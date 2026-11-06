@@ -1,0 +1,122 @@
+{
+  "title": "Mean Module",
+  "children": [
+    {
+      "title": "Overview",
+      "lines": [
+        "Gritty analog-style",
+        "mono synth.",
+        "",
+        "2 oscillators +",
+        "noise, a saturating",
+        "2-pole Sallen-Key",
+        "multimode filter,",
+        "2 ADSRs, LFO and a",
+        "post-filter drive.",
+        "",
+        "Mono, last-note",
+        "priority (or low /",
+        "high). Runs 2x",
+        "oversampled."
+      ]
+    },
+    {
+      "title": "Pages",
+      "children": [
+        {
+          "title": "1 Osc",
+          "lines": [
+            "Wave: bitmask of",
+            "Saw/Tri/Pulse, any",
+            "combination.",
+            "Shape: pulse width,",
+            "triangle skew or",
+            "saw bow.",
+            "Osc2 coarse/fine.",
+            "Levels."
+          ]
+        },
+        {
+          "title": "2 Filter",
+          "lines": [
+            "Cutoff, Resonance.",
+            "Filter Drive = input",
+            "level. Hot input",
+            "saturates and",
+            "squeezes resonance.",
+            "Self-oscillates.",
+            "Mode: LP BP HP",
+            "LP+HP BP+LP.",
+            "Env1/LFO to cutoff,",
+            "Key Track, Drive."
+          ]
+        },
+        {
+          "title": "3 Env",
+          "lines": [
+            "Env1: filter and",
+            "pitch FM.",
+            "Env2: amplifier.",
+            "Exponential ADSR,",
+            "0.5ms to 10s."
+          ]
+        },
+        {
+          "title": "4 Mod/FM",
+          "lines": [
+            "FM1 = Env1 pitch FM.",
+            "FM2 = LFO pitch FM.",
+            "X-Mod: osc2 FMs osc1.",
+            "Shape Mod: LFO moves",
+            "shape on both oscs.",
+            "LFO rate and wave."
+          ]
+        },
+        {
+          "title": "5 Play",
+          "lines": [
+            "Noise, Glide,",
+            "Vibrato, Bend range,",
+            "Analog Drift, Legato,",
+            "Drone (VCA held",
+            "open), Volume."
+          ]
+        },
+        {
+          "title": "6 Perform",
+          "lines": [
+            "Vel>Cutoff, Vel>Amp.",
+            "Aftertouch dest:",
+            "Off Cutoff Vibrato",
+            "Drive FM, and amount.",
+            "Note priority.",
+            "Octave, Vib rate,",
+            "Tune."
+          ]
+        }
+      ]
+    },
+    {
+      "title": "Presets & State",
+      "lines": [
+        "Browse factory",
+        "presets from the",
+        "slot preset row.",
+        "All parameters are",
+        "saved with the set",
+        "and in My Presets."
+      ]
+    },
+    {
+      "title": "MIDI",
+      "lines": [
+        "Notes + velocity,",
+        "pitch bend, mod wheel",
+        "(vibrato), channel and",
+        "poly aftertouch",
+        "(any key), CC123 =",
+        "all notes off."
+      ]
+    }
+  ]
+}

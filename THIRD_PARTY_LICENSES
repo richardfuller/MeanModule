@@ -1,0 +1,12 @@
+Third-Party Licenses
+====================
+
+Mean Module contains no third-party source code in its DSP.
+
+- src/host/plugin_api_v1.h is vendored unmodified from Schwung
+  (https://github.com/charlesvestal/schwung, MIT License,
+  Copyright (c) Charles Vestal).
+- The oscillator, filter and decimator designs are implemented from published
+  techniques (PolyBLEP; Zavalishin, "The Art of VA Filter Design"; Pirkle's
+  Korg35 TPT application notes; Mystran's cheap nonlinear ZDF approximation).
+  No code was copied from those sources.
