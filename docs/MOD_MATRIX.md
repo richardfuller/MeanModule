@@ -30,6 +30,8 @@ and to the stored knob values; it never changes the stored values.
 | Stick X, Stick Y | -1..+1 | the two stick knobs; they spring back when released |
 | Key | -1..+1 | pitch of the note: C4 = 0, two octaves each way = +-1 |
 | Random | -1..+1 | sample and hold, a new value for each note (each arp step) |
+| Noise | -1..+1 | white noise, a new value every sample (FM, cutoff, anything) |
+| Osc 2 | -1..+1 | the Osc 2 audio output, whatever its Level: audio-rate modulation of anything |
 
 | Target | Amount 1.0 means | Notes |
 | --- | --- | --- |
@@ -44,6 +46,7 @@ and to the stored knob values; it never changes the stored values.
 | Drive | +1.0 | post-VCA drive, clamped 0..1.6 |
 | Amp | gain = 1 + amount x source | clamped 0..2; negative amounts duck the sound |
 | X-Mod | +1.0 | clamped 0..1 |
+| Osc 1 FM, Osc 2 FM | +2 octaves of exponential FM | adds to the FM knobs and X-Mod |
 | LFO Rate, LFO 2 Rate | +1.0 on the 0..1 rate knob | from the previous sample, so it cannot feed back on itself; ignored while that LFO is synced |
 
 Examples: LFO -> Cutoff 0.4 (wobble); Velocity -> Drive 0.4 (harder = dirtier); Stick Y -> Filter Input 0.7 (push into
@@ -65,3 +68,22 @@ Two LFOs on the LFOs page (Root -> LFOs, after Modulation): Rate, Wave, Sync eac
 * Sync: Free, or 1/2, 1/4, 1/8, 1/8T, 1/16, 1/16T, 1/32 of the tempo, one cycle per division. While Move's transport runs the
   phase is locked to the beat position; with the transport stopped the LFO free-runs at the host tempo. Rate is ignored when synced.
 * LFO 1 also feeds the fixed routings (Cutoff, osc FM, Shape). LFO 2 is available through the matrix only.
+
+## Tuning
+
+Root -> Tuning: Osc 1 and Osc 2 Coarse and Fine, Octave, Tune, Drift, Bend Range. Both oscillators have their own coarse (+-24 semitones)
+and fine (+-50 cents) now, as on the hardware.
+
+## MIDI controllers (external MIDI only, i.e. USB-A devices)
+
+| Message | Effect |
+| --- | --- |
+| CC 1, 64 | mod wheel, sustain pedal |
+| CC 5, 7, 11 | glide time, volume, expression (output level) |
+| CC 71, 72, 73, 74 | resonance, Env 2 release, Env 2 attack, cutoff |
+| CC 0 + Program Change | selects a preset: bank * 128 + program |
+| RPN 0 (CC 101, 100, 6) | pitch bend range |
+| CC 120, 121, 123 | sound off, reset controllers, all notes off |
+
+These are ignored when they come from Move's own surface, because CC 71-78 there are the eight knobs.
+Pitch bend, channel pressure and poly aftertouch are handled from every source.

@@ -52,6 +52,16 @@
           ]
         },
         {
+          "title": "Tuning",
+          "lines": [
+            "Semi1 Fine1 Semi2 Fine2:",
+            "coarse and fine tune",
+            "for both oscillators.",
+            "Oct, Tune, Drift,",
+            "Bend range."
+          ]
+        },
+        {
           "title": "Filter",
           "lines": [
             "Cutoff, Res.",
@@ -115,13 +125,15 @@
             "Six slots: Src, Dst, Amt",
             "(-1..+1), Matrix 1-2,",
             "3-4 and 5-6 pages.",
-            "Src: LFO Env1 Env2",
-            "Vel Wheel AfterT StkX",
-            "StkY Key Random LFO2.",
+            "Src: LFO Env1 Env2 Vel",
+            "Wheel AfterT StkX StkY",
+            "Key Random LFO2 Noise",
+            "Osc2.",
             "Dst: Pitch Pitch2",
             "Shape1/2 Lvl1/2 Noise",
             "Cutoff Res Input Drive",
-            "Amp XMod LFO Rates.",
+            "Amp XMod LFO Rates",
+            "Osc1/2 FM.",
             "Slots add up; Off or",
             "0 amount does nothing."
           ]

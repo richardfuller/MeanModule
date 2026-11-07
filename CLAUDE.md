@@ -38,8 +38,11 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - Presets are named "<Category> <Name>" and kept in category order: Init, Bass, Sub, Lead, Pluck, Keys, Stab, Brass, Arp, Seq, Pad, Texture, Vox, Drone, FX (no percussion; dark/industrial theme). Matrix slots in presets use the `MX(slot, S_*, D_*, amt)` helper.
 
 - LFOs: two (`lfo_*`, `lfo2_*`), waves Tri/Sq/SawDn/SawUp/Random, Sync = 1/2..1/32 locked to `get_beat_position` (free-run at bpm when stopped).
-- Mod matrix: 6 slots (`m1_src/dst/amt`..), 12 sources x 16 targets, summed per sample in render_active; design and ranges in
+- Mod matrix: 6 slots (`m1_src/dst/amt`..), 14 sources x 18 targets (Noise and Osc 2 are sources; Osc 1/2 FM are targets), summed per sample in render_active; design and ranges in
   `docs/MOD_MATRIX.md`. Stick Y target 4 = Hold Toggle is the only thing that flips Hold from the stick.
+
+- MIDI from EXTERNAL sources only: CC 5/7/11/71-74, bank CC0 + Program Change, RPN 0 bend range (see `docs/MOD_MATRIX.md`). Never map
+  CCs from Move's own surface: CC 71-78 are its knobs.
 
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.
@@ -47,6 +50,6 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   ~5 chars wide) and `SHORT_OPTS` for enums (3-char squares), then put its key in a page macro (`K_OSC`, `K_FILT`, ... at most 8
   per page) near `HIERARCHY`. It is automatically in state, chain_params and the stress tests; the host test fails if a param
   has no name, no short_name or is on no page.
-- UI: pages are levels in `HIERARCHY` (Play, Stick, Arp first, then Oscillators, Filter, Env 1, Env 2, Modulation, LFOs, Matrix 1-2/3-4/5-6, Perform); root carries the
+- UI: pages are levels in `HIERARCHY` (Play, Stick, Arp first, then Oscillators, Tuning, Filter, Env 1, Env 2, Modulation, LFOs, Matrix 1-2/3-4/5-6, Perform); root carries the
   performance macros and preset browser. `get_param("name")` returns "Mean Module"; module.json `name` is "Mean Mod" (the slot header
   cuts longer names) and abbrev is "MM".

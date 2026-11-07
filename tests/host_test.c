@@ -323,6 +323,57 @@ int main(int argc, char **argv) {
         CHECK(onsets >= 4 && bad == 0, "arp onsets must sit on the beat grid (%d onsets, %d off-grid, max %.0f samples)", onsets, bad, maxdev);
         midi(inst, 0x80, 48, 0); drain(inst, out); g_transport = 0; setp(inst, "preset", "0");
     }
+    /* 2l. Osc 1 tuning, noise / osc 2 as matrix sources into FM, controller CCs, Program Change, RPN bend range */
+    {
+        char v[32];
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "osc1_wave", "2"); setp(inst, "resonance", "0"); setp(inst, "flt_fm1", "0");
+        setp(inst, "cutoff", "0.5"); setp(inst, "drive", "0"); setp(inst, "drift", "0"); setp(inst, "vibrato_depth", "0");
+        midi(inst, 0x90, 48, 100); render(inst, out, 100);
+        double base = pitch_hz(out, 40 * FRAMES, 50 * FRAMES);
+        setp(inst, "osc1_coarse", "12"); render(inst, out, 100);
+        double up = pitch_hz(out, 40 * FRAMES, 50 * FRAMES);
+        printf("osc1 coarse +12: ratio %.3f (expect 2)\n", up / base);
+        CHECK(fabs(up / base - 2.0) < 0.1, "osc1 coarse +12 should double the pitch (%.3f)", up / base);
+        setp(inst, "osc1_coarse", "0"); setp(inst, "osc1_fine", "50"); render(inst, out, 100);
+        double fine = pitch_hz(out, 40 * FRAMES, 50 * FRAMES);
+        CHECK(fabs(fine / base - 1.0293) < 0.03, "osc1 fine +50 cents ratio %.4f", fine / base);
+        setp(inst, "osc1_fine", "0");
+        /* noise into osc 1 FM roughens a clean triangle: many more zero crossings */
+        setp(inst, "m1_src", "12"); setp(inst, "m1_dst", "16"); setp(inst, "m1_amt", "0.4"); render(inst, out, 100);
+        double noisy = pitch_hz(out, 40 * FRAMES, 50 * FRAMES);
+        printf("noise->osc1 FM: %.1f Hz vs %.1f Hz clean\n", noisy, base);
+        CHECK(fabs(noisy - base) > base * 0.03 || noisy < 0.1, "noise -> Osc 1 FM should change the waveform (%.1f vs %.1f)", noisy, base);
+        setp(inst, "m1_amt", "0"); midi(inst, 0x80, 48, 0); drain(inst, out);
+        /* controller CCs: external only */
+        setp(inst, "preset", "0");
+        midi(inst, 0xB0, 74, 127);
+        rt_enter(); api->get_param(inst, "cutoff", v, sizeof v); rt_leave();
+        CHECK(atof(v) > 0.99, "CC74 should set cutoff (%s)", v);
+        midi_src(inst, 0xB0, 71, 127, MOVE_MIDI_SOURCE_INTERNAL);
+        rt_enter(); api->get_param(inst, "resonance", v, sizeof v); rt_leave();
+        CHECK(atof(v) < 0.5, "CC71 from Move's own knobs must not remap resonance (%s)", v);
+        midi(inst, 0xB0, 7, 64);
+        rt_enter(); api->get_param(inst, "volume", v, sizeof v); rt_leave();
+        CHECK(fabs(atof(v) - 0.5039) < 0.01, "CC7 should set volume (%s)", v);
+        midi(inst, 0xB0, 101, 0); midi(inst, 0xB0, 100, 0); midi(inst, 0xB0, 6, 7);
+        rt_enter(); api->get_param(inst, "bend_range", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 7, "RPN 0 should set the bend range (%s)", v);
+        midi(inst, 0xB0, 6, 3);   /* RPN still selected: ok. now deselect (127,127) so a stray CC6 does nothing */
+        midi(inst, 0xB0, 101, 127); midi(inst, 0xB0, 100, 127); midi(inst, 0xB0, 6, 11);
+        rt_enter(); api->get_param(inst, "bend_range", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 3, "CC6 without RPN 0 selected must be ignored (%s)", v);
+        midi(inst, 0xC0, 5, 0);
+        rt_enter(); api->get_param(inst, "preset", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 5, "Program Change 5 should select preset 5 (%s)", v);
+        midi(inst, 0xB0, 0, 1); midi(inst, 0xC0, 3, 0);
+        rt_enter(); api->get_param(inst, "preset", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 131 || atoi(v) == 5, "bank 1 program 3 -> preset 131 if it exists, else ignored (%s)", v);
+        midi(inst, 0xB0, 0, 0);
+        midi_src(inst, 0xC0, 9, 0, MOVE_MIDI_SOURCE_INTERNAL);
+        rt_enter(); api->get_param(inst, "preset", v, sizeof v); rt_leave();
+        CHECK(atoi(v) != 9, "Program Change from Move's own surface must be ignored (%s)", v);
+        midi(inst, 0xB0, 121, 0); setp(inst, "preset", "0");
+    }
     /* 2k. mod matrix: routing, scaling, unipolar/bipolar sources, stability over every source x target pair */
     {
         char v[16];
@@ -373,7 +424,7 @@ int main(int argc, char **argv) {
         /* every source x target pair at both polarities stays finite, bounded and silent after release */
         setp(inst, "preset", "0"); setp(inst, "lfo_rate", "0.6");
         double worst = 0; int nodrain = 0;
-        for (int s = 1; s <= 11; s++) for (int d = 1; d <= 15; d++) for (int pol = 0; pol < 2; pol++) {
+        for (int s = 1; s <= 13; s++) for (int d = 1; d <= 17; d++) for (int pol = 0; pol < 2; pol++) {
             char sv[12], dv[12], wv[12], yv[12]; snprintf(sv, sizeof sv, "%d", s); snprintf(dv, sizeof dv, "%d", d);
             snprintf(wv, sizeof wv, "%d", (s + d) % 5); snprintf(yv, sizeof yv, "%d", (s * d) % 8);
             setp(inst, "lfo_wave", wv); setp(inst, "lfo2_wave", wv); setp(inst, "lfo2_sync", yv); setp(inst, "lfo_sync", d % 3 == 0 ? yv : "0");
