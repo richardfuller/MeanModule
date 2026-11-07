@@ -481,7 +481,7 @@ int main(int argc, char **argv) {
         /* every source x target pair at both polarities stays finite, bounded and silent after release */
         setp(inst, "preset", "0"); setp(inst, "lfo_rate", "0.6");
         double worst = 0; int nodrain = 0;
-        for (int s = 1; s <= 13; s++) for (int d = 1; d <= 17; d++) for (int pol = 0; pol < 2; pol++) {
+        for (int s = 1; s <= 19; s++) for (int d = 1; d <= 24; d++) for (int pol = 0; pol < 2; pol++) {
             char sv[12], dv[12], wv[12], yv[12]; snprintf(sv, sizeof sv, "%d", s); snprintf(dv, sizeof dv, "%d", d);
             snprintf(wv, sizeof wv, "%d", (s + d) % 5); snprintf(yv, sizeof yv, "%d", (s * d) % 8);
             setp(inst, "lfo_wave", wv); setp(inst, "lfo2_wave", wv); setp(inst, "lfo2_sync", yv); setp(inst, "lfo_sync", d % 3 == 0 ? yv : "0");
@@ -496,6 +496,136 @@ int main(int argc, char **argv) {
         CHECK(nodrain == 0, "matrix pairs left the voice sounding (%d)", nodrain);
         setp(inst, "stick_x", "0"); setp(inst, "stick_y", "0"); midi(inst, 0xB0, 1, 0); midi(inst, 0xD0, 0, 0); setp(inst, "preset", "0");
         (void)v;
+    }
+    /* 2m. matrix batch 2: Pitch Bend, Arp Step, Note Age, Smooth Random, Osc 1, Sustain Pedal sources; Grit, Glide, Vibrato Depth, LFO Depths, Env Amount targets */
+    {
+        #define CLEAN_TRI() do { setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "osc1_wave", "2"); setp(inst, "resonance", "0"); setp(inst, "flt_fm1", "0"); \
+            setp(inst, "cutoff", "0.8"); setp(inst, "drive", "0"); setp(inst, "drift", "0"); setp(inst, "vibrato_depth", "0"); setp(inst, "bend_range", "0"); } while (0)
+        /* Pitch Bend source: bend -> Amp at -1 silences the voice with the wheel up (Bend Range 0, so only the matrix sees it) */
+        CLEAN_TRI(); setp(inst, "m1_src", "14"); setp(inst, "m1_dst", "12"); setp(inst, "m1_amt", "-1");
+        midi(inst, 0x90, 48, 100); render(inst, out, 100);
+        double b0 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        midi(inst, 0xE0, 127, 127); render(inst, out, 100);
+        double b1 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        midi(inst, 0xE0, 0, 64); render(inst, out, 100);
+        double b2 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        printf("pitch bend source -> amp: centre %.4f, up %.5f, back %.4f\n", b0, b1, b2);
+        CHECK(b0 > 0.05 && b1 < 0.002 && b2 > 0.05, "Pitch Bend source (%.4f %.5f %.4f)", b0, b1, b2);
+        midi(inst, 0x80, 48, 0); drain(inst, out);
+        /* Sustain Pedal source: slewed 0..1 */
+        setp(inst, "m1_src", "19");
+        midi(inst, 0x90, 48, 100); render(inst, out, 100);
+        double p0 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        midi(inst, 0xB0, 64, 127); render(inst, out, 100);
+        double p1 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        midi(inst, 0xB0, 64, 0); render(inst, out, 100);
+        double p2 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        printf("pedal source -> amp: up %.4f, down %.5f, up %.4f\n", p0, p1, p2);
+        CHECK(p0 > 0.05 && p1 < 0.002 && p2 > 0.05, "Sustain Pedal source (%.4f %.5f %.4f)", p0, p1, p2);
+        midi(inst, 0x80, 48, 0); drain(inst, out);
+        /* Note Age: a slow 0..1 ramp from every new note (5 s); it restarts with the next note */
+        CLEAN_TRI(); setp(inst, "m1_src", "16"); setp(inst, "m1_dst", "1"); setp(inst, "m1_amt", "1");
+        midi(inst, 0x90, 48, 100); render(inst, out, 60);
+        double ae = pitch_hz(out, 20 * FRAMES, 30 * FRAMES);
+        render(inst, out, 600); render(inst, out, 600);
+        double al = pitch_hz(out, 560 * FRAMES, 30 * FRAMES);
+        midi(inst, 0x80, 48, 0); drain(inst, out); midi(inst, 0x90, 48, 100); render(inst, out, 60);
+        double ar = pitch_hz(out, 20 * FRAMES, 30 * FRAMES);
+        printf("note age -> pitch: early %.1f Hz, after 3.7 s %.1f Hz (ratio %.2f), new note %.1f Hz\n", ae, al, al / ae, ar);
+        CHECK(al / ae > 1.4 && ar / ae < 1.15, "Note Age should ramp up and restart per note (%.1f %.1f %.1f)", ae, al, ar);
+        midi(inst, 0x80, 48, 0); drain(inst, out);
+        /* Smooth Random: wanders, but never jumps */
+        CLEAN_TRI(); setp(inst, "m1_src", "17"); setp(inst, "m1_dst", "1"); setp(inst, "m1_amt", "0.4");
+        midi(inst, 0x90, 72, 100); render(inst, out, 600);
+        double hmn = 1e9, hmx = 0, hjump = 1.0, hprev = 0;
+        for (int w = 0; w < 28; w++) {
+            double h = pitch_hz(out, 2000 + w * 2400, 2400);
+            if (h < hmn) hmn = h; if (h > hmx) hmx = h;
+            if (hprev > 0) { double r = h > hprev ? h / hprev : hprev / h; if (r > hjump) hjump = r; }
+            hprev = h;
+        }
+        printf("smooth random -> pitch: %.1f .. %.1f Hz, biggest step %.3f\n", hmn, hmx, hjump);
+        CHECK(hmx / hmn > 1.08 && hjump < 1.10, "Smooth Random should wander smoothly (%.1f..%.1f, step %.3f)", hmn, hmx, hjump);
+        midi(inst, 0x80, 72, 0); drain(inst, out);
+        /* Arp Step: 0 on the first arp note, 1 on the last; Amp at -1 makes the pattern fade across the steps */
+        CLEAN_TRI(); setp(inst, "arp_mode", "1"); setp(inst, "arp_rate", "2"); setp(inst, "arp_gate", "1"); setp(inst, "arp_octaves", "1");
+        midi(inst, 0x90, 48, 100); midi(inst, 0x90, 52, 100); midi(inst, 0x90, 55, 100);
+        for (int pass = 0; pass < 2; pass++) {
+            setp(inst, "m1_src", "15"); setp(inst, "m1_dst", "12"); setp(inst, "m1_amt", pass ? "0" : "-1");
+            render(inst, out, 300);
+            double lo = 1e9, hi = 0; for (int w = 0; w < 30; w++) { double r = rms_win(out, 6000 + w * 1024, 1024); if (r < lo) lo = r; if (r > hi) hi = r; }
+            printf("arp step %s: window rms %.4f .. %.4f\n", pass ? "control" : "-> amp", lo, hi);
+            if (!pass) CHECK(hi > 0.05 && lo < 0.4 * hi, "Arp Step should change level across the pattern (%.4f..%.4f)", lo, hi);
+            else CHECK(lo > 0.5 * hi, "no matrix: arp level should be steady (%.4f..%.4f)", lo, hi);
+        }
+        midi(inst, 0x80, 48, 0); midi(inst, 0x80, 52, 0); midi(inst, 0x80, 55, 0); setp(inst, "arp_mode", "0"); drain(inst, out);
+        /* Osc 1 as a source (even with its Level at 0): Osc 1 -> Osc 2 Level turns a silent patch into sound */
+        CLEAN_TRI(); setp(inst, "osc1_level", "0"); setp(inst, "osc2_level", "0"); setp(inst, "osc2_wave", "1"); setp(inst, "m1_src", "18"); setp(inst, "m1_dst", "6"); setp(inst, "m1_amt", "0");
+        midi(inst, 0x90, 48, 100); render(inst, out, 100);
+        double o0 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        setp(inst, "m1_amt", "1"); render(inst, out, 100);
+        double o1 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        printf("osc1 source -> osc2 level: %.5f silent, %.4f with the slot\n", o0, o1);
+        CHECK(o0 < 0.002 && o1 > 0.02, "Osc 1 as a source should modulate (%.5f vs %.4f)", o0, o1);
+        midi(inst, 0x80, 48, 0); drain(inst, out);
+        /* Grit target: Velocity -> Grit at +1 equals Stick X -> Grit at +1 */
+        CLEAN_TRI(); setp(inst, "osc1_wave", "1"); setp(inst, "drive", "0.3"); setp(inst, "stick_x_to", "3"); setp(inst, "stick_x", "1");
+        midi(inst, 0x90, 48, 127); render(inst, out, 100);
+        double gs0 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        midi(inst, 0x80, 48, 0); drain(inst, out);
+        setp(inst, "stick_x", "0"); setp(inst, "stick_x_to", "0"); setp(inst, "m1_src", "4"); setp(inst, "m1_dst", "18"); setp(inst, "m1_amt", "1");
+        midi(inst, 0x90, 48, 127); render(inst, out, 100);
+        double gs1 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        setp(inst, "m1_amt", "0"); render(inst, out, 100);
+        double gs2 = rms_win(out, 60 * FRAMES, 30 * FRAMES);
+        printf("grit target: stick %.4f, matrix %.4f, none %.4f\n", gs0, gs1, gs2);
+        CHECK(fabs(gs1 / gs0 - 1.0) < 0.08 && fabs(gs2 / gs0 - 1.0) > 0.1, "Grit target should match the stick Grit (%.4f vs %.4f, off %.4f)", gs1, gs0, gs2);
+        midi(inst, 0x80, 48, 0); drain(inst, out);
+        /* Glide Time target: with no Glide knob, Velocity -> Glide makes the second note slide */
+        for (int pass = 0; pass < 2; pass++) {
+            CLEAN_TRI(); setp(inst, "glide", "0"); setp(inst, "m1_src", "4"); setp(inst, "m1_dst", "19"); setp(inst, "m1_amt", pass ? "0" : "1");
+            midi(inst, 0x90, 48, 127); render(inst, out, 40); midi(inst, 0x90, 60, 127); render(inst, out, 120);
+            double gh = pitch_hz(out, 90 * FRAMES, 30 * FRAMES);
+            printf("glide target %s: %.1f Hz (note is 261.6)\n", pass ? "off" : "on", gh);
+            if (!pass) CHECK(gh > 150 && gh < 225, "Glide Time target should slide (%.1f Hz)", gh);
+            else CHECK(gh > 245, "no Glide Time slot: the note should be there (%.1f Hz)", gh);
+            midi(inst, 0x80, 48, 0); midi(inst, 0x80, 60, 0); drain(inst, out);
+        }
+        /* Vibrato Depth target: Velocity -> Vibrato Depth gives a pitch wobble that the plain patch does not have */
+        double vs[2];
+        for (int pass = 0; pass < 2; pass++) {
+            CLEAN_TRI(); setp(inst, "m1_src", "4"); setp(inst, "m1_dst", "20"); setp(inst, "m1_amt", pass ? "0" : "1");
+            midi(inst, 0x90, 84, 127); render(inst, out, 300);
+            double lo = 1e9, hi = 0; for (int w = 0; w < 14; w++) { double h = pitch_hz(out, 3000 + w * 2500, 2500); if (h < lo) lo = h; if (h > hi) hi = h; }
+            vs[pass] = hi / lo; midi(inst, 0x80, 84, 0); drain(inst, out);
+        }
+        printf("vibrato depth target: spread %.3f (off %.3f)\n", vs[0], vs[1]);
+        CHECK(vs[0] > 1.07 && vs[1] < 1.04, "Vibrato Depth target (%.3f vs %.3f)", vs[0], vs[1]);
+        /* LFO Depth / LFO 2 Depth: an LFO on pitch is silent with the wheel down and full with the wheel up */
+        for (int which = 0; which < 2; which++) {
+            double sp[2];
+            for (int wh = 0; wh < 2; wh++) {
+                CLEAN_TRI(); setp(inst, "lfo_wave", "1"); setp(inst, "lfo_rate", "0.45"); setp(inst, "lfo2_wave", "1"); setp(inst, "lfo2_rate", "0.45");
+                setp(inst, "m1_src", which ? "11" : "1"); setp(inst, "m1_dst", "1"); setp(inst, "m1_amt", "0.5");
+                setp(inst, "m2_src", "5"); setp(inst, "m2_dst", which ? "22" : "21"); setp(inst, "m2_amt", "1");
+                midi(inst, 0xB0, 1, wh ? 127 : 0); midi(inst, 0x90, 72, 100); render(inst, out, 600);
+                double lo = 1e9, hi = 0; for (int w = 0; w < 28; w++) { double h = pitch_hz(out, 2000 + w * 2400, 2400); if (h < lo) lo = h; if (h > hi) hi = h; }
+                sp[wh] = hi / lo; midi(inst, 0xB0, 1, 0); midi(inst, 0x80, 72, 0); drain(inst, out);
+            }
+            printf("LFO %d depth: wheel down spread %.3f, wheel up %.3f\n", which + 1, sp[0], sp[1]);
+            CHECK(sp[0] < 1.06 && sp[1] > 1.25, "LFO %d Depth (%.3f / %.3f)", which + 1, sp[0], sp[1]);
+        }
+        /* Env Amount target: Velocity -> Env Amount opens the filter further with the filter envelope */
+        double ea[2];
+        for (int pass = 0; pass < 2; pass++) {
+            CLEAN_TRI(); setp(inst, "osc1_wave", "1"); setp(inst, "cutoff", "0.3"); setp(inst, "env1_a", "0"); setp(inst, "env1_s", "1");
+            setp(inst, "m1_src", "4"); setp(inst, "m1_dst", "23"); setp(inst, "m1_amt", pass ? "0" : "1");
+            midi(inst, 0x90, 48, 127); render(inst, out, 150); ea[pass] = rms_win(out, 110 * FRAMES, 30 * FRAMES); midi(inst, 0x80, 48, 0); drain(inst, out);
+        }
+        printf("env amount target: rms %.4f vs %.4f\n", ea[0], ea[1]);
+        CHECK(ea[0] > 1.3 * ea[1], "Env Amount target should open the filter (%.4f vs %.4f)", ea[0], ea[1]);
+        setp(inst, "m1_amt", "0"); setp(inst, "m2_amt", "0"); setp(inst, "preset", "0");
+        #undef CLEAN_TRI
     }
     /* 2j. stick: touch makes it hold, release springs it back; no touch events -> timed recentre; stick down toggles Hold */
     {

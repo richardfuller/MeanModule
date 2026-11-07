@@ -7,7 +7,7 @@ Verified 2026-11-07 against Schwung host v1.9.2, Move at a DHCP address on the s
    dsp.so needs glibc <= 2.27 (checked with `objdump -T`).
 2. Install through Schwung Manager (port 7700) with the user's script (outside this repo, read it before running):
    ```
-   powershell -NoProfile -File C:\Users\rcf79\OneDrive\Documents\Projects\AudioStreamTest\deploy_to_move.ps1 -Tarball dist\meanmodule-module.tar.gz -ModuleId meanmodule
+   powershell -NoProfile -File <path-to>\deploy_to_move.ps1 -Tarball dist\meanmodule-module.tar.gz -ModuleId meanmodule
    ```
    It re-resolves the Move's IPv4 with `ping -4 move.local` (the address changes), uploads via `/modules/install-custom`,
    and checks the module is listed. Success text: "Installed meanmodule from tarball".

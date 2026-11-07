@@ -36,13 +36,13 @@ typedef enum { K_F, K_I, K_E } kind_t;
 #define YTO "Glide,Vibrato Depth,Cutoff,Grit,Hold Toggle,Arp Rate,Arp Mode"
 #define TCHK "Off,Knob 3,Knob 4,Knob 5,Knob 6,Knob 7,Knob 8"
 #define TCHD "Hold On,Arp Faster,Grit Push,Filter Open"
-#define MXSRC "Off,LFO,Env 1,Env 2,Velocity,Mod Wheel,Aftertouch,Stick X,Stick Y,Key,Random,LFO 2,Noise,Osc 2"
-#define MXDST "Off,Pitch,Osc 2 Pitch,Osc 1 Shape,Osc 2 Shape,Osc 1 Level,Osc 2 Level,Noise,Cutoff,Resonance,Filter Input,Drive,Amp,X-Mod,LFO Rate,LFO 2 Rate,Osc 1 FM,Osc 2 FM"
-#define MXSRC_S "OFF,LFO,EN1,EN2,VEL,MOD,AFT,STX,STY,KEY,RND,LF2,NSE,OS2"
-#define MXDST_S "OFF,PCH,PC2,SH1,SH2,LV1,LV2,NSE,CUT,RES,INP,DRV,AMP,XMD,LFR,LR2,FM1,FM2"
+#define MXSRC "Off,LFO,Env 1,Env 2,Velocity,Mod Wheel,Aftertouch,Stick X,Stick Y,Key,Random,LFO 2,Noise,Osc 2,Pitch Bend,Arp Step,Note Age,Smooth Random,Osc 1,Sustain Pedal"
+#define MXDST "Off,Pitch,Osc 2 Pitch,Osc 1 Shape,Osc 2 Shape,Osc 1 Level,Osc 2 Level,Noise,Cutoff,Resonance,Filter Input,Drive,Amp,X-Mod,LFO Rate,LFO 2 Rate,Osc 1 FM,Osc 2 FM,Grit,Glide Time,Vibrato Depth,LFO Depth,LFO 2 Depth,Env Amount,Drift Amount"
+#define MXSRC_S "OFF,LFO,EN1,EN2,VEL,MOD,AFT,STX,STY,KEY,RND,LF2,NSE,OS2,BND,ARP,AGE,SMR,OS1,PED"
+#define MXDST_S "OFF,PCH,PC2,SH1,SH2,LV1,LV2,NSE,CUT,RES,INP,DRV,AMP,XMD,LFR,LR2,FM1,FM2,GRT,GLD,VIB,LD1,LD2,ENV,DFT"
 #define N_SLOTS 6            /* mod matrix slots */
-#define N_MXSRC 14
-#define N_MXDST 18
+#define N_MXSRC 20
+#define N_MXDST 25
 #define ARPMODE "Off,Up,Down,Up and Down,Random,As Played"
 #define ARPRATE "1/4,1/8,1/8 Triplet,1/16,1/16 Triplet,1/32"
 
@@ -98,23 +98,23 @@ typedef enum { K_F, K_I, K_E } kind_t;
  X(ARP_RATE, "arp_rate", "Arp Rate", K_E, 0, 5, 3, 1, ARPRATE) \
  X(ARP_OCT, "arp_octaves", "Arp Octaves", K_I, 1, 3, 1, 1, NULL) \
  X(ARP_GATE, "arp_gate", "Arp Gate", K_F, 0.1, 1, 0.6, 0.05, NULL) \
- X(M1_SRC, "m1_src", "Matrix 1 Source", K_E, 0, 13, 0, 1, MXSRC) \
- X(M1_DST, "m1_dst", "Matrix 1 Target", K_E, 0, 17, 0, 1, MXDST) \
+ X(M1_SRC, "m1_src", "Matrix 1 Source", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M1_DST, "m1_dst", "Matrix 1 Target", K_E, 0, 24, 0, 1, MXDST) \
  X(M1_AMT, "m1_amt", "Matrix 1 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
- X(M2_SRC, "m2_src", "Matrix 2 Source", K_E, 0, 13, 0, 1, MXSRC) \
- X(M2_DST, "m2_dst", "Matrix 2 Target", K_E, 0, 17, 0, 1, MXDST) \
+ X(M2_SRC, "m2_src", "Matrix 2 Source", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M2_DST, "m2_dst", "Matrix 2 Target", K_E, 0, 24, 0, 1, MXDST) \
  X(M2_AMT, "m2_amt", "Matrix 2 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
- X(M3_SRC, "m3_src", "Matrix 3 Source", K_E, 0, 13, 0, 1, MXSRC) \
- X(M3_DST, "m3_dst", "Matrix 3 Target", K_E, 0, 17, 0, 1, MXDST) \
+ X(M3_SRC, "m3_src", "Matrix 3 Source", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M3_DST, "m3_dst", "Matrix 3 Target", K_E, 0, 24, 0, 1, MXDST) \
  X(M3_AMT, "m3_amt", "Matrix 3 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
- X(M4_SRC, "m4_src", "Matrix 4 Source", K_E, 0, 13, 0, 1, MXSRC) \
- X(M4_DST, "m4_dst", "Matrix 4 Target", K_E, 0, 17, 0, 1, MXDST) \
+ X(M4_SRC, "m4_src", "Matrix 4 Source", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M4_DST, "m4_dst", "Matrix 4 Target", K_E, 0, 24, 0, 1, MXDST) \
  X(M4_AMT, "m4_amt", "Matrix 4 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
- X(M5_SRC, "m5_src", "Matrix 5 Source", K_E, 0, 13, 0, 1, MXSRC) \
- X(M5_DST, "m5_dst", "Matrix 5 Target", K_E, 0, 17, 0, 1, MXDST) \
+ X(M5_SRC, "m5_src", "Matrix 5 Source", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M5_DST, "m5_dst", "Matrix 5 Target", K_E, 0, 24, 0, 1, MXDST) \
  X(M5_AMT, "m5_amt", "Matrix 5 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
- X(M6_SRC, "m6_src", "Matrix 6 Source", K_E, 0, 13, 0, 1, MXSRC) \
- X(M6_DST, "m6_dst", "Matrix 6 Target", K_E, 0, 17, 0, 1, MXDST) \
+ X(M6_SRC, "m6_src", "Matrix 6 Source", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M6_DST, "m6_dst", "Matrix 6 Target", K_E, 0, 24, 0, 1, MXDST) \
  X(M6_AMT, "m6_amt", "Matrix 6 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
  X(LFO2_RATE, "lfo2_rate", "LFO 2 Rate", K_F, 0, 1, 0.3, 0.02, NULL) \
  X(LFO2_WAVE, "lfo2_wave", "LFO 2 Wave", K_E, 0, 4, 0, 1, LFOW) \
@@ -205,6 +205,8 @@ typedef struct {
     int cc_bank, rpn_msb, rpn_lsb;   /* CC0 bank for Program Change; selected RPN */
     float rnd;                  /* Random mod source: sample-and-hold, new value per note trigger */
     float mx_lfr;               /* previous sample's LFO-rate modulation (breaks the LFO feedback loop) */
+    float mx_ld[2];             /* previous sample's LFO 1 / LFO 2 Depth modulation (applied one sample late: no loop) */
+    float bend_n, arp_ramp, age, srnd, srnd1, srnd_tgt, ped, o1_prev; int srnd_cnt;   /* matrix sources: bend -1..1, arp step 0..1, note age 0..1, smooth random, pedal (slewed), osc 1 output */
     uint32_t rng;
     float dc_x, dc_y;
     float noise_lp1, noise_lp2;
@@ -305,6 +307,7 @@ static void gate_on(mm_t *m, int retrigger) {
     m->gate = 1;
     if (retrigger) {
         m->rnd = frand(&m->rng);
+        m->age = 0.0f;
         m->e1.stage = ENV_ATK; m->e2.stage = ENV_ATK;  /* retrigger from current level */
     }
 }
@@ -427,7 +430,7 @@ static int arp_build(mm_t *m, int *seq) {   /* returns pattern length (<= 3 * MA
     return len;
 }
 static void arp_stop(mm_t *m) {
-    m->arp_running = 0;
+    m->arp_running = 0; m->arp_ramp = 0.0f;
     if (m->arp_note >= 0) { voice_off(m, m->arp_note); m->arp_note = -1; }
 }
 static void arp_step(mm_t *m) {
@@ -441,6 +444,7 @@ static void arp_step(mm_t *m) {
         i = m->arp_idx % len; m->arp_idx = i + 1;
     }
     int note = seq[i], vel = m->held_vel[m->held_n - 1];
+    m->arp_ramp = len > 1 ? (float)i / (float)(len - 1) : 0.0f;
     int tie = m->p[P_ARP_GATE] >= 0.999f;
     if (!tie && m->arp_note >= 0) voice_off(m, m->arp_note);
     else if (tie && m->arp_note >= 0 && m->arp_note != note) { int old = m->arp_note; voice_on(m, note, vel); voice_off(m, old); m->arp_note = note; return; }
@@ -518,6 +522,19 @@ typedef struct { const char *name; const pv_t *v; int n; } preset_t;
 #define S_OS2 13
 #define D_FM1 16
 #define D_FM2 17
+#define S_BND 14
+#define S_ARP 15
+#define S_AGE 16
+#define S_SMR 17
+#define S_OS1 18
+#define S_PED 19
+#define D_GRT 18
+#define D_GLD 19
+#define D_VIB 20
+#define D_LD1 21
+#define D_LD2 22
+#define D_ENV 23
+#define D_DFT 24
 #define MX(n, s, d, a) {P_M##n##_SRC, s}, {P_M##n##_DST, d}, {P_M##n##_AMT, a}
 static const preset_t PRESETS[] = {
     PRE("Init", {P_VOLUME, 0.7f}),
@@ -587,6 +604,10 @@ static const preset_t PRESETS[] = {
         {P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.9f},{P_DRIVE,0.7f},{P_FLT_FM1,0.5f},{P_ENV1_D,0.5f}),
     PRE("Bass Audio Cutoff",{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,3},{P_OSC2_LEVEL,0},{P_OSC1_COARSE,-12},{P_CUTOFF,0.36f},{P_RESONANCE,0.5f},
         {P_FILTER_DRIVE,0.9f},{P_DRIVE,0.7f},{P_FLT_FM1,0.2f},MX(1,S_OS2,D_CUT,0.12f)),
+    PRE("Bass Key Grit",{P_OSC1_WAVE,1},{P_OSC2_WAVE,2},{P_OSC2_COARSE,-12},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.4f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.7f},
+        {P_DRIVE,0.5f},{P_FLT_FM1,0.3f},{P_ENV1_D,0.5f},{P_ENV2_S,0.9f},MX(1,S_KEY,D_GRT,-0.9f)),
+    PRE("Bass Velocity Grit",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,6},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.36f},{P_RESONANCE,0.35f},
+        {P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_FLT_FM1,0.2f},{P_ENV1_D,0.45f},{P_ENV2_S,0.9f},{P_VEL_AMP,0.3f},MX(1,S_VEL,D_GRT,0.8f),MX(2,S_VEL,D_ENV,0.5f)),
     PRE("Sub Black Hole",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,1},{P_OSC2_LEVEL,0},{P_OCTAVE,-1},{P_CUTOFF,0.3f},{P_RESONANCE,0.15f},
         {P_FILTER_DRIVE,0.7f},{P_DRIVE,0.6f},{P_FLT_FM1,0},{P_ENV2_A,0.05f},{P_ENV2_R,0.4f}),
     PRE("Sub Pressure",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,5},{P_OCTAVE,-1},{P_CUTOFF,0.33f},{P_RESONANCE,0.2f},
@@ -600,6 +621,8 @@ static const preset_t PRESETS[] = {
     PRE("Sub Reactor",{P_OSC1_WAVE,2},{P_OSC2_WAVE,4},{P_OSC2_FINE,3},{P_OCTAVE,-1},{P_XMOD,0.25f},{P_CUTOFF,0.34f},{P_RESONANCE,0.4f},
         {P_FILTER_DRIVE,0.85f},{P_DRIVE,0.7f},{P_ENV1_D,0.6f},{P_ENV1_S,0.3f},{P_FLT_FM1,0.3f},{P_LFO2_RATE,0.25f},
         MX(1,S_E1,D_CUT,0.3f),MX(2,S_LF2,D_XMD,0.3f)),
+    PRE("Sub Loose Tuning",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,1},{P_OSC2_WAVE,2},{P_OSC2_LEVEL,0.6f},{P_OCTAVE,-1},{P_CUTOFF,0.35f},{P_RESONANCE,0.2f},
+        {P_DRIVE,0.4f},{P_FLT_FM1,0},{P_DRIFT,0.5f},{P_ENV2_S,0.9f},MX(1,S_SMR,D_DFT,0.5f),MX(2,S_SMR,D_PC2,0.015f)),
     PRE("Lead Broken Radio",{P_FILTER_MODE,1},{P_OSC1_WAVE,5},{P_OSC2_WAVE,4},{P_OSC2_FINE,18},{P_NOISE_LEVEL,0.12f},
         {P_CUTOFF,0.62f},{P_RESONANCE,0.6f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.7f}),
     PRE("Lead Bubble",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,3},{P_VIB_DEPTH,.3f},{P_OSC1_FM2,.15f},
@@ -654,6 +677,14 @@ static const preset_t PRESETS[] = {
         {P_RESONANCE,0.45f},{P_FILTER_MODE,4},{P_FILTER_DRIVE,0.8f},{P_LFO_RATE,0.62f},MX(1,S_LFO,D_PCH,0.02f),MX(2,S_AT,D_CUT,0.4f)),
     PRE("Lead Noise Bite",{P_OSC2_WAVE,1},{P_OSC2_FINE,10},{P_CUTOFF,0.58f},{P_RESONANCE,0.35f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.6f},
         {P_GLIDE,0.1f},{P_LEGATO,1},MX(1,S_NSE,D_FM1,0.06f),MX(2,S_VEL,D_CUT,0.3f)),
+    PRE("Lead Bend Open",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_CUTOFF,0.42f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.5f},
+        {P_GLIDE,0.1f},{P_LEGATO,1},{P_BEND_RANGE,5},{P_ENV2_S,0.9f},MX(1,S_BND,D_CUT,0.5f),MX(2,S_BND,D_GRT,0.6f)),
+    PRE("Lead Wheel Vibrato",{P_OSC1_WAVE,1},{P_OSC2_WAVE,4},{P_OSC2_FINE,7},{P_CUTOFF,0.55f},{P_RESONANCE,0.3f},{P_DRIVE,0.4f},{P_GLIDE,0.12f},{P_LEGATO,1},
+        {P_ENV2_S,0.9f},MX(1,S_WHL,D_VIB,0.8f),MX(2,S_AT,D_GRT,0.6f)),
+    PRE("Lead Pedal Scream",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,8},{P_CUTOFF,0.5f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.4f},
+        {P_GLIDE,0.1f},{P_LEGATO,1},{P_ENV2_S,0.9f},MX(1,S_PED,D_GRT,0.8f),MX(2,S_PED,D_RES,0.25f)),
+    PRE("Lead Soft Slide",{P_OSC1_WAVE,1},{P_OSC2_WAVE,2},{P_OSC2_FINE,6},{P_CUTOFF,0.5f},{P_RESONANCE,0.25f},{P_FILTER_DRIVE,0.6f},{P_DRIVE,0.4f},
+        {P_GLIDE,0.3f},{P_LEGATO,1},{P_ENV2_S,0.9f},MX(1,S_VEL,D_GLD,-0.28f)),
     PRE("Pluck Iron Wire",{P_OSC2_WAVE,4},{P_OSC2_COARSE,12},{P_OSC2_LEVEL,0.3f},{P_CUTOFF,0.5f},{P_RESONANCE,0.35f},{P_FLT_FM1,0.8f},
         {P_ENV1_D,0.45f},{P_ENV2_D,0.55f},{P_ENV2_S,0.08f},{P_ENV2_R,0.3f},{P_DRIVE,0.4f}),
     PRE("Pluck Rusty Nail",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.3f},{P_NOISE_LEVEL,0.05f},{P_CUTOFF,0.45f},{P_RESONANCE,0.5f},{P_FILTER_DRIVE,0.8f},
@@ -670,6 +701,8 @@ static const preset_t PRESETS[] = {
         MX(1,S_SY,D_RES,0.4f),MX(2,S_SX,D_LV2,0.5f)),
     PRE("Pluck Slag",{P_OSC1_WAVE,5},{P_NOISE_LEVEL,0.1f},{P_CUTOFF,0.38f},{P_RESONANCE,0.55f},{P_FILTER_DRIVE,1},{P_DRIVE,0.9f},
         {P_FLT_FM1,0.8f},{P_ENV1_D,0.5f},{P_ENV2_D,0.6f},{P_ENV2_S,0.08f},{P_ENV2_R,0.35f}),
+    PRE("Pluck Hard Hit",{P_OSC1_WAVE,1},{P_OSC2_WAVE,2},{P_OSC2_FINE,8},{P_CUTOFF,0.35f},{P_RESONANCE,0.35f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.4f},
+        {P_FLT_FM1,0.2f},{P_ENV1_D,0.35f},{P_ENV1_S,0},{P_ENV2_D,0.55f},{P_ENV2_S,0.1f},{P_ENV2_R,0.3f},MX(1,S_VEL,D_ENV,0.8f),MX(2,S_VEL,D_DRV,0.4f)),
     PRE("Keys Bell Metal",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_XMOD,.6f},{P_OSC1_FM1,.3f},
         {P_ENV1_D,.5f},{P_ENV2_D,.75f},{P_ENV2_S,0},{P_ENV2_R,.6f},{P_CUTOFF,.8f}),
     PRE("Keys Bounce",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,1},{P_OSC2_COARSE,12},{P_OSC2_LEVEL,.4f},{P_CUTOFF,.5f},
@@ -764,6 +797,9 @@ static const preset_t PRESETS[] = {
     PRE("Brass Fall Apart",{P_OSC2_WAVE,1},{P_OSC2_FINE,11},{P_CUTOFF,0.4f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},
         {P_FLT_FM1,0.6f},{P_ENV1_A,0.4f},{P_ENV1_D,0.6f},{P_ENV1_S,0.5f},{P_ENV2_A,0.3f},{P_ENV2_S,0.9f},{P_LFO2_RATE,0.45f},{P_LFO2_WAVE,4},
         MX(1,S_LF2,D_PC2,0.04f),MX(2,S_RND,D_CUT,0.2f)),
+    PRE("Brass Wheel Swell",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_CUTOFF,0.4f},{P_RESONANCE,0.25f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.4f},
+        {P_ENV1_A,0.4f},{P_ENV1_D,0.6f},{P_ENV1_S,0.5f},{P_FLT_FM1,0.4f},{P_ENV2_A,0.3f},{P_ENV2_S,0.9f},{P_LFO_RATE,0.35f},
+        MX(1,S_WHL,D_LD1,1.0f),MX(2,S_LFO,D_CUT,0.35f),MX(3,S_WHL,D_VIB,0.5f)),
     PRE("Arp Acid Run",{P_ARP_MODE,1},{P_ARP_RATE,3},{P_ARP_OCT,2},{P_ARP_GATE,0.55f},{P_OSC2_LEVEL,0},{P_CUTOFF,0.3f},
         {P_RESONANCE,0.75f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.5f},{P_FLT_FM1,1},{P_ENV1_D,0.5f},{P_ENV1_S,0.05f},{P_ENV2_D,0.55f},
         {P_ENV2_S,0.6f},{P_ENV2_R,0.2f},{P_VEL_CUTOFF,0.5f}),
@@ -801,6 +837,8 @@ static const preset_t PRESETS[] = {
     PRE("Arp Chainsaw",{P_ARP_MODE,1},{P_ARP_RATE,5},{P_ARP_OCT,1},{P_ARP_GATE,0.6f},{P_OSC1_WAVE,7},{P_OSC2_WAVE,7},{P_OSC2_FINE,9},
         {P_CUTOFF,0.5f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,1},{P_DRIVE,1},{P_FLT_FM1,0.4f},{P_ENV2_S,0.8f},{P_ENV2_R,0.15f},{P_LFO2_SYNC,3},
         MX(1,S_LF2,D_CUT,0.4f)),
+    PRE("Arp Step Climb",{P_ARP_MODE,1},{P_ARP_RATE,3},{P_ARP_OCT,2},{P_ARP_GATE,0.6f},{P_OSC1_WAVE,1},{P_OSC2_WAVE,4},{P_OSC2_FINE,7},{P_CUTOFF,0.3f},
+        {P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.5f},{P_FLT_FM1,0.1f},MX(1,S_ARP,D_CUT,0.6f),MX(2,S_ARP,D_GRT,0.5f)),
     PRE("Seq Gate Chop",{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_CUTOFF,0.5f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.5f},{P_FLT_FM1,0},
         {P_LFO_WAVE,1},{P_LFO_SYNC,5},MX(1,S_LFO,D_AMP,0.9f)),
     PRE("Seq Pump Bass",{P_OSC2_WAVE,4},{P_OSC2_COARSE,-12},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.4f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.85f},
@@ -869,6 +907,10 @@ static const preset_t PRESETS[] = {
         MX(1,S_LFO,D_SH1,0.5f),MX(2,S_LF2,D_PC2,0.03f)),
     PRE("Pad Wire Swarm",{P_OSC1_WAVE,7},{P_OSC2_WAVE,7},{P_OSC2_FINE,20},{P_XMOD,0.3f},{P_CUTOFF,0.55f},{P_RESONANCE,0.35f},{P_DRIVE,0.6f},
         {P_ENV2_A,0.5f},{P_ENV2_R,0.7f},{P_FLT_FM1,0.1f},{P_LFO2_RATE,0.4f},{P_LFO2_WAVE,4},MX(1,S_LF2,D_PCH,0.02f)),
+    PRE("Pad Slow Swell",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,11},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.38f},{P_RESONANCE,0.35f},{P_FILTER_DRIVE,0.7f},
+        {P_DRIVE,0.4f},{P_FLT_FM1,0},{P_ENV2_A,0.65f},{P_ENV2_R,0.8f},{P_LFO_RATE,0.3f},MX(1,S_AGE,D_CUT,0.55f),MX(2,S_AGE,D_LD1,1.0f),MX(3,S_LFO,D_CUT,0.25f)),
+    PRE("Pad Wander",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,13},{P_OSC2_LEVEL,0.7f},{P_CUTOFF,0.42f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.5f},
+        {P_FLT_FM1,0},{P_ENV2_A,0.6f},{P_ENV2_R,0.8f},{P_DRIFT,0.4f},MX(1,S_SMR,D_CUT,0.3f),MX(2,S_SMR,D_SH2,0.4f),MX(3,S_SMR,D_DFT,0.6f)),
     PRE("Texture Static Bed",{P_FILTER_MODE,1},{P_OSC1_LEVEL,0.1f},{P_NOISE_LEVEL,0.8f},{P_CUTOFF,0.6f},{P_RESONANCE,0.6f},{P_FLT_FM1,0},
         {P_ENV2_A,0.5f},{P_ENV2_R,0.8f},{P_LFO2_RATE,0.3f},{P_LFO2_WAVE,4},MX(1,S_LF2,D_CUT,0.3f)),
     PRE("Texture Rust Bed",{P_OSC2_WAVE,1},{P_OSC2_FINE,14},{P_NOISE_LEVEL,0.2f},{P_CUTOFF,0.42f},{P_RESONANCE,0.5f},{P_FILTER_DRIVE,0.9f},
@@ -891,6 +933,8 @@ static const preset_t PRESETS[] = {
         {P_FLT_FM1,0.1f},{P_LFO_RATE,0.2f},{P_LFO2_RATE,0.12f},MX(1,S_LF2,D_PC2,0.015f),MX(2,S_LFO,D_CUT,0.25f)),
     PRE("Texture Shortwave",{P_OSC2_WAVE,1},{P_OSC2_FINE,14},{P_FILTER_MODE,4},{P_CUTOFF,0.5f},{P_RESONANCE,0.55f},{P_DRIVE,0.7f},{P_FLT_FM1,0},
         {P_ENV2_A,0.5f},{P_ENV2_R,0.8f},{P_LFO_RATE,0.22f},MX(1,S_NSE,D_FM2,0.12f),MX(2,S_LFO,D_CUT,0.35f)),
+    PRE("Texture Cross FM",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,5},{P_CUTOFF,0.6f},{P_RESONANCE,0.3f},{P_DRIVE,0.5f},{P_FLT_FM1,0},
+        {P_ENV2_S,0.9f},MX(1,S_OS1,D_FM2,0.3f),MX(2,S_OS2,D_FM1,0.25f),MX(3,S_SMR,D_FM1,0.1f)),
     PRE("Vox Dead Choir*",{P_FILTER_MODE,4},{P_OSC2_WAVE,1},{P_OSC2_FINE,12},{P_CUTOFF,0.5f},{P_RESONANCE,0.75f},{P_ENV2_A,0.5f},{P_ENV2_R,0.6f},
         {P_FLT_FM1,0},{P_STICK_Y_TO,2},MX(1,S_SY,D_CUT,0.35f)),
     PRE("Vox Throat*",{P_FILTER_MODE,1},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.4f},{P_CUTOFF,0.45f},{P_RESONANCE,0.8f},{P_FLT_FM1,0},{P_LFO_RATE,0.55f},
@@ -953,6 +997,8 @@ static const preset_t PRESETS[] = {
         {P_FLT_FM1,0},MX(1,S_NSE,D_FM1,0.5f),MX(2,S_NSE,D_FM2,0.3f)),
     PRE("FX Ring Drop",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,18},{P_CUTOFF,0.6f},{P_RESONANCE,0.3f},{P_DRIVE,0.6f},
         {P_ENV1_D,0.8f},{P_ENV1_S,0},{P_FLT_FM1,0.2f},{P_ENV2_R,0.5f},MX(1,S_OS2,D_PCH,0.08f),MX(2,S_E1,D_PCH,0.6f)),
+    PRE("FX Pedal Collapse",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_FINE,10},{P_CUTOFF,0.5f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},
+        {P_ENV2_S,0.9f},MX(1,S_PED,D_GRT,1.0f),MX(2,S_PED,D_PCH,-0.2f)),
 };
 #define N_PRESETS ((int)(sizeof PRESETS / sizeof PRESETS[0]))
 
@@ -1091,7 +1137,7 @@ static const host_api_v1_t *g_host;
 
 static void reset_state(mm_t *m) {
     m->n_notes = 0; m->gate = 0; m->cur_note = -1; m->arp_note = -1; m->cur_semi = m->tgt_semi = 48.0f; m->vel = 0.8f;
-    m->bend = m->at = m->modwheel = 0.0f;
+    m->bend = m->at = m->modwheel = 0.0f; m->bend_n = m->arp_ramp = m->age = m->srnd = m->srnd1 = m->srnd_tgt = m->ped = m->o1_prev = 0.0f; m->srnd_cnt = 0; m->mx_ld[0] = m->mx_ld[1] = 0.0f;
     m->touch_act = -1; m->touch_mask = 0;
     m->expr = 1.0f; m->rpn_msb = m->rpn_lsb = 127;
     memset(&m->e1, 0, sizeof m->e1); memset(&m->e2, 0, sizeof m->e2);
@@ -1193,13 +1239,13 @@ static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
     switch (st) {
     case 0x90: if (d2 > 0) in_on(m, d1, d2); else in_off(m, d1); break;
     case 0x80: in_off(m, d1); break;
-    case 0xE0: m->bend = ((((d2 << 7) | d1) - 8192) / 8192.0f) * m->p[P_BEND_RANGE]; break;
+    case 0xE0: m->bend_n = (float)(((d2 << 7) | d1) - 8192) / 8192.0f; m->bend = m->bend_n * m->p[P_BEND_RANGE]; break;
     case 0xA0: m->at = d2 / 127.0f; break;                 /* poly AT (mono voice: any key) */
     case 0xD0: m->at = d1 / 127.0f; break;                 /* channel pressure */
     case 0xB0:
         if (d1 == 1) m->modwheel = d2 / 127.0f;
         else if (d1 == 64) pedal(m, d2 >= 64);
-        else if (d1 == 121) { m->modwheel = 0.0f; m->at = 0.0f; m->bend = 0.0f; m->expr = 1.0f; m->rpn_msb = m->rpn_lsb = 127; pedal(m, 0); }   /* reset all controllers */
+        else if (d1 == 121) { m->modwheel = 0.0f; m->at = 0.0f; m->bend = 0.0f; m->bend_n = 0.0f; m->expr = 1.0f; m->rpn_msb = m->rpn_lsb = 127; pedal(m, 0); }   /* reset all controllers */
         else if (d1 == 123 || d1 == 120) panic(m);
         else if (src == MOVE_MIDI_SOURCE_EXTERNAL) {   /* common controller CCs; never from Move's own surface (CC 71-78 are its knobs) */
             const float v = d2 / 127.0f;
@@ -1267,6 +1313,21 @@ static int get_param(void *inst, const char *key, char *buf, int n) {
 }
 static int get_error(void *i, char *buf, int n) { (void)i; (void)buf; (void)n; return 0; }
 
+/* Grit / Dark macro maths, shared by the block-rate value and the per-sample Grit matrix target. */
+typedef struct { float fdrive, drive, res, noise, drift, cut_oct, makeup; } grit_t;
+static grit_t grit_calc(const float *p, float gi) {
+    const float gp = gi > 0.0f ? gi : 0.0f, gn = gi < 0.0f ? -gi : 0.0f;
+    grit_t g;
+    g.fdrive  = clampf(p[P_FILTER_DRIVE] + 0.9f * gp - 0.4f * gn, 0.0f, 2.0f);   /* beyond 1: extra saturation only Grit can reach */
+    g.drive   = clampf(p[P_DRIVE] + 0.9f * gp - 0.3f * gn, 0.0f, 1.6f);
+    g.res     = clampf(p[P_RESONANCE] + 0.2f * gp - 0.1f * gn, 0.0f, 1.0f);
+    g.noise   = clampf(p[P_NOISE_LEVEL] + 0.12f * gp, 0.0f, 1.0f);
+    g.drift   = clampf(p[P_DRIFT] + 0.5f * gp - 0.2f * gn, 0.0f, 1.0f);
+    g.cut_oct = -2.0f * gp + 1.0f * gn;
+    g.makeup  = 1.0f + 0.8f * gn + 0.5f * gp;     /* clean end loses filter-input gain: keep the level */
+    return g;
+}
+
 static void render_active(mm_t *m, int16_t *out, int frames) {
     const float *p = m->p;
 
@@ -1295,14 +1356,8 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     const float vel_scale = 1.0f - p[P_VEL_AMP] * (1.0f - m->vel);
     const float pitch_off = 12.0f * p[P_OCTAVE] + p[P_TUNE] / 100.0f;
     /* Grit / Dark macro, applied on top of the patch (the stored params are untouched). + = grittier and darker, - = cleaner and brighter. */
-    const float gp = grit_in > 0.0f ? grit_in : 0.0f, gn = grit_in < 0.0f ? -grit_in : 0.0f;
-    const float g_fdrive = clampf(p[P_FILTER_DRIVE] + 0.9f * gp - 0.4f * gn, 0.0f, 2.0f);   /* beyond 1: extra saturation only Grit can reach */
-    const float g_drive  = clampf(p[P_DRIVE] + 0.9f * gp - 0.3f * gn, 0.0f, 1.6f);
-    const float g_res    = clampf(p[P_RESONANCE] + 0.2f * gp - 0.1f * gn, 0.0f, 1.0f);
-    const float g_noise  = clampf(p[P_NOISE_LEVEL] + 0.12f * gp, 0.0f, 1.0f);
-    const float g_drift  = clampf(p[P_DRIFT] + 0.5f * gp - 0.2f * gn, 0.0f, 1.0f);
-    const float g_cut_oct = -2.0f * gp + 1.0f * gn;
-    const float g_makeup = 1.0f + 0.8f * gn + 0.5f * gp;     /* clean end loses filter-input gain: keep the level */
+    const grit_t G0 = grit_calc(p, grit_in);
+    const float g_fdrive = G0.fdrive, g_drive = G0.drive, g_res = G0.res, g_noise = G0.noise, g_drift = G0.drift;
     const float drift_amt = g_drift * 0.03f;  /* semitones (3 cents) */
     const float drift_c = 1.0f - expf(-6.2831853f * 0.4f / SR);
     const float k1 = exp2f((0.5f - p[P_OSC1_SHAPE]) * 2.0f), k2 = exp2f((0.5f - p[P_OSC2_SHAPE]) * 2.0f);
@@ -1330,35 +1385,51 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         if (s > 0 && s < N_MXSRC && d > 0 && d < N_MXDST && a != 0.0f) { mx_s[mx_n] = s; mx_d[mx_n] = d; mx_a[mx_n] = a; mx_n++; has_d[d] = 1; }
     }
     const float lfo_base = p[P_LFO_RATE];
+    const float age_inc = 1.0f / (5.0f * SR), srnd_c = 1.0f - expf(-6.2831853f * 1.0f / SR), ped_c = 1.0f - expf(-1.0f / (0.005f * SR));
 
     for (int i = 0; i < frames; i++) {
         /* control signals */
         float lfo = lfo_shape(m->lfo_ph, lw1, m->lfo_rv[0]);
         float lfo2 = lfo_shape(m->lfo2_ph, lw2, m->lfo_rv[1]);
+        if (has_d[21]) lfo *= clampf(m->mx_ld[0], 0.0f, 2.0f);      /* LFO Depth: the slot total scales the LFO (0 = silent) */
+        if (has_d[22]) lfo2 *= clampf(m->mx_ld[1], 0.0f, 2.0f);
         m->lfo_ph += ls1 ? lfo1_sync_inc : (has_d[14] ? 0.05f * exp2f(9.6439f * clampf(lfo_base + m->mx_lfr, 0.0f, 1.3f)) / SR : lfo_inc);
         if (m->lfo_ph >= 1.0f) { m->lfo_ph -= 1.0f; m->lfo_rv[0] = frand(&m->rng); }
         m->lfo2_ph += ls2 ? lfo2_sync_inc : 0.05f * exp2f(9.6439f * clampf(lfo2_base + (has_d[15] ? m->mx_lr2 : 0.0f), 0.0f, 1.3f)) / SR;
         if (m->lfo2_ph >= 1.0f) { m->lfo2_ph -= 1.0f; m->lfo_rv[1] = frand(&m->rng); }
         m->vib_ph += vib_inc; if (m->vib_ph >= 1.0f) m->vib_ph -= 1.0f;
-        float vib = (m->vib_ph < 0.5f ? 4.0f * m->vib_ph - 1.0f : 3.0f - 4.0f * m->vib_ph) * vib_depth;
+        const float vib_tri = (m->vib_ph < 0.5f ? 4.0f * m->vib_ph - 1.0f : 3.0f - 4.0f * m->vib_ph);
         float e1 = env_step(&m->e1, a1, d1, s1, r1);
         float e2 = env_step(&m->e2, a2, d2, s2, r2);
 
+        m->age += age_inc; if (m->age > 1.0f) m->age = 1.0f;
         float mod[N_MXDST] = {0};
         if (mx_n) {
             float sv[N_MXSRC];
             sv[1] = lfo; sv[2] = e1; sv[3] = e2; sv[4] = m->vel; sv[5] = m->modwheel; sv[6] = m->at; sv[7] = xv; sv[8] = yv;
             sv[9] = clampf((m->cur_semi - 60.0f) * (1.0f / 24.0f), -1.0f, 1.0f); sv[10] = m->rnd; sv[11] = lfo2; sv[12] = frand(&m->rng); sv[13] = m->o2_prev; sv[0] = 0.0f;
+            if (--m->srnd_cnt <= 0) { m->srnd_cnt = (int)(0.4f * SR); m->srnd_tgt = frand(&m->rng); }
+            m->srnd1 += (m->srnd_tgt - m->srnd1) * srnd_c;      /* two cascaded slews: no corners */
+            m->srnd += (m->srnd1 - m->srnd) * srnd_c;
+            m->ped += ((m->sustain ? 1.0f : 0.0f) - m->ped) * ped_c;
+            sv[14] = m->bend_n; sv[15] = m->arp_ramp; sv[16] = m->age; sv[17] = m->srnd; sv[18] = m->o1_prev; sv[19] = m->ped;
             for (int k = 0; k < mx_n; k++) mod[mx_d[k]] += sv[mx_s[k]] * mx_a[k];
-            m->mx_lfr = mod[14]; m->mx_lr2 = mod[15];
+            m->mx_lfr = mod[14]; m->mx_lr2 = mod[15]; m->mx_ld[0] = mod[21]; m->mx_ld[1] = mod[22];
         }
-        m->cur_semi += (m->tgt_semi - m->cur_semi) * glide_c;
+        const int gm = has_d[18];                                    /* Grit target: the macro is recomputed per sample */
+        grit_t gs = G0; float drv_i = drv;
+        if (gm) { gs = grit_calc(p, clampf(grit_in + mod[18], -1.0f, 1.0f)); drv_i = clampf(gs.drive + (at_dest == 3 ? at * 0.6f : 0.0f), 0.0f, 1.6f); }
+        const float drift_i = (gm || has_d[24]) ? clampf(gs.drift + mod[24], 0.0f, 1.0f) * 0.03f : drift_amt;
+        float gc = glide_c;
+        if (has_d[19]) { float gg = clampf(g_glide + mod[19], 0.0f, 1.0f), gsec = 2.0f * gg * gg; gc = gsec > 0.0005f ? 1.0f - expf(-1.0f / (gsec * SR * 0.25f)) : 1.0f; }
+        m->cur_semi += (m->tgt_semi - m->cur_semi) * gc;
+        const float vib = vib_tri * (has_d[20] ? fmaxf(vib_depth + 1.5f * mod[20], 0.0f) : vib_depth);
         m->o1.drift += (frand(&m->rng) - m->o1.drift) * drift_c * 0.02f;  /* slow wander */
         m->o2.drift += (frand(&m->rng) - m->o2.drift) * drift_c * 0.02f;
         float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib + 12.0f * mod[1];
 
-        float cut_oct = p[P_CUTOFF] * 9.8138f + g_cut_oct + p[P_FLT_FM1] * e1 * 5.0f + p[P_FLT_FM2] * lfo * 3.0f
-                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct + stick_cut_oct + 5.0f * mod[8] + (m->touch_act == 3 ? 3.0f : 0.0f);
+        float cut_oct = p[P_CUTOFF] * 9.8138f + gs.cut_oct + p[P_FLT_FM1] * e1 * 5.0f + p[P_FLT_FM2] * lfo * 3.0f
+                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct + stick_cut_oct + 5.0f * mod[8] + 5.0f * e1 * mod[23] + (m->touch_act == 3 ? 3.0f : 0.0f);
         float fc = clampf(20.0f * exp2f(cut_oct), 15.0f, 19000.0f);
         float g = tanf(3.14159265f * fc / (SR * OS)), G = g / (1.0f + g);
 
@@ -1366,27 +1437,28 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         float amp = e2 * vel_scale;
         float amp_mx = has_d[12] ? clampf(1.0f + mod[12], 0.0f, 2.0f) : 1.0f; amp *= amp_mx;
         const float lv1e = has_d[5] ? clampf(lv1 + mod[5], 0.0f, 1.5f) : lv1, lv2e = has_d[6] ? clampf(lv2 + mod[6], 0.0f, 1.5f) : lv2;
-        const float nle = has_d[7] ? clampf(g_noise + mod[7], 0.0f, 1.0f) * 0.5f * 1.4142f : noise_lvl;
+        const float nle = (has_d[7] || gm) ? clampf(gs.noise + mod[7], 0.0f, 1.0f) * 0.5f * 1.4142f : noise_lvl;
         const float xme = has_d[13] ? clampf(xmod_eff + mod[13], 0.0f, 1.0f) : xmod_eff;
-        const float resK = has_d[9] ? clampf(g_res + mod[9], 0.0f, 1.0f) * 3.6f : res_K;
+        const float resK = (has_d[9] || gm) ? clampf(gs.res + mod[9], 0.0f, 1.0f) * 3.6f : res_K;
         float igi = ig, isqi = inv_sqrt_ig;
-        if (has_d[10]) { igi = 0.25f * exp2f(4.0f * clampf(g_fdrive + mod[10], 0.0f, 2.0f)); isqi = 1.0f / sqrtf(igi); }
+        if (has_d[10] || gm) { igi = 0.25f * exp2f(4.0f * clampf(gs.fdrive + mod[10], 0.0f, 2.0f)); isqi = 1.0f / sqrtf(igi); }
         float dg = drv_g, db = drv_b, dbo = drv_bias_out, dn = drv_norm;
-        if (has_d[11]) {
-            float dv = clampf(drv + mod[11], 0.0f, 1.6f);
+        if (has_d[11] || gm) {
+            float dv = clampf(drv_i + mod[11], 0.0f, 1.6f);
             dg = 1.0f + 5.0f * dv + 6.0f * dv * dv; db = 0.15f * dv; dbo = tanhf(db); dn = 1.0f / sqrtf(dg);
         }
         const float o2o = o2_off + 12.0f * mod[2];
         for (int sub = 0; sub < OS; sub++) {
             float fm1_oct = p[P_OSC1_FM1] * e1 * 3.0f + p[P_OSC1_FM2] * lfo * 1.0f + xme * m->o2_prev * 2.0f + 2.0f * mod[16];
-            float f1 = 440.0f * exp2f((semi + o1_off + m->o1.drift * drift_amt * 8.0f - 69.0f) / 12.0f + fm1_oct);
+            float f1 = 440.0f * exp2f((semi + o1_off + m->o1.drift * drift_i * 8.0f - 69.0f) / 12.0f + fm1_oct);
             float dt1 = clampf(f1 / (SR * OS), 0.0f, 0.45f);
             float sh1 = clampf(p[P_OSC1_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f + 0.5f * mod[3], 0.0f, 1.0f);
             float y1 = osc_wave(m->o1.phase, dt1, w1, sh1, k1);
             m->o1.phase += dt1; if (m->o1.phase >= 1.0f) m->o1.phase -= 1.0f;
+            m->o1_prev = y1;
 
             float fm2_oct = p[P_OSC2_FM1] * e1 * 3.0f + p[P_OSC2_FM2] * lfo * 1.0f + 2.0f * mod[17];
-            float f2 = 440.0f * exp2f((semi + o2o + m->o2.drift * drift_amt * 8.0f - 69.0f) / 12.0f + fm2_oct);
+            float f2 = 440.0f * exp2f((semi + o2o + m->o2.drift * drift_i * 8.0f - 69.0f) / 12.0f + fm2_oct);
             float dt2 = clampf(f2 / (SR * OS), 0.0f, 0.45f);
             float sh2 = clampf(p[P_OSC2_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f + 0.5f * mod[4], 0.0f, 1.0f);
             float y2 = osc_wave(m->o2.phase, dt2, w2, sh2, k2);
@@ -1398,7 +1470,7 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
             float fl = flt_tick(m, mix, G, resK, igi, isqi, fmode, noise * 1e-4f);
             float va = fl * amp;                                       /* VCA */
             va = (tanhf(dg * va + db) - dbo) * dn; /* transistor-ish asymmetric drive */
-            m->hb[m->hb_pos] = va * vol * g_makeup;
+            m->hb[m->hb_pos] = va * vol * gs.makeup;
             m->hb_pos = (m->hb_pos + 1) % HB_N;
         }
         float y = 0.0f;  /* decimate: newest sample is at hb_pos-1 */

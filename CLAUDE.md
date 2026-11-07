@@ -38,7 +38,7 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - Presets are named "<Category> <Name>" and kept in category order: Init, Bass, Sub, Lead, Pluck, Keys, Stab, Brass, Arp, Seq, Pad, Texture, Vox, Drone, FX (no percussion; dark/industrial theme). Matrix slots in presets use the `MX(slot, S_*, D_*, amt)` helper.
 
 - LFOs: two (`lfo_*`, `lfo2_*`), waves Tri/Sq/SawDn/SawUp/Random, Sync = 1/2..1/32 locked to `get_beat_position` (free-run at bpm when stopped).
-- Mod matrix: 6 slots (`m1_src/dst/amt`..), 14 sources x 18 targets (Noise and Osc 2 are sources; Osc 1/2 FM are targets), summed per sample in render_active; design and ranges in
+- Mod matrix: 6 slots (`m1_src/dst/amt`..), 20 sources x 25 targets (Noise, Osc 1/2, Pitch Bend, Arp Step, Note Age, Smooth Random, Sustain Pedal are sources; Osc 1/2 FM, Grit, Glide, Vib Depth, LFO 1/2 Depth, Env Amount, Drift are targets; LFO Depth is a gain with 0 = silent), summed per sample in render_active; design and ranges in
   `docs/MOD_MATRIX.md`. Stick Y target 4 = Hold Toggle is the only thing that flips Hold from the stick.
 
 - MIDI from EXTERNAL sources only: CC 5/7/11/71-74, bank CC0 + Program Change, RPN 0 bend range (see `docs/MOD_MATRIX.md`). Never map

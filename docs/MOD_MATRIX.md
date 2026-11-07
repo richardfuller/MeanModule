@@ -32,6 +32,12 @@ and to the stored knob values; it never changes the stored values.
 | Random | -1..+1 | sample and hold, a new value for each note (each arp step) |
 | Noise | -1..+1 | white noise, a new value every sample (FM, cutoff, anything) |
 | Osc 2 | -1..+1 | the Osc 2 audio output, whatever its Level: audio-rate modulation of anything |
+| Osc 1 | -1..+1 | the Osc 1 audio output, whatever its Level (Osc 1 FM from this source is self-FM) |
+| Pitch Bend | -1..+1 | the bend wheel, as a plain -1..+1 (independent of Bend Range, so Bend Range 0 gives a bend that only the matrix sees) |
+| Arp Step | 0..1 | position of the current arp note in the pattern: first note 0, last note 1 (0 with the arp off) |
+| Note Age | 0..1 | a ramp from 0 to 1 over 5 seconds from each new note; it stays at 1 until the next trigger (legato notes do not restart it) |
+| Smooth Random | -1..+1 | a wandering value: a new random target every 0.4 s, slewed twice (about 1 Hz) so it never jumps |
+| Sustain Pedal | 0..1 | CC64, slewed over about 5 ms so it does not click |
 
 | Target | Amount 1.0 means | Notes |
 | --- | --- | --- |
@@ -48,9 +54,19 @@ and to the stored knob values; it never changes the stored values.
 | X-Mod | +1.0 | clamped 0..1 |
 | Osc 1 FM, Osc 2 FM | +2 octaves of exponential FM | adds to the FM knobs and X-Mod |
 | LFO Rate, LFO 2 Rate | +1.0 on the 0..1 rate knob | from the previous sample, so it cannot feed back on itself; ignored while that LFO is synced |
+| Grit | +1.0 on the Grit/Dark macro | added to the Grit knob and the Stick, clamped -1..+1 (see below) |
+| Glide Time | +1.0 on the Glide knob | clamped 0..1; slides notes even with Glide at 0 |
+| Vibrato Depth | +1.5 semitones | added to the Vibrato knob, wheel and aftertouch, never below 0 |
+| LFO Depth, LFO 2 Depth | gain = the slot total | scales that LFO everywhere it is used (knob routings and as a matrix source), clamped 0..2. **0 means silent**: use it with a source that starts at 0 (Mod Wheel, Note Age, Env 1) to fade the LFO in. Applied one sample late |
+| Env Amount | +1.0 | added to the filter envelope depth (the Env 1 -> Cutoff knob, 5 octaves at full), so Velocity or Key can scale the envelope |
+| Drift Amount | +1.0 on the Drift knob | clamped 0..1 |
+
+Grit as a target moves the whole macro at once (filter drive, drive, resonance, noise, drift, cutoff, makeup gain), per sample. Key -> Grit at a
+negative amount makes low notes grittier; Pitch Bend -> Grit makes a push into the wheel dirtier.
 
 Examples: LFO -> Cutoff 0.4 (wobble); Velocity -> Drive 0.4 (harder = dirtier); Stick Y -> Filter Input 0.7 (push into
-saturation); Random -> Cutoff 0.35 (each note a different brightness); Env 2 -> Osc 2 Pitch (pitch drop).
+saturation); Random -> Cutoff 0.35 (each note a different brightness); Env 2 -> Osc 2 Pitch (pitch drop); Note Age -> LFO Depth + LFO -> Cutoff (a wobble that fades in);
+Arp Step -> Cutoff (each arp pass climbs); Smooth Random -> Drift Amount (a loose, wandering tuning).
 
 ## UI
 
@@ -58,7 +74,7 @@ Root -> Matrix 1-2, Matrix 3-4, Matrix 5-6 (after LFOs). Each slot is three knob
 shown with three-letter options.
 
 Cost: only active slots are evaluated; sources are read per sample, targets that need extra maths (Filter Input, Drive,
-LFO Rate) recompute only when a slot uses them.
+LFO Rate, Grit, Glide Time) recompute only when a slot uses them.
 
 ## LFOs
 

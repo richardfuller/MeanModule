@@ -128,14 +128,26 @@
             "Src: LFO Env1 Env2 Vel",
             "Wheel AfterT StkX StkY",
             "Key Random LFO2 Noise",
-            "Osc2.",
+            "Osc2 Bend ArpStep Age",
+            "SmRand Osc1 Pedal.",
+            "Slots add up; Off or",
+            "0 amount does nothing."
+          ]
+        },
+        {
+          "title": "Matrix targets",
+          "lines": [
             "Dst: Pitch Pitch2",
             "Shape1/2 Lvl1/2 Noise",
             "Cutoff Res Input Drive",
             "Amp XMod LFO Rates",
-            "Osc1/2 FM.",
-            "Slots add up; Off or",
-            "0 amount does nothing."
+            "Osc1/2 FM Grit Glide",
+            "VibDepth LFO1/2 Depth",
+            "EnvAmt Drift.",
+            "LFO Depth is a gain:",
+            "0 = LFO silent, so",
+            "Wheel or Age fades",
+            "the LFO in."
           ]
         },
         {
