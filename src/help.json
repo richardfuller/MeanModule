@@ -78,8 +78,15 @@
             "Noise, Glide,",
             "Vibrato, Bend range,",
             "Analog Drift, Legato,",
-            "Drone (VCA held",
-            "open), Volume."
+            "Volume.",
+            "Drone: Off / Hold /",
+            "Latch. Hold = amp",
+            "stays open while a",
+            "key is down. Latch =",
+            "keeps sounding after",
+            "release until all-",
+            "notes-off, a preset",
+            "change or Drone Off."
           ]
         },
         {

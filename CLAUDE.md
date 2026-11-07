@@ -21,6 +21,13 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   `/c/Program Files/Docker/Docker/resources/bin` to PATH in Git Bash.
 - `docs/ABI_NOTES.md` verified platform facts; `docs/DEPLOY.md` how to build, package and install on the Move (works, no SSH).
 
+## Behaviour notes
+- Voice idles when env2 is idle: render_block writes exact zeros and skips all DSP (no CPU when silent).
+- Drone: OFF / HOLD (amp open while a key is down) / LATCH (holds after release until CC123/120, preset change or drone off).
+  A drone never sounds without a note.
+- aarch64 builds set FPCR.FZ during render (restored after); filter/DC-blocker states are flushed of denormals.
+- Presets are named "<Category> <Name>" (Bass, Lead, Keys, Pad, Drone) and sorted by category; Init is first.
+
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.
 - Parameter: add one `X(...)` row to `PARAMS`; add its key to a `PAGES` row if it should be on an encoder page

@@ -45,6 +45,17 @@ static void render(void *inst, int16_t *out, int blocks) {
         rt_enter(); api->render_block(inst, out + b * FRAMES * 2, FRAMES); rt_leave();
     }
 }
+/* Release everything and render until the plugin outputs exact silence (returns blocks taken, or -1 if it never does). */
+static int drain(void *inst, int16_t *out) {
+    uint8_t m3[3] = {0xB0, 123, 0};
+    rt_enter(); api->on_midi(inst, m3, 3, MOVE_MIDI_SOURCE_EXTERNAL); rt_leave();
+    for (int b = 0; b < 9000; b++) {
+        render(inst, out, 1);
+        int nz = 0; for (int i = 0; i < FRAMES * 2; i++) if (out[i]) nz = 1;
+        if (!nz) return b;
+    }
+    return -1;
+}
 static void midi(void *inst, uint8_t a, uint8_t b, uint8_t c) {
     uint8_t m[3] = {a, b, c}; rt_enter(); api->on_midi(inst, m, 3, MOVE_MIDI_SOURCE_EXTERNAL); rt_leave();
 }
@@ -127,9 +138,13 @@ int main(int argc, char **argv) {
         char b2[32]; rt_enter(); int pc = api->get_param(inst, "preset_count", b2, sizeof b2); rt_leave();
         int cnt = pc > 0 ? atoi(b2) : 0;
         printf("presets: %d\n", cnt);
+        CHECK(drain(inst, out) >= 0, "plugin never went silent after the stress tests");
         for (int pi = 0; pi < cnt; pi++) {
             snprintf(b2, sizeof b2, "%d", pi); setp(inst, "preset", b2);
             char nm[64]; rt_enter(); api->get_param(inst, "preset_name", nm, sizeof nm); rt_leave();
+            render(inst, out, 40);   /* selecting a preset must never make sound by itself (drones used to) */
+            m = measure(out, 40 * FRAMES);
+            CHECK(m.peak < 0.0005, "preset %d '%s' sounds with no note held (peak %.4f)", pi, nm, m.peak);
             for (int note = 36; note <= 72; note += 36) {
                 midi(inst, 0x90, note, 110); render(inst, out, 200); midi(inst, 0x80, note, 0); render(inst, out + 200 * FRAMES * 2, 100);
                 m = measure(out, 300 * FRAMES);
@@ -137,10 +152,36 @@ int main(int argc, char **argv) {
                 CHECK(isfinite(m.rms) && m.peak < 1.0 && fabs(m.dc) < 0.02 && m.peak > 0.005,
                       "preset %d '%s' note %d: peak %.3f rms %.3f dc %.4f", pi, nm, note, m.peak, m.rms, m.dc);
             }
-            midi(inst, 0xB0, 123, 0); render(inst, out, 40);
+            /* a held note must still be audible after ~1.2 s (catches "very brief" presets) */
+            midi(inst, 0x90, 48, 110); render(inst, out, 400);
+            m = measure(out + 320 * FRAMES * 2, 80 * FRAMES);
+            if (m.rms < 0.02) printf("  note: %-22s tail rms %.4f at 1.2 s\n", nm, m.rms);
+            CHECK(m.rms > 0.002, "preset %d '%s' dies while a note is held (rms %.4f at 1.2 s)", pi, nm, m.rms);
+            midi(inst, 0x80, 48, 0);
+            CHECK(drain(inst, out) >= 0, "preset %d '%s' never goes silent after release", pi, nm);
         }
         setp(inst, "preset", "9999"); setp(inst, "preset", "-5");  /* out of range must be ignored */
         setp(inst, "preset", "0");
+    }
+    /* 2e. drone modes: HOLD follows the key, LATCH holds until panic / preset / drone change */
+    {
+        setp(inst, "preset", "0"); setp(inst, "env2_r", "0.3");
+        setp(inst, "drone", "1"); midi(inst, 0x90, 48, 100); render(inst, out, 100); midi(inst, 0x80, 48, 0); render(inst, out, 300);
+        m = measure(out + 200 * FRAMES * 2, 100 * FRAMES);
+        CHECK(m.peak == 0.0, "drone HOLD should stop after release (peak %.4f)", m.peak);
+        setp(inst, "drone", "2"); midi(inst, 0x90, 48, 100); render(inst, out, 100); midi(inst, 0x80, 48, 0); render(inst, out, 300);
+        m = measure(out + 200 * FRAMES * 2, 100 * FRAMES);
+        CHECK(m.rms > 0.05, "drone LATCH should keep sounding after note-off (rms %.4f)", m.rms);
+        CHECK(drain(inst, out) >= 0, "drone LATCH should stop on all-notes-off");
+        midi(inst, 0x90, 48, 100); render(inst, out, 50); midi(inst, 0x80, 48, 0); render(inst, out, 50);
+        setp(inst, "preset", "0");   /* preset change must release the latch */
+        CHECK(drain(inst, out) >= 0, "preset change should release a drone latch");
+        midi(inst, 0x90, 48, 100); render(inst, out, 50); midi(inst, 0x80, 48, 0); render(inst, out, 50);
+        setp(inst, "drone", "0");    /* ... and so must switching the drone off */
+        CHECK(drain(inst, out) >= 0, "drone off should release a latch");
+        setp(inst, "preset", "0");
+        /* idle voice renders exact silence */
+        render(inst, out, 4); m = measure(out, 4 * FRAMES); CHECK(m.peak == 0.0, "idle voice not silent");
     }
     /* 2c. state round trip, tiny-buffer refusal, malformed state */
     {
