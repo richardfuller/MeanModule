@@ -32,7 +32,14 @@ typedef enum { K_F, K_I, K_E } kind_t;
 #define ATDEST "Off,Cutoff,Vibrato,Drive,FM"
 #define PRIO "Last,Low,High"
 #define XTO "Bend,Vibrato Speed,Cutoff,Grit"
-#define YTO "Glide,Vibrato Depth,Cutoff,Grit"
+#define YTO "Glide,Vibrato Depth,Cutoff,Grit,Hold Toggle"
+#define MXSRC "Off,LFO,Env 1,Env 2,Velocity,Mod Wheel,Aftertouch,Stick X,Stick Y,Key,Random"
+#define MXDST "Off,Pitch,Osc 2 Pitch,Osc 1 Shape,Osc 2 Shape,Osc 1 Level,Osc 2 Level,Noise,Cutoff,Resonance,Filter Input,Drive,Amp,X-Mod,LFO Rate"
+#define MXSRC_S "OFF,LFO,EN1,EN2,VEL,MOD,AFT,STX,STY,KEY,RND"
+#define MXDST_S "OFF,PCH,PC2,SH1,SH2,LV1,LV2,NSE,CUT,RES,INP,DRV,AMP,XMD,LFR"
+#define N_SLOTS 6            /* mod matrix slots */
+#define N_MXSRC 11
+#define N_MXDST 15
 #define ARPMODE "Off,Up,Down,Up and Down,Random,As Played"
 #define ARPRATE "1/4,1/8,1/8 Triplet,1/16,1/16 Triplet,1/32"
 
@@ -82,12 +89,30 @@ typedef enum { K_F, K_I, K_E } kind_t;
  X(STICK_X, "stick_x", "Stick Left-Right", K_F, -1, 1, 0.0, 0.05, NULL) \
  X(STICK_Y, "stick_y", "Stick Up-Down", K_F, -1, 1, 0.0, 0.05, NULL) \
  X(STICK_X_TO, "stick_x_to", "Stick X To", K_E, 0, 3, 0, 1, XTO) \
- X(STICK_Y_TO, "stick_y_to", "Stick Y To", K_E, 0, 3, 1, 1, YTO) \
+ X(STICK_Y_TO, "stick_y_to", "Stick Y To", K_E, 0, 4, 1, 1, YTO) \
  X(HOLD, "hold", "Hold", K_E, 0, 1, 0, 1, OFFON) \
  X(ARP_MODE, "arp_mode", "Arp Mode", K_E, 0, 5, 0, 1, ARPMODE) \
  X(ARP_RATE, "arp_rate", "Arp Rate", K_E, 0, 5, 3, 1, ARPRATE) \
  X(ARP_OCT, "arp_octaves", "Arp Octaves", K_I, 1, 3, 1, 1, NULL) \
- X(ARP_GATE, "arp_gate", "Arp Gate", K_F, 0.1, 1, 0.6, 0.05, NULL)
+ X(ARP_GATE, "arp_gate", "Arp Gate", K_F, 0.1, 1, 0.6, 0.05, NULL) \
+ X(M1_SRC, "m1_src", "Matrix 1 Source", K_E, 0, 10, 0, 1, MXSRC) \
+ X(M1_DST, "m1_dst", "Matrix 1 Target", K_E, 0, 14, 0, 1, MXDST) \
+ X(M1_AMT, "m1_amt", "Matrix 1 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
+ X(M2_SRC, "m2_src", "Matrix 2 Source", K_E, 0, 10, 0, 1, MXSRC) \
+ X(M2_DST, "m2_dst", "Matrix 2 Target", K_E, 0, 14, 0, 1, MXDST) \
+ X(M2_AMT, "m2_amt", "Matrix 2 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
+ X(M3_SRC, "m3_src", "Matrix 3 Source", K_E, 0, 10, 0, 1, MXSRC) \
+ X(M3_DST, "m3_dst", "Matrix 3 Target", K_E, 0, 14, 0, 1, MXDST) \
+ X(M3_AMT, "m3_amt", "Matrix 3 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
+ X(M4_SRC, "m4_src", "Matrix 4 Source", K_E, 0, 10, 0, 1, MXSRC) \
+ X(M4_DST, "m4_dst", "Matrix 4 Target", K_E, 0, 14, 0, 1, MXDST) \
+ X(M4_AMT, "m4_amt", "Matrix 4 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
+ X(M5_SRC, "m5_src", "Matrix 5 Source", K_E, 0, 10, 0, 1, MXSRC) \
+ X(M5_DST, "m5_dst", "Matrix 5 Target", K_E, 0, 14, 0, 1, MXDST) \
+ X(M5_AMT, "m5_amt", "Matrix 5 Amount", K_F, -1, 1, 0.0, 0.02, NULL) \
+ X(M6_SRC, "m6_src", "Matrix 6 Source", K_E, 0, 10, 0, 1, MXSRC) \
+ X(M6_DST, "m6_dst", "Matrix 6 Target", K_E, 0, 14, 0, 1, MXDST) \
+ X(M6_AMT, "m6_amt", "Matrix 6 Amount", K_F, -1, 1, 0.0, 0.02, NULL)
 
 typedef struct { const char *key, *label; kind_t kind; float min, max, def, step; const char *opts; } pdef_t;
 enum {
@@ -115,7 +140,7 @@ static const char *const SHORT_NAME[P_COUNT] = {
     [P_VEL_CUTOFF]="VCut", [P_VEL_AMP]="VAmp", [P_AT_DEST]="AT", [P_AT_AMOUNT]="Amt", [P_PRIORITY]="Prio", [P_OCTAVE]="Oct",
     [P_VIB_RATE]="VibRt", [P_TUNE]="Tune", [P_GRIT]="Grit",
     [P_STICK_X]="StkX", [P_STICK_Y]="StkY", [P_STICK_X_TO]="X To", [P_STICK_Y_TO]="Y To", [P_HOLD]="Hold",
-    [P_ARP_MODE]="Arp", [P_ARP_RATE]="Rate", [P_ARP_OCT]="Oct", [P_ARP_GATE]="Gate",
+    [P_ARP_MODE]="Arp", [P_ARP_RATE]="Rate", [P_ARP_OCT]="Oct", [P_ARP_GATE]="Gate", [P_M1_SRC]="Src1", [P_M1_DST]="Dst1", [P_M1_AMT]="Amt1", [P_M2_SRC]="Src2", [P_M2_DST]="Dst2", [P_M2_AMT]="Amt2", [P_M3_SRC]="Src3", [P_M3_DST]="Dst3", [P_M3_AMT]="Amt3", [P_M4_SRC]="Src4", [P_M4_DST]="Dst4", [P_M4_AMT]="Amt4", [P_M5_SRC]="Src5", [P_M5_DST]="Dst5", [P_M5_AMT]="Amt5", [P_M6_SRC]="Src6", [P_M6_DST]="Dst6", [P_M6_AMT]="Amt6",
 };
 /* Graphics: envelopes draw as ADSR curves, cutoff+resonance as a filter response, volume as a fader. A group only draws when its
  * params sit contiguously on one row of a page: Env 1 / Env 2 have their four knobs first, Filter and root have cutoff, resonance first. */
@@ -133,8 +158,9 @@ static const char *const VIZ_KIND[P_COUNT] = { [P_VOLUME]="fader" };
 static const char *const SHORT_OPTS[P_COUNT] = {
     [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR",
     [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
-    [P_STICK_X_TO]="BND,VSP,CUT,GRT", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT", [P_HOLD]="OFF,ON",
+    [P_STICK_X_TO]="BND,VSP,CUT,GRT", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD", [P_HOLD]="OFF,ON",
     [P_ARP_MODE]="OFF,UP,DWN,U+D,RND,ASP", [P_ARP_RATE]="1/4,1/8,8T,16,16T,32",
+    [P_M1_SRC]=MXSRC_S, [P_M1_DST]=MXDST_S, [P_M2_SRC]=MXSRC_S, [P_M2_DST]=MXDST_S, [P_M3_SRC]=MXSRC_S, [P_M3_DST]=MXDST_S, [P_M4_SRC]=MXSRC_S, [P_M4_DST]=MXDST_S, [P_M5_SRC]=MXSRC_S, [P_M5_DST]=MXDST_S, [P_M6_SRC]=MXSRC_S, [P_M6_DST]=MXDST_S,
 };
 
 /* ---------------------------------------------------------------- DSP state */
@@ -159,6 +185,8 @@ typedef struct {
     float o2_prev;
     env_t e1, e2;
     float lfo_ph, vib_ph;
+    float rnd;                  /* Random mod source: sample-and-hold, new value per note trigger */
+    float mx_lfr;               /* previous sample's LFO-rate modulation (breaks the LFO feedback loop) */
     uint32_t rng;
     float dc_x, dc_y;
     float noise_lp1, noise_lp2;
@@ -247,6 +275,7 @@ static inline float coef(float t_sec, float divisor) { return 1.0f - expf(-divis
 static void gate_on(mm_t *m, int retrigger) {
     m->gate = 1;
     if (retrigger) {
+        m->rnd = frand(&m->rng);
         m->e1.stage = ENV_ATK; m->e2.stage = ENV_ATK;  /* retrigger from current level */
     }
 }
@@ -476,6 +505,7 @@ static const preset_t PRESETS[] = {
         {P_RESONANCE,.4f},{P_FLT_FM1,.4f},{P_ENV1_D,.55f},{P_FLT_FM2,.3f}),
     PRE("Bass Wobble",{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,5},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.3f},{P_RESONANCE,.55f},
         {P_FLT_FM2,.8f},{P_LFO_RATE,.6f}),
+    PRE("Bass Wub Matrix",{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,6},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.3f},{P_RESONANCE,0.55f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.6f},{P_FLT_FM1,0.3f},{P_ENV1_D,0.5f},{P_ENV2_S,0.9f},{P_LFO_RATE,0.45f},{P_M1_SRC,1},{P_M1_DST,8},{P_M1_AMT,0.45f},{P_M2_SRC,8},{P_M2_DST,14},{P_M2_AMT,0.4f},{P_M3_SRC,7},{P_M3_DST,9},{P_M3_AMT,0.4f}),
     PRE("Lead Broken Radio",{P_FILTER_MODE,1},{P_OSC1_WAVE,5},{P_OSC2_WAVE,4},{P_OSC2_FINE,18},{P_NOISE_LEVEL,0.12f},
         {P_CUTOFF,0.62f},{P_RESONANCE,0.6f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.7f}),
     PRE("Lead Bubble",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,3},{P_VIB_DEPTH,.3f},{P_OSC1_FM2,.15f},
@@ -515,6 +545,7 @@ static const preset_t PRESETS[] = {
         {P_FLT_FM1,.2f},{P_ENV1_D,.6f},{P_ENV1_S,.5f},{P_ENV2_A,.2f},{P_ENV2_R,.4f},{P_GLIDE,.2f},{P_LEGATO,1}),
     PRE("Lead Whistle",{P_OSC1_LEVEL,.05f},{P_OSC2_LEVEL,0},{P_RESONANCE,1},{P_CUTOFF,.7f},{P_KEY_TRACK,1},{P_FLT_FM1,0},
         {P_FILTER_DRIVE,.3f},{P_VIB_DEPTH,.2f},{P_GLIDE,.15f}),
+    PRE("Lead Stick Scream",{P_OSC1_WAVE,1},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,0.35f},{P_OSC2_FINE,8},{P_CUTOFF,0.5f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.55f},{P_GLIDE,0.12f},{P_LEGATO,1},{P_ENV2_S,0.9f},{P_M1_SRC,8},{P_M1_DST,10},{P_M1_AMT,0.7f},{P_M2_SRC,6},{P_M2_DST,4},{P_M2_AMT,0.5f},{P_M3_SRC,5},{P_M3_DST,1},{P_M3_AMT,0.08f}),
     PRE("Keys Bell Metal",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_XMOD,.6f},{P_OSC1_FM1,.3f},
         {P_ENV1_D,.5f},{P_ENV2_D,.75f},{P_ENV2_S,0},{P_ENV2_R,.6f},{P_CUTOFF,.8f}),
     PRE("Keys Bounce",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,1},{P_OSC2_COARSE,12},{P_OSC2_LEVEL,.4f},{P_CUTOFF,.5f},
@@ -575,6 +606,7 @@ static const preset_t PRESETS[] = {
     PRE("Brass Sync Horn",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,3},{P_XMOD,0.5f},{P_CUTOFF,0.46f},
         {P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_FLT_FM1,0.6f},{P_ENV1_A,0.4f},{P_ENV1_D,0.6f},{P_ENV1_S,0.4f},
         {P_ENV2_A,0.3f},{P_ENV2_S,0.9f},{P_ENV2_R,0.3f},{P_GLIDE,0.1f},{P_LEGATO,1}),
+    PRE("Brass Velocity Bite",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_CUTOFF,0.36f},{P_RESONANCE,0.25f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.4f},{P_ENV1_A,0.4f},{P_ENV1_D,0.6f},{P_ENV1_S,0.5f},{P_FLT_FM1,0.5f},{P_ENV2_A,0.3f},{P_ENV2_S,0.9f},{P_VEL_AMP,0.4f},{P_M1_SRC,4},{P_M1_DST,8},{P_M1_AMT,0.5f},{P_M2_SRC,4},{P_M2_DST,11},{P_M2_AMT,0.4f}),
     PRE("Arp Acid Run",{P_ARP_MODE,1},{P_ARP_RATE,3},{P_ARP_OCT,2},{P_ARP_GATE,0.55f},{P_OSC2_LEVEL,0},{P_CUTOFF,0.3f},
         {P_RESONANCE,0.75f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.5f},{P_FLT_FM1,1},{P_ENV1_D,0.5f},{P_ENV1_S,0.05f},{P_ENV2_D,0.55f},
         {P_ENV2_S,0.6f},{P_ENV2_R,0.2f},{P_VEL_CUTOFF,0.5f}),
@@ -629,6 +661,7 @@ static const preset_t PRESETS[] = {
         {P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_FLT_FM1,0.3f},{P_ENV1_A,0.7f},{P_ENV1_S,0.5f},{P_ENV2_A,0.7f},{P_ENV2_R,0.8f}),
     PRE("Pad Slow Swell",{P_OSC2_WAVE,1},{P_OSC2_FINE,12},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.48f},{P_RESONANCE,.25f},{P_FLT_FM1,.5f},
         {P_ENV1_A,.85f},{P_ENV1_D,.8f},{P_ENV1_S,.6f},{P_ENV1_R,.8f},{P_ENV2_A,.8f}),
+    PRE("Pad Random Walk",{P_OSC2_WAVE,1},{P_OSC2_FINE,12},{P_OSC2_LEVEL,0.7f},{P_CUTOFF,0.45f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.5f},{P_ENV2_A,0.7f},{P_ENV2_R,0.8f},{P_FLT_FM1,0.2f},{P_LFO_RATE,0.2f},{P_M1_SRC,10},{P_M1_DST,8},{P_M1_AMT,0.35f},{P_M2_SRC,1},{P_M2_DST,3},{P_M2_AMT,0.5f},{P_M3_SRC,1},{P_M3_DST,2},{P_M3_AMT,0.02f}),
     PRE("Drone Chaos",{P_OSC1_WAVE,5},{P_OSC2_WAVE,5},{P_OSC2_COARSE,7},{P_OSC2_FINE,23},{P_XMOD,.8f},{P_OSC1_FM2,.4f},
         {P_OSC2_FM2,.3f},{P_LFO_RATE,.7f},{P_SHAPE_MOD,.8f},{P_CUTOFF,.6f},{P_RESONANCE,.55f},{P_FLT_FM2,.5f},{P_FLT_FM1,0},
         {P_DRONE,1}),
@@ -727,21 +760,28 @@ static int emit_param(char *b, int n, int w, int i) {
 #define K_PLAY  "\"noise_level\",\"glide\",\"vibrato_depth\",\"bend_range\",\"drift\",\"legato\",\"drone\",\"volume\""
 #define K_PERF  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\",\"priority\",\"octave\",\"vib_rate\",\"tune\""
 #define K_STICK "\"stick_x\",\"stick_y\",\"stick_x_to\",\"stick_y_to\",\"hold\",\"bend_range\",\"vibrato_depth\",\"glide\""
+#define K_MX1   "\"m1_src\",\"m1_dst\",\"m1_amt\",\"m2_src\",\"m2_dst\",\"m2_amt\",\"lfo_rate\",\"lfo_wave\""
+#define K_MX2   "\"m3_src\",\"m3_dst\",\"m3_amt\",\"m4_src\",\"m4_dst\",\"m4_amt\""
+#define K_MX3   "\"m5_src\",\"m5_dst\",\"m5_amt\",\"m6_src\",\"m6_dst\",\"m6_amt\""
 #define K_ARP   "\"arp_mode\",\"arp_rate\",\"arp_octaves\",\"arp_gate\",\"hold\""
 #define LEVEL(id, title, keys) "\"" id "\":{\"name\":\"" title "\",\"children\":null,\"knobs\":[" keys "],\"params\":[" keys "]}"
 static const char HIERARCHY[] =
     "{\"modes\":null,\"levels\":{"
     "\"root\":{\"name\":\"Mean Mod\",\"list_param\":\"preset\",\"count_param\":\"preset_count\",\"name_param\":\"preset_name\",\"children\":null,"
         "\"knobs\":[" K_ROOT "],"
-        "\"params\":[{\"level\":\"osc\",\"label\":\"Oscillators\"},{\"level\":\"filter\",\"label\":\"Filter\"},{\"level\":\"env1\",\"label\":\"Env 1\"},"
-        "{\"level\":\"env2\",\"label\":\"Env 2\"},{\"level\":\"mod\",\"label\":\"Modulation\"},{\"level\":\"play\",\"label\":\"Play\"},"
-        "{\"level\":\"perform\",\"label\":\"Perform\"},{\"level\":\"stick\",\"label\":\"Stick\"},{\"level\":\"arp\",\"label\":\"Arp\"},"
+        "\"params\":[{\"level\":\"play\",\"label\":\"Play\"},{\"level\":\"stick\",\"label\":\"Stick\"},{\"level\":\"arp\",\"label\":\"Arp\"},"
+        "{\"level\":\"osc\",\"label\":\"Oscillators\"},{\"level\":\"filter\",\"label\":\"Filter\"},{\"level\":\"env1\",\"label\":\"Env 1\"},"
+        "{\"level\":\"env2\",\"label\":\"Env 2\"},{\"level\":\"mod\",\"label\":\"Modulation\"},{\"level\":\"mx1\",\"label\":\"Matrix 1-2\"},"
+        "{\"level\":\"mx2\",\"label\":\"Matrix 3-4\"},{\"level\":\"mx3\",\"label\":\"Matrix 5-6\"},{\"level\":\"perform\",\"label\":\"Perform\"},"
         "{\"key\":\"env2_a\",\"short_name\":\"AmpA\"},{\"key\":\"env2_r\",\"short_name\":\"AmpR\"}]},"
     LEVEL("osc", "Oscillators", K_OSC) ","
     LEVEL("filter", "Filter", K_FILT) ","
     LEVEL("env1", "Env 1", K_ENV1) ","
     LEVEL("env2", "Env 2", K_ENV2) ","
     LEVEL("mod", "Modulation", K_MOD) ","
+    LEVEL("mx1", "Matrix 1-2", K_MX1) ","
+    LEVEL("mx2", "Matrix 3-4", K_MX2) ","
+    LEVEL("mx3", "Matrix 5-6", K_MX3) ","
     LEVEL("play", "Play", K_PLAY) ","
     LEVEL("perform", "Perform", K_PERF) ","
     LEVEL("stick", "Stick", K_STICK) ","
@@ -967,49 +1007,80 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     const float drv = clampf(g_drive + (at_dest == 3 ? at * 0.6f : 0.0f), 0.0f, 1.6f), drv_g = 1.0f + 5.0f * drv + 6.0f * drv * drv, drv_b = 0.15f * drv, drv_bias_out = tanhf(drv_b);
     const float drv_norm = 1.0f / sqrtf(drv_g);
 
+    /* Mod matrix: active slots only (source set, target set, amount non-zero). Sources are sampled per sample, destinations summed. */
+    int mx_n = 0, mx_s[N_SLOTS], mx_d[N_SLOTS], has_d[N_MXDST] = {0};
+    float mx_a[N_SLOTS];
+    for (int k = 0; k < N_SLOTS; k++) {
+        int s = (int)p[P_M1_SRC + 3 * k], d = (int)p[P_M1_DST + 3 * k]; float a = p[P_M1_AMT + 3 * k];
+        if (s > 0 && s < N_MXSRC && d > 0 && d < N_MXDST && a != 0.0f) { mx_s[mx_n] = s; mx_d[mx_n] = d; mx_a[mx_n] = a; mx_n++; has_d[d] = 1; }
+    }
+    const float lfo_base = p[P_LFO_RATE];
+
     for (int i = 0; i < frames; i++) {
         /* control signals */
         float lfo = m->lfo_ph < 0.5f ? 4.0f * m->lfo_ph - 1.0f : 3.0f - 4.0f * m->lfo_ph;  /* triangle */
         if (square) lfo = m->lfo_ph < 0.5f ? 1.0f : -1.0f;
-        m->lfo_ph += lfo_inc; if (m->lfo_ph >= 1.0f) m->lfo_ph -= 1.0f;
+        m->lfo_ph += has_d[14] ? 0.05f * exp2f(9.6439f * clampf(lfo_base + m->mx_lfr, 0.0f, 1.3f)) / SR : lfo_inc;
+        if (m->lfo_ph >= 1.0f) m->lfo_ph -= 1.0f;
         m->vib_ph += vib_inc; if (m->vib_ph >= 1.0f) m->vib_ph -= 1.0f;
         float vib = (m->vib_ph < 0.5f ? 4.0f * m->vib_ph - 1.0f : 3.0f - 4.0f * m->vib_ph) * vib_depth;
         float e1 = env_step(&m->e1, a1, d1, s1, r1);
         float e2 = env_step(&m->e2, a2, d2, s2, r2);
 
+        float mod[N_MXDST] = {0};
+        if (mx_n) {
+            float sv[N_MXSRC];
+            sv[1] = lfo; sv[2] = e1; sv[3] = e2; sv[4] = m->vel; sv[5] = m->modwheel; sv[6] = m->at; sv[7] = xv; sv[8] = yv;
+            sv[9] = clampf((m->cur_semi - 60.0f) * (1.0f / 24.0f), -1.0f, 1.0f); sv[10] = m->rnd; sv[0] = 0.0f;
+            for (int k = 0; k < mx_n; k++) mod[mx_d[k]] += sv[mx_s[k]] * mx_a[k];
+            m->mx_lfr = mod[14];
+        }
         m->cur_semi += (m->tgt_semi - m->cur_semi) * glide_c;
         m->o1.drift += (frand(&m->rng) - m->o1.drift) * drift_c * 0.02f;  /* slow wander */
         m->o2.drift += (frand(&m->rng) - m->o2.drift) * drift_c * 0.02f;
-        float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib;
+        float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib + 12.0f * mod[1];
 
         float cut_oct = p[P_CUTOFF] * 9.8138f + g_cut_oct + p[P_FLT_FM1] * e1 * 5.0f + p[P_FLT_FM2] * lfo * 3.0f
-                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct + stick_cut_oct;
+                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct + stick_cut_oct + 5.0f * mod[8];
         float fc = clampf(20.0f * exp2f(cut_oct), 15.0f, 19000.0f);
         float g = tanf(3.14159265f * fc / (SR * OS)), G = g / (1.0f + g);
 
         /* oscillator core at OS x the sample rate; halfband-decimated afterwards */
         float amp = e2 * vel_scale;
+        float amp_mx = has_d[12] ? clampf(1.0f + mod[12], 0.0f, 2.0f) : 1.0f; amp *= amp_mx;
+        const float lv1e = has_d[5] ? clampf(lv1 + mod[5], 0.0f, 1.5f) : lv1, lv2e = has_d[6] ? clampf(lv2 + mod[6], 0.0f, 1.5f) : lv2;
+        const float nle = has_d[7] ? clampf(g_noise + mod[7], 0.0f, 1.0f) * 0.5f * 1.4142f : noise_lvl;
+        const float xme = has_d[13] ? clampf(xmod_eff + mod[13], 0.0f, 1.0f) : xmod_eff;
+        const float resK = has_d[9] ? clampf(g_res + mod[9], 0.0f, 1.0f) * 3.6f : res_K;
+        float igi = ig, isqi = inv_sqrt_ig;
+        if (has_d[10]) { igi = 0.25f * exp2f(4.0f * clampf(g_fdrive + mod[10], 0.0f, 2.0f)); isqi = 1.0f / sqrtf(igi); }
+        float dg = drv_g, db = drv_b, dbo = drv_bias_out, dn = drv_norm;
+        if (has_d[11]) {
+            float dv = clampf(drv + mod[11], 0.0f, 1.6f);
+            dg = 1.0f + 5.0f * dv + 6.0f * dv * dv; db = 0.15f * dv; dbo = tanhf(db); dn = 1.0f / sqrtf(dg);
+        }
+        const float o2o = o2_off + 12.0f * mod[2];
         for (int sub = 0; sub < OS; sub++) {
-            float fm1_oct = p[P_OSC1_FM1] * e1 * 3.0f + p[P_OSC1_FM2] * lfo * 1.0f + xmod_eff * m->o2_prev * 2.0f;
+            float fm1_oct = p[P_OSC1_FM1] * e1 * 3.0f + p[P_OSC1_FM2] * lfo * 1.0f + xme * m->o2_prev * 2.0f;
             float f1 = 440.0f * exp2f((semi + m->o1.drift * drift_amt * 8.0f - 69.0f) / 12.0f + fm1_oct);
             float dt1 = clampf(f1 / (SR * OS), 0.0f, 0.45f);
-            float sh1 = clampf(p[P_OSC1_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f, 0.0f, 1.0f);
+            float sh1 = clampf(p[P_OSC1_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f + 0.5f * mod[3], 0.0f, 1.0f);
             float y1 = osc_wave(m->o1.phase, dt1, w1, sh1, k1);
             m->o1.phase += dt1; if (m->o1.phase >= 1.0f) m->o1.phase -= 1.0f;
 
             float fm2_oct = p[P_OSC2_FM1] * e1 * 3.0f + p[P_OSC2_FM2] * lfo * 1.0f;
-            float f2 = 440.0f * exp2f((semi + o2_off + m->o2.drift * drift_amt * 8.0f - 69.0f) / 12.0f + fm2_oct);
+            float f2 = 440.0f * exp2f((semi + o2o + m->o2.drift * drift_amt * 8.0f - 69.0f) / 12.0f + fm2_oct);
             float dt2 = clampf(f2 / (SR * OS), 0.0f, 0.45f);
-            float sh2 = clampf(p[P_OSC2_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f, 0.0f, 1.0f);
+            float sh2 = clampf(p[P_OSC2_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f + 0.5f * mod[4], 0.0f, 1.0f);
             float y2 = osc_wave(m->o2.phase, dt2, w2, sh2, k2);
             m->o2.phase += dt2; if (m->o2.phase >= 1.0f) m->o2.phase -= 1.0f;
             m->o2_prev = y2;
 
             float noise = frand(&m->rng);
-            float mix = y1 * lv1 + y2 * lv2 + noise * noise_lvl;
-            float fl = flt_tick(m, mix, G, res_K, ig, inv_sqrt_ig, fmode, noise * 1e-4f);
+            float mix = y1 * lv1e + y2 * lv2e + noise * nle;
+            float fl = flt_tick(m, mix, G, resK, igi, isqi, fmode, noise * 1e-4f);
             float va = fl * amp;                                       /* VCA */
-            va = (tanhf(drv_g * va + drv_b) - drv_bias_out) * drv_norm; /* transistor-ish asymmetric drive */
+            va = (tanhf(dg * va + db) - dbo) * dn; /* transistor-ish asymmetric drive */
             m->hb[m->hb_pos] = va * vol * g_makeup;
             m->hb_pos = (m->hb_pos + 1) % HB_N;
         }
@@ -1062,9 +1133,9 @@ static void render_block(void *inst, int16_t *out, int frames) {
             if (++m->stick_age[k] > (m->touch_seen ? 150 : 120)) { m->p[pi] = 0.0f; m->stick_age[k] = 0; if (k) { m->y_down = 0; m->y_dwell = 0; } }
         } else m->stick_age[k] = 0;
     }
-    /* Stick down toggles Hold, but only when Y is pushed all the way down and kept there (~0.23 s):
+    /* With Y assigned to "Hold Toggle", stick down toggles Hold, but only when Y is pushed all the way down and kept there (~0.23 s):
      * sweeping the knob through the lower half, or a quick wiggle, must never flip Hold. */
-    if (m->p[P_STICK_Y] <= -0.999f && !m->y_down) {
+    if ((int)m->p[P_STICK_Y_TO] == 4 && m->p[P_STICK_Y] <= -0.999f && !m->y_down) {
         if (++m->y_dwell >= 80) { m->y_down = 1; m->y_dwell = 0; m->p[P_HOLD] = ((int)m->p[P_HOLD] == 1) ? 0.0f : 1.0f; sync_modes(m); }
     } else if (m->p[P_STICK_Y] > -0.999f) m->y_dwell = 0;
 

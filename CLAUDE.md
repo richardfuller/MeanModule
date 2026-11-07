@@ -33,9 +33,12 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   transport grid via `get_beat_position` when it runs (free-running otherwise; the first note sounds at once); gate 100% ties notes. render_block splits at arp events.
 - Stick (joystick emulation): `stick_x`/`stick_y` live on the Stick page as knobs 1 and 2; `touch_observe` delivers knob touch
   edges (source 5, notes 0/1) and release springs the value to 0. With no touch events a timer recentres (120-150 blocks).
-  Y held fully down ~0.23 s toggles Hold (a sweep never does); stick bend is >= 7 semitones (2x Bend Range). Targets: X = Bend / Vibrato Speed / Cutoff / Grit; Y = Glide / Vibrato Depth / Cutoff / Grit.
+  with Y assigned to Hold Toggle, Y held fully down ~0.23 s toggles Hold (a sweep never does); stick bend is >= 7 semitones (2x Bend Range). Targets: X = Bend / Vibrato Speed / Cutoff / Grit; Y = Glide / Vibrato Depth / Cutoff / Grit.
 - The 4-slot screen shows `get_param("name")` ("Mean Mod"); the Remote UI header also uses it.
 - Presets are named "<Category> <Name>" (Bass, Lead, Keys, Brass, Arp, Pad, Drone) and sorted by category; Init is first.
+
+- Mod matrix: 6 slots (`m1_src/dst/amt`..), 11 sources x 15 targets, summed per sample in render_active; design and ranges in
+  `docs/MOD_MATRIX.md`. Stick Y target 4 = Hold Toggle is the only thing that flips Hold from the stick.
 
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.
@@ -43,6 +46,6 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   ~5 chars wide) and `SHORT_OPTS` for enums (3-char squares), then put its key in a page macro (`K_OSC`, `K_FILT`, ... at most 8
   per page) near `HIERARCHY`. It is automatically in state, chain_params and the stress tests; the host test fails if a param
   has no name, no short_name or is on no page.
-- UI: pages are levels in `HIERARCHY` (Oscillators, Filter, Env 1, Env 2, Modulation, Play, Perform); root carries the
+- UI: pages are levels in `HIERARCHY` (Play, Stick, Arp first, then Oscillators, Filter, Env 1, Env 2, Modulation, Matrix 1-2/3-4/5-6, Perform); root carries the
   performance macros and preset browser. `get_param("name")` returns "Mean Module"; module.json `name` is "Mean Mod" (the slot header
   cuts longer names) and abbrev is "MM".

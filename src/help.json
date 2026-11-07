@@ -94,6 +94,38 @@
           ]
         },
         {
+          "title": "Matrix",
+          "lines": [
+            "Six slots: Src, Dst, Amt",
+            "(-1..+1), Matrix 1-2,",
+            "3-4 and 5-6 pages.",
+            "Src: LFO Env1 Env2",
+            "Vel Wheel AfterT StkX",
+            "StkY Key Random.",
+            "Dst: Pitch Pitch2",
+            "Shape1/2 Lvl1/2 Noise",
+            "Cutoff Res Input Drive",
+            "Amp XMod LFO Rate.",
+            "Slots add up; Off or",
+            "0 amount does nothing."
+          ]
+        },
+        {
+          "title": "Signal path",
+          "lines": [
+            "Osc1 + Osc2 + Noise",
+            "-> Input drive",
+            "-> Sallen-Key filter",
+            "-> VCA (Env 2)",
+            "-> Drive -> Volume.",
+            "Osc2 can FM Osc1",
+            "(XMod). Env 1 and LFO",
+            "feed cutoff, FM, shape.",
+            "Matrix adds more.",
+            "Grit sits on top."
+          ]
+        },
+        {
           "title": "Play",
           "lines": [
             "Noise, Glide, Vib,",
@@ -132,13 +164,14 @@
             "X To: Bend, Vibrato",
             "Speed, Cutoff, Grit.",
             "Y To: Glide, Vibrato",
-            "Depth, Cutoff, Grit.",
-            "Hold the Y knob fully",
-            "down to toggle Hold.",
+            "Depth, Cutoff, Grit,",
+            "or Hold Toggle: hold",
+            "Y fully down to flip",
+            "Hold (other targets",
+            "never touch Hold).",
             "Hold keeps notes",
-            "sounding after",
-            "release; a fresh",
-            "press replaces them."
+            "sounding after release;",
+            "a fresh press replaces them."
           ]
         },
         {

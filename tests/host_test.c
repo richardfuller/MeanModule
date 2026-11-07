@@ -322,6 +322,52 @@ int main(int argc, char **argv) {
         CHECK(onsets >= 4 && bad == 0, "arp onsets must sit on the beat grid (%d onsets, %d off-grid, max %.0f samples)", onsets, bad, maxdev);
         midi(inst, 0x80, 48, 0); drain(inst, out); g_transport = 0; setp(inst, "preset", "0");
     }
+    /* 2k. mod matrix: routing, scaling, unipolar/bipolar sources, stability over every source x target pair */
+    {
+        char v[16];
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "vibrato_depth", "0"); setp(inst, "drift", "0");
+        midi(inst, 0x90, 55, 100); render(inst, out, 60);
+        double base = pitch_hz(out, 20 * FRAMES, 40 * FRAMES);
+        midi(inst, 0xB0, 1, 127);                                      /* mod wheel full */
+        setp(inst, "m1_src", "5"); setp(inst, "m1_dst", "1"); setp(inst, "m1_amt", "0.5");   /* wheel -> pitch, +6 semitones */
+        render(inst, out, 200);
+        double up = pitch_hz(out, 150 * FRAMES, 40 * FRAMES);
+        printf("matrix wheel->pitch: ratio %.3f (expect ~1.414)\n", up / base);
+        CHECK(fabs(up / base - 1.4142) < 0.07, "matrix wheel->pitch ratio %.3f", up / base);
+        setp(inst, "m1_amt", "-0.5"); render(inst, out, 200);
+        double dn = pitch_hz(out, 150 * FRAMES, 40 * FRAMES);
+        CHECK(fabs(dn / base - 0.7071) < 0.05, "matrix negative amount ratio %.3f", dn / base);
+        setp(inst, "m1_dst", "12"); setp(inst, "m1_amt", "-1"); render(inst, out, 100);   /* wheel -> amp at -1: silent */
+        CHECK(rms_win(out, 60 * FRAMES, 30 * FRAMES) < 0.001, "matrix wheel->amp -1 should silence the voice");
+        setp(inst, "m1_src", "0"); render(inst, out, 100);                                 /* source Off: slot inert */
+        CHECK(rms_win(out, 60 * FRAMES, 30 * FRAMES) > 0.05, "a slot with source Off must do nothing");
+        setp(inst, "m1_src", "5"); setp(inst, "m1_amt", "0"); render(inst, out, 100);      /* amount 0: inert */
+        CHECK(rms_win(out, 60 * FRAMES, 30 * FRAMES) > 0.05, "a slot with amount 0 must do nothing");
+        midi(inst, 0xB0, 1, 0); midi(inst, 0x80, 55, 0); drain(inst, out);
+        /* Random: a new value per note trigger */
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "m2_src", "10"); setp(inst, "m2_dst", "1"); setp(inst, "m2_amt", "0.6");
+        double hz[4];
+        for (int n = 0; n < 4; n++) { midi(inst, 0x90, 55, 100); render(inst, out, 40); hz[n] = pitch_hz(out, 10 * FRAMES, 30 * FRAMES); midi(inst, 0x80, 55, 0); drain(inst, out); }
+        int distinct = 0; for (int n = 1; n < 4; n++) if (fabs(hz[n] - hz[0]) > 3.0) distinct++;
+        printf("matrix random: %.1f %.1f %.1f %.1f Hz\n", hz[0], hz[1], hz[2], hz[3]);
+        CHECK(distinct >= 2, "Random source should give a different pitch per note (%d distinct)", distinct);
+        /* every source x target pair at both polarities stays finite, bounded and silent after release */
+        setp(inst, "preset", "0"); setp(inst, "lfo_rate", "0.6");
+        double worst = 0; int nodrain = 0;
+        for (int s = 1; s <= 10; s++) for (int d = 1; d <= 14; d++) for (int pol = 0; pol < 2; pol++) {
+            char sv[8], dv[8]; snprintf(sv, sizeof sv, "%d", s); snprintf(dv, sizeof dv, "%d", d);
+            setp(inst, "m1_src", sv); setp(inst, "m1_dst", dv); setp(inst, "m1_amt", pol ? "-1" : "1");
+            setp(inst, "stick_x", "1"); setp(inst, "stick_y", "0.7");
+            midi(inst, 0xB0, 1, 127); midi(inst, 0xD0, 100, 0); midi(inst, 0x90, 48, 120); render(inst, out, 25);
+            metrics_t mm = measure(out, 25 * FRAMES); if (mm.peak > worst) worst = mm.peak;
+            CHECK(mm.peak <= 1.0 && mm.clipped < 25 * FRAMES / 2, "matrix s%d d%d pol%d unstable (peak %.2f clipped %d)", s, d, pol, mm.peak, mm.clipped);
+            midi(inst, 0x80, 48, 0); if (drain(inst, out) < 0) nodrain++;
+        }
+        printf("matrix sweep: worst peak %.2f, undrained %d\n", worst, nodrain);
+        CHECK(nodrain == 0, "matrix pairs left the voice sounding (%d)", nodrain);
+        setp(inst, "stick_x", "0"); setp(inst, "stick_y", "0"); midi(inst, 0xB0, 1, 0); midi(inst, 0xD0, 0, 0); setp(inst, "preset", "0");
+        (void)v;
+    }
     /* 2j. stick: touch makes it hold, release springs it back; no touch events -> timed recentre; stick down toggles Hold */
     {
         setp(inst, "preset", "0"); setp(inst, "env2_s", "1");
@@ -343,6 +389,12 @@ int main(int argc, char **argv) {
         render(inst, out, 160);
         double back = pitch_hz(out, 40 * FRAMES, 100 * FRAMES);
         CHECK(fabs(back / base - 1.0) < 0.03, "pitch should return after release (%.1f vs %.1f)", back, base);
+        /* with Y on its default target (Vibrato Depth), pushing Y fully down must never touch Hold (it used to stop the arp) */
+        midi_src(inst, 0x90, 1, 127, MOVE_MIDI_SOURCE_TOUCH);
+        setp(inst, "stick_y", "-1"); render(inst, out, 300); rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "Y at the bottom must not toggle Hold unless Y is assigned to Hold Toggle (%s)", v);
+        midi_src(inst, 0x80, 1, 0, MOVE_MIDI_SOURCE_TOUCH);
+        setp(inst, "stick_y_to", "4");
         /* sweeping Y down through the lower half and back, or a brief tap of the bottom, must NOT touch Hold */
         midi_src(inst, 0x90, 1, 127, MOVE_MIDI_SOURCE_TOUCH);
         for (int s = 0; s <= 20; s++) { char sv[16]; snprintf(sv, sizeof sv, "%.2f", -s * 0.05); setp(inst, "stick_y", sv); render(inst, out, 2); }
