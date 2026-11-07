@@ -61,15 +61,33 @@ static void midi(void *inst, uint8_t a, uint8_t b, uint8_t c) {
 }
 static void setp(void *inst, const char *k, const char *v) { rt_enter(); api->set_param(inst, k, v); rt_leave(); }
 
-/* Extract "key":"..." names from ui_hierarchy. Returns count. */
+/* Read chain_params, return the parameter keys (skipping "preset") and validate the UI contract:
+ * every param has a proper-case name, a short_name of <= 6 chars, and appears in the hierarchy; module name is served. */
 static int param_keys(void *inst, char keys[][48], int max) {
-    static char buf[65536];
-    rt_enter(); int n = api->get_param(inst, "ui_hierarchy", buf, sizeof buf); rt_leave();
-    CHECK(n > 0 && n < (int)sizeof buf, "ui_hierarchy missing or oversize (%d)", n);
+    static char cp[65536], hier[65536];
+    rt_enter(); int n = api->get_param(inst, "chain_params", cp, sizeof cp); rt_leave();
+    CHECK(n > 0 && n < (int)sizeof cp, "chain_params missing or oversize (%d)", n);
+    rt_enter(); int nh = api->get_param(inst, "ui_hierarchy", hier, sizeof hier); rt_leave();
+    CHECK(nh > 0 && nh < (int)sizeof hier, "ui_hierarchy missing or oversize (%d)", nh);
+    char nm[64]; rt_enter(); int nn = api->get_param(inst, "name", nm, sizeof nm); rt_leave();
+    CHECK(nn > 0 && !strcmp(nm, "Mean Module"), "module name is '%s'", nn > 0 ? nm : "(none)");
     int c = 0;
-    for (char *p = buf; n > 0 && (p = strstr(p, "\"key\":\"")) && c < max; ) {
+    for (char *p = cp; n > 0 && (p = strstr(p, "\"key\":\"")) && c < max; ) {
         p += 7; char *e = strchr(p, '"'); if (!e) break;
-        snprintf(keys[c++], 48, "%.*s", (int)(e - p), p); p = e;
+        char key[48]; snprintf(key, sizeof key, "%.*s", (int)(e - p), p);
+        char *obj_end = strstr(e, "\"key\":\""); size_t span = obj_end ? (size_t)(obj_end - e) : strlen(e);
+        char obj[1024]; snprintf(obj, sizeof obj, "%.*s", (int)(span < sizeof obj - 1 ? span : sizeof obj - 1), e);
+        if (strcmp(key, "preset")) {
+            snprintf(keys[c++], 48, "%s", key);
+            char *q = strstr(obj, "\"name\":\""); CHECK(q != NULL, "param %s has no name", key);
+            if (q) CHECK(q[8] >= 'A' && q[8] <= 'Z', "param %s name is not proper case", key);
+            q = strstr(obj, "\"short_name\":\"");
+            CHECK(q != NULL, "param %s has no short_name", key);
+            if (q) { q += 14; char *qe = strchr(q, '"'); CHECK(qe && qe - q >= 1 && qe - q <= 6, "param %s short_name length", key); }
+            char pat[64]; snprintf(pat, sizeof pat, "\"%s\"", key);
+            CHECK(strstr(hier, pat) != NULL, "param %s is on no page", key);
+        }
+        p = e;
     }
     return c;
 }
@@ -182,6 +200,18 @@ int main(int argc, char **argv) {
         setp(inst, "preset", "0");
         /* idle voice renders exact silence */
         render(inst, out, 4); m = measure(out, 4 * FRAMES); CHECK(m.peak == 0.0, "idle voice not silent");
+    }
+    /* 2f. sustain pedal (CC64): note-off is deferred while the pedal is down */
+    {
+        setp(inst, "preset", "0"); setp(inst, "env2_r", "0.2"); setp(inst, "env2_s", "1"); setp(inst, "drone", "0");
+        midi(inst, 0xB0, 64, 127); midi(inst, 0x90, 55, 100); render(inst, out, 60); midi(inst, 0x80, 55, 0); render(inst, out, 200);
+        m = measure(out + 100 * FRAMES * 2, 100 * FRAMES);
+        CHECK(m.rms > 0.05, "pedal down should hold the note (rms %.4f)", m.rms);
+        midi(inst, 0xB0, 64, 0); render(inst, out, 400);
+        m = measure(out + 300 * FRAMES * 2, 100 * FRAMES);
+        CHECK(m.peak < 0.001, "pedal up should release the held note (peak %.4f)", m.peak);
+        midi(inst, 0xB0, 123, 0); drain(inst, out);
+        setp(inst, "preset", "0");
     }
     /* 2c. state round trip, tiny-buffer refusal, malformed state */
     {

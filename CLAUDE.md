@@ -30,5 +30,9 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.
-- Parameter: add one `X(...)` row to `PARAMS`; add its key to a `PAGES` row if it should be on an encoder page
-  (8 per page, positional). It is automatically in state, ui_hierarchy, chain_params and the stress tests.
+- Parameter: add one `X(...)` row to `PARAMS` (use a proper-case label), a `SHORT_NAME` (<= 5 chars; the knob cell is
+  ~5 chars wide) and `SHORT_OPTS` for enums (3-char squares), then put its key in a page macro (`K_OSC`, `K_FILT`, ... at most 8
+  per page) near `HIERARCHY`. It is automatically in state, chain_params and the stress tests; the host test fails if a param
+  has no name, no short_name or is on no page.
+- UI: pages are levels in `HIERARCHY` (Oscillators, Filter, Env 1, Env 2, Modulation, Play, Perform); root carries the
+  performance macros and preset browser. `get_param("name")` returns "Mean Module"; manifest abbrev is "MM".

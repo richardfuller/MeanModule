@@ -24,81 +24,85 @@
       "title": "Pages",
       "children": [
         {
-          "title": "1 Osc",
+          "title": "Oscillators",
           "lines": [
-            "Wave: bitmask of",
-            "Saw/Tri/Pulse, any",
-            "combination.",
-            "Shape: pulse width,",
+            "Wave1/2: Saw, Tri,",
+            "Pulse or any mix.",
+            "Shp1/2: pulse width,",
             "triangle skew or",
             "saw bow.",
-            "Osc2 coarse/fine.",
-            "Levels."
+            "Semi/Fine: osc 2",
+            "tuning. Lvl1/2."
           ]
         },
         {
-          "title": "2 Filter",
+          "title": "Filter",
           "lines": [
-            "Cutoff, Resonance.",
-            "Filter Drive = input",
-            "level. Hot input",
-            "saturates and",
-            "squeezes resonance.",
-            "Self-oscillates.",
-            "Mode: LP BP HP",
-            "LP+HP BP+LP.",
-            "Env1/LFO to cutoff,",
-            "Key Track, Drive."
+            "Cutoff, Res.",
+            "Input = drive into",
+            "the filter. Hot input",
+            "saturates and squeezes",
+            "resonance; it",
+            "self-oscillates.",
+            "Mode: LP BP HP L+H B+L.",
+            "Env/LFO to cutoff,",
+            "Key tracking, Drive."
           ]
         },
         {
-          "title": "3 Env",
+          "title": "Env 1",
           "lines": [
-            "Env1: filter and",
-            "pitch FM.",
-            "Env2: amplifier.",
+            "Filter and pitch FM",
+            "envelope.",
             "Exponential ADSR,",
-            "0.5ms to 10s."
+            "0.5 ms to 10 s."
           ]
         },
         {
-          "title": "4 Mod/FM",
+          "title": "Env 2",
           "lines": [
-            "FM1 = Env1 pitch FM.",
-            "FM2 = LFO pitch FM.",
-            "X-Mod: osc2 FMs osc1.",
-            "Shape Mod: LFO moves",
-            "shape on both oscs.",
-            "LFO rate and wave."
+            "Amplifier envelope.",
+            "Exponential ADSR,",
+            "0.5 ms to 10 s."
           ]
         },
         {
-          "title": "5 Play",
+          "title": "Modulation",
           "lines": [
-            "Noise, Glide,",
-            "Vibrato, Bend range,",
-            "Analog Drift, Legato,",
-            "Volume.",
+            "EFM 1/2: Env 1 pitch FM.",
+            "LFM 1/2: LFO pitch FM.",
+            "XMod: osc 2 FMs osc 1.",
+            "Shape: LFO moves the",
+            "shape of both oscs.",
+            "Rate and wave of LFO."
+          ]
+        },
+        {
+          "title": "Play",
+          "lines": [
+            "Noise, Glide, Vib,",
+            "Bend range, Drift,",
+            "Legato, Volume.",
             "Drone: Off / Hold /",
-            "Latch. Hold = amp",
-            "stays open while a",
-            "key is down. Latch =",
-            "keeps sounding after",
-            "release until all-",
-            "notes-off, a preset",
-            "change or Drone Off."
+            "Latch. Hold keeps amp",
+            "open while a key is",
+            "down. Latch keeps",
+            "sounding after release",
+            "until all-notes-off,",
+            "a preset change or",
+            "Drone Off."
           ]
         },
         {
-          "title": "6 Perform",
+          "title": "Perform",
           "lines": [
-            "Vel>Cutoff, Vel>Amp.",
-            "Aftertouch dest:",
-            "Off Cutoff Vibrato",
-            "Drive FM, and amount.",
-            "Note priority.",
-            "Octave, Vib rate,",
-            "Tune."
+            "VCut, VAmp: velocity",
+            "to cutoff and amp.",
+            "AT: aftertouch target",
+            "(Off Cut Vib Drv FM),",
+            "Amt: amount.",
+            "Prio: last/low/high.",
+            "Oct, VibRt, Tune."
           ]
         }
       ]
@@ -120,9 +124,10 @@
         "Notes + velocity,",
         "pitch bend, mod wheel",
         "(vibrato), channel and",
-        "poly aftertouch",
-        "(any key), CC123 =",
-        "all notes off."
+        "poly aftertouch (any",
+        "key), sustain pedal",
+        "(CC64), CC121 reset,",
+        "CC123 all notes off."
       ]
     }
   ]

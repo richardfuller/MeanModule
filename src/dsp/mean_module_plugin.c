@@ -8,6 +8,7 @@
  * Per-instance JSON is formatted once in create_instance with snprintf (no heap use).
  */
 #include <math.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -16,48 +17,48 @@
 #define SR 44100.0f
 #define MAX_NOTES 16
 #define MAX_INSTANCES 16     /* static pool; create_instance returns NULL when exhausted */
-#define JSON_MAX 20480
+#define JSON_MAX 24576
 #define OS 2                 /* oversampling factor for the oscillator/nonlinear core */
 #define HB_N 47              /* halfband decimation FIR length (odd) */
 #define HB_NZ 25             /* nonzero taps: center + 12 odd offsets each side */
 
 /* ---------------------------------------------------------------- parameters */
 typedef enum { K_F, K_I, K_E } kind_t;
-#define WAVES "OFF,SAW,TRI,S+T,PLS,S+P,T+P,S+T+P"
-#define OFFON "OFF,ON"
-#define LFOW "TRI,SQR"
-#define DRONEOPT "OFF,HOLD,LATCH"
-#define FMODES "LP,BP,HP,LP+HP,BP+LP"
-#define ATDEST "OFF,CUTOFF,VIBRATO,DRIVE,FM"
-#define PRIO "LAST,LOW,HIGH"
+#define WAVES "Off,Saw,Tri,Saw+Tri,Pulse,Saw+Pulse,Tri+Pulse,All Three"
+#define OFFON "Off,On"
+#define LFOW "Triangle,Square"
+#define DRONEOPT "Off,Hold,Latch"
+#define FMODES "Lowpass,Bandpass,Highpass,LP+HP,BP+LP"
+#define ATDEST "Off,Cutoff,Vibrato,Drive,FM"
+#define PRIO "Last,Low,High"
 
 /* id, key, label, kind, min, max, default, step, options */
 #define PARAMS(X) \
- X(OSC1_WAVE, "osc1_wave", "Osc1 Wave", K_E, 0, 7, 1, 1, WAVES) \
- X(OSC1_SHAPE, "osc1_shape", "Osc1 Shape", K_F, 0, 1, 0.5, 0.02, NULL) \
- X(OSC2_WAVE, "osc2_wave", "Osc2 Wave", K_E, 0, 7, 0, 1, WAVES) \
- X(OSC2_SHAPE, "osc2_shape", "Osc2 Shape", K_F, 0, 1, 0.5, 0.02, NULL) \
- X(OSC2_COARSE, "osc2_coarse", "Osc2 Coarse", K_I, -24, 24, 0, 1, NULL) \
- X(OSC2_FINE, "osc2_fine", "Osc2 Fine", K_F, -50, 50, 7, 1, NULL) \
- X(OSC1_LEVEL, "osc1_level", "Osc1 Level", K_F, 0, 1, 0.8, 0.02, NULL) \
- X(OSC2_LEVEL, "osc2_level", "Osc2 Level", K_F, 0, 1, 0.6, 0.02, NULL) \
- X(ENV1_A, "env1_a", "Env1 Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(ENV1_D, "env1_d", "Env1 Decay", K_F, 0, 1, 0.45, 0.02, NULL) \
- X(ENV1_S, "env1_s", "Env1 Sustain", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(ENV1_R, "env1_r", "Env1 Release", K_F, 0, 1, 0.3, 0.02, NULL) \
- X(ENV2_A, "env2_a", "Env2 Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(ENV2_D, "env2_d", "Env2 Decay", K_F, 0, 1, 0.5, 0.02, NULL) \
- X(ENV2_S, "env2_s", "Env2 Sustain", K_F, 0, 1, 1.0, 0.02, NULL) \
- X(ENV2_R, "env2_r", "Env2 Release", K_F, 0, 1, 0.35, 0.02, NULL) \
- X(OSC1_FM1, "osc1_fm1", "Osc1 FM1(Env1)", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(OSC2_FM1, "osc2_fm1", "Osc2 FM1(Env1)", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(OSC1_FM2, "osc1_fm2", "Osc1 FM2(LFO)", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(OSC2_FM2, "osc2_fm2", "Osc2 FM2(LFO)", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(XMOD, "xmod_2to1", "X-Mod 2>1", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(SHAPE_MOD, "shape_mod", "Shape Mod(LFO)", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(OSC1_WAVE, "osc1_wave", "Osc 1 Wave", K_E, 0, 7, 1, 1, WAVES) \
+ X(OSC1_SHAPE, "osc1_shape", "Osc 1 Shape", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(OSC2_WAVE, "osc2_wave", "Osc 2 Wave", K_E, 0, 7, 0, 1, WAVES) \
+ X(OSC2_SHAPE, "osc2_shape", "Osc 2 Shape", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(OSC2_COARSE, "osc2_coarse", "Osc 2 Coarse", K_I, -24, 24, 0, 1, NULL) \
+ X(OSC2_FINE, "osc2_fine", "Osc 2 Fine", K_F, -50, 50, 7, 1, NULL) \
+ X(OSC1_LEVEL, "osc1_level", "Osc 1 Level", K_F, 0, 1, 0.8, 0.02, NULL) \
+ X(OSC2_LEVEL, "osc2_level", "Osc 2 Level", K_F, 0, 1, 0.6, 0.02, NULL) \
+ X(ENV1_A, "env1_a", "Env 1 Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(ENV1_D, "env1_d", "Env 1 Decay", K_F, 0, 1, 0.45, 0.02, NULL) \
+ X(ENV1_S, "env1_s", "Env 1 Sustain", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(ENV1_R, "env1_r", "Env 1 Release", K_F, 0, 1, 0.3, 0.02, NULL) \
+ X(ENV2_A, "env2_a", "Env 2 Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(ENV2_D, "env2_d", "Env 2 Decay", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(ENV2_S, "env2_s", "Env 2 Sustain", K_F, 0, 1, 1.0, 0.02, NULL) \
+ X(ENV2_R, "env2_r", "Env 2 Release", K_F, 0, 1, 0.35, 0.02, NULL) \
+ X(OSC1_FM1, "osc1_fm1", "Osc 1 Env FM", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(OSC2_FM1, "osc2_fm1", "Osc 2 Env FM", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(OSC1_FM2, "osc1_fm2", "Osc 1 LFO FM", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(OSC2_FM2, "osc2_fm2", "Osc 2 LFO FM", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(XMOD, "xmod_2to1", "X-Mod 2 to 1", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(SHAPE_MOD, "shape_mod", "LFO to Shape", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(LFO_RATE, "lfo_rate", "LFO Rate", K_F, 0, 1, 0.35, 0.02, NULL) \
  X(LFO_WAVE, "lfo_wave", "LFO Wave", K_E, 0, 1, 0, 1, LFOW) \
- X(CUTOFF, "cutoff", "Cutoff", K_F, 0, 1, 0.677, 0.01, NULL)  X(RESONANCE, "resonance", "Resonance", K_F, 0, 1, 0.3, 0.02, NULL)  X(FILTER_DRIVE, "filter_drive", "Filter Drive", K_F, 0, 1, 0.5, 0.02, NULL)  X(FILTER_MODE, "filter_mode", "Filter Mode", K_E, 0, 4, 0, 1, FMODES)  X(FLT_FM1, "flt_fm1", "Env1>Cutoff", K_F, -1, 1, 0.4, 0.02, NULL)  X(FLT_FM2, "flt_fm2", "LFO>Cutoff", K_F, 0, 1, 0.0, 0.02, NULL)  X(KEY_TRACK, "key_track", "Key Track", K_F, 0, 1, 0.5, 0.02, NULL)  X(DRIVE, "drive", "Drive", K_F, 0, 1, 0.2, 0.02, NULL)  X(NOISE_LEVEL, "noise_level", "Noise Level", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(CUTOFF, "cutoff", "Cutoff", K_F, 0, 1, 0.677, 0.01, NULL)  X(RESONANCE, "resonance", "Resonance", K_F, 0, 1, 0.3, 0.02, NULL)  X(FILTER_DRIVE, "filter_drive", "Filter Drive", K_F, 0, 1, 0.5, 0.02, NULL)  X(FILTER_MODE, "filter_mode", "Filter Mode", K_E, 0, 4, 0, 1, FMODES)  X(FLT_FM1, "flt_fm1", "Env 1 to Cutoff", K_F, -1, 1, 0.4, 0.02, NULL)  X(FLT_FM2, "flt_fm2", "LFO to Cutoff", K_F, 0, 1, 0.0, 0.02, NULL)  X(KEY_TRACK, "key_track", "Key Track", K_F, 0, 1, 0.5, 0.02, NULL)  X(DRIVE, "drive", "Drive", K_F, 0, 1, 0.2, 0.02, NULL)  X(NOISE_LEVEL, "noise_level", "Noise", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(GLIDE, "glide", "Glide", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(VIB_DEPTH, "vibrato_depth", "Vibrato Depth", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(BEND_RANGE, "bend_range", "Bend Range", K_I, 1, 12, 2, 1, NULL) \
@@ -65,10 +66,10 @@ typedef enum { K_F, K_I, K_E } kind_t;
  X(LEGATO, "legato", "Legato", K_E, 0, 1, 0, 1, OFFON) \
  X(DRONE, "drone", "Drone", K_E, 0, 2, 0, 1, DRONEOPT) \
  X(VOLUME, "volume", "Volume", K_F, 0, 1, 0.7, 0.02, NULL) \
- X(VEL_CUTOFF, "vel_cutoff", "Vel>Cutoff", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(VEL_AMP, "vel_amp", "Vel>Amp", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(VEL_CUTOFF, "vel_cutoff", "Velocity to Cutoff", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(VEL_AMP, "vel_amp", "Velocity to Amp", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(AT_DEST, "at_dest", "Aftertouch To", K_E, 0, 4, 2, 1, ATDEST) \
- X(AT_AMOUNT, "at_amount", "AT Amount", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(AT_AMOUNT, "at_amount", "Aftertouch Amount", K_F, 0, 1, 0.5, 0.02, NULL) \
  X(PRIORITY, "priority", "Note Priority", K_E, 0, 2, 0, 1, PRIO) \
  X(OCTAVE, "octave", "Octave", K_I, -2, 2, 0, 1, NULL) \
  X(VIB_RATE, "vib_rate", "Vibrato Rate", K_F, 0, 1, 0.5, 0.02, NULL) \
@@ -87,16 +88,23 @@ static const pdef_t PD[P_COUNT] = {
 #undef X
 };
 
-/* Encoder pages of 8 (positional). Filter page arrives with the filter. */
-static const int PAGES[][8] = {
-    {P_OSC1_WAVE, P_OSC1_SHAPE, P_OSC2_WAVE, P_OSC2_SHAPE, P_OSC2_COARSE, P_OSC2_FINE, P_OSC1_LEVEL, P_OSC2_LEVEL},
-    {P_CUTOFF, P_RESONANCE, P_FILTER_DRIVE, P_FILTER_MODE, P_FLT_FM1, P_FLT_FM2, P_KEY_TRACK, P_DRIVE},
-    {P_ENV1_A, P_ENV1_D, P_ENV1_S, P_ENV1_R, P_ENV2_A, P_ENV2_D, P_ENV2_S, P_ENV2_R},
-    {P_OSC1_FM1, P_OSC2_FM1, P_OSC1_FM2, P_OSC2_FM2, P_XMOD, P_SHAPE_MOD, P_LFO_RATE, P_LFO_WAVE},
-    {P_NOISE_LEVEL, P_GLIDE, P_VIB_DEPTH, P_BEND_RANGE, P_DRIFT, P_LEGATO, P_DRONE, P_VOLUME},
-    {P_VEL_CUTOFF, P_VEL_AMP, P_AT_DEST, P_AT_AMOUNT, P_PRIORITY, P_OCTAVE, P_VIB_RATE, P_TUNE},
+static const char *const SHORT_NAME[P_COUNT] = {
+    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi", [P_OSC2_FINE]="Fine",
+    [P_OSC1_LEVEL]="Lvl1", [P_OSC2_LEVEL]="Lvl2",
+    [P_ENV1_A]="Atk", [P_ENV1_D]="Dec", [P_ENV1_S]="Sus", [P_ENV1_R]="Rel", [P_ENV2_A]="Atk", [P_ENV2_D]="Dec", [P_ENV2_S]="Sus", [P_ENV2_R]="Rel",
+    [P_OSC1_FM1]="EFM 1", [P_OSC2_FM1]="EFM 2", [P_OSC1_FM2]="LFM 1", [P_OSC2_FM2]="LFM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
+    [P_LFO_RATE]="Rate", [P_LFO_WAVE]="Wave",
+    [P_CUTOFF]="Cutoff", [P_RESONANCE]="Res", [P_FILTER_DRIVE]="Input", [P_FILTER_MODE]="Mode", [P_FLT_FM1]="Env", [P_FLT_FM2]="LFO",
+    [P_KEY_TRACK]="Key", [P_DRIVE]="Drive",
+    [P_NOISE_LEVEL]="Noise", [P_GLIDE]="Glide", [P_VIB_DEPTH]="Vib", [P_BEND_RANGE]="Bend", [P_DRIFT]="Drift", [P_LEGATO]="Legato",
+    [P_DRONE]="Drone", [P_VOLUME]="Vol",
+    [P_VEL_CUTOFF]="VCut", [P_VEL_AMP]="VAmp", [P_AT_DEST]="AT", [P_AT_AMOUNT]="Amt", [P_PRIORITY]="Prio", [P_OCTAVE]="Oct",
+    [P_VIB_RATE]="VibRt", [P_TUNE]="Tune",
 };
-#define N_PAGES ((int)(sizeof PAGES / sizeof PAGES[0]))
+static const char *const SHORT_OPTS[P_COUNT] = {
+    [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR",
+    [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
+};
 
 /* ---------------------------------------------------------------- DSP state */
 enum { ENV_IDLE, ENV_ATK, ENV_DEC, ENV_SUS, ENV_REL };
@@ -124,6 +132,8 @@ typedef struct {
     float dc_x, dc_y;
     float noise_lp1, noise_lp2;
     int preset;
+    int sustain;                /* CC64 pedal down */
+    uint8_t pend_off[128];      /* note-offs deferred by the pedal */
     int latched;                /* drone LATCH: sound holds after note-off until panic / preset / drone change */
     int was_idle;               /* voice idle (silent): render_block skips all DSP */
     int cur_note;               /* sounding note after priority resolution, -1 when none */
@@ -223,6 +233,7 @@ static int pick_idx(const mm_t *m) {
     return idx;
 }
 static void note_on(mm_t *m, int note, int vel) {
+    if (note >= 0 && note < 128) m->pend_off[note] = 0;
     remove_note(m, note);
     if (m->n_notes == MAX_NOTES) remove_note(m, m->notes[0]);
     int was_gate = m->gate;
@@ -249,7 +260,7 @@ static void unlatch(mm_t *m) {
     m->latched = 0;
     if (!m->gate) release_envs(m);
 }
-static void note_off(mm_t *m, int note) {
+static void note_off_now(mm_t *m, int note) {
     remove_note(m, note);
     if (m->n_notes > 0) {  /* fall back to the winning held note */
         int idx = pick_idx(m), winner = m->notes[idx];
@@ -260,6 +271,16 @@ static void note_off(mm_t *m, int note) {
     } else if (m->gate) {
         gate_off(m);
     }
+}
+static void note_off(mm_t *m, int note) {
+    if (m->sustain) { if (note >= 0 && note < 128) m->pend_off[note] = 1; return; }   /* pedal holds it */
+    note_off_now(m, note);
+}
+static void pedal(mm_t *m, int down) {
+    m->sustain = down;
+    if (down) return;
+    for (int n = 0; n < 128; n++)
+        if (m->pend_off[n]) { m->pend_off[n] = 0; note_off_now(m, n); }
 }
 
 /* ---------------------------------------------------------------- factory presets (compiled in: no file I/O)
@@ -503,40 +524,75 @@ static void state_read(mm_t *m, const char *js) {
 }
 
 /* ---------------------------------------------------------------- JSON (built once in create_instance) */
-static int emit_param(char *b, int n, int i) {
+/* Bounded append: never writes past n, returns the new length (clamped), so a too-big answer can never overflow. */
+static int app(char *b, int n, int w, const char *fmt, ...) {
+    if (w >= n - 1) return n - 1;
+    va_list ap; va_start(ap, fmt);
+    int r = vsnprintf(b + w, (size_t)(n - w), fmt, ap);
+    va_end(ap);
+    if (r < 0) return w;
+    return (w + r >= n - 1) ? n - 1 : w + r;
+}
+static int app_list(char *b, int n, int w, const char *csv) {
+    w = app(b, n, w, "[");
+    const char *p = csv;
+    while (*p) {
+        const char *e = strchr(p, ','); int len = e ? (int)(e - p) : (int)strlen(p);
+        w = app(b, n, w, "\"%.*s\"%s", len, p, e ? "," : "");
+        p += len + (e ? 1 : 0);
+    }
+    return app(b, n, w, "]");
+}
+static int emit_param(char *b, int n, int w, int i) {
     const pdef_t *d = &PD[i];
     const char *type = d->kind == K_F ? "float" : (d->kind == K_I ? "int" : "enum");
-    int w = snprintf(b, n, "{\"key\":\"%s\",\"label\":\"%s\",\"type\":\"%s\",\"min\":%g,\"max\":%g,\"default\":%g",
-                     d->key, d->label, type, d->min, d->max, d->def);
-    if (d->kind == K_F) w += snprintf(b + w, n - w, ",\"step\":%g", d->step);
-    if (d->opts) {
-        w += snprintf(b + w, n - w, ",\"options\":[");
-        const char *p = d->opts;
-        while (*p) {
-            const char *e = strchr(p, ','); int len = e ? (int)(e - p) : (int)strlen(p);
-            w += snprintf(b + w, n - w, "\"%.*s\"%s", len, p, e ? "," : "");
-            p += len + (e ? 1 : 0);
-        }
-        w += snprintf(b + w, n - w, "]");
-    }
-    return w + snprintf(b + w, n - w, "}");
+    w = app(b, n, w, "{\"key\":\"%s\",\"name\":\"%s\",\"label\":\"%s\"", d->key, d->label, d->label);
+    if (SHORT_NAME[i]) w = app(b, n, w, ",\"short_name\":\"%s\"", SHORT_NAME[i]);
+    w = app(b, n, w, ",\"type\":\"%s\",\"min\":%g,\"max\":%g,\"default\":%g", type, (double)d->min, (double)d->max, (double)d->def);
+    if (d->kind == K_F) w = app(b, n, w, ",\"step\":%g", (double)d->step);
+    if (d->opts) { w = app(b, n, w, ",\"options\":"); w = app_list(b, n, w, d->opts); }
+    if (SHORT_OPTS[i]) { w = app(b, n, w, ",\"short_options\":"); w = app_list(b, n, w, SHORT_OPTS[i]); }
+    return app(b, n, w, "}");
 }
-static void build_json(mm_t *m) {
-    char *b = m->ui_json; int n = JSON_MAX, w = 0;
-    w += snprintf(b + w, n - w, "{\"levels\":{\"root\":{\"label\":\"Mean Module\",\"list_param\":\"preset\",\"count_param\":\"preset_count\",\"name_param\":\"preset_name\",\"params\":[");
-    for (int i = 0; i < P_COUNT; i++) { w += emit_param(b + w, n - w, i); if (i < P_COUNT - 1) b[w++] = ','; }
-    w += snprintf(b + w, n - w, "],\"knobs\":[");
-    for (int pg = 0; pg < N_PAGES; pg++)
-        for (int k = 0; k < 8; k++)
-            w += snprintf(b + w, n - w, "\"%s\"%s", PD[PAGES[pg][k]].key, (pg == N_PAGES - 1 && k == 7) ? "" : ",");
-    w += snprintf(b + w, n - w, "]}}}");
-    m->ui_len = w;
 
-    b = m->chain_json; w = 0;
-    b[w++] = '[';
-    for (int i = 0; i < P_COUNT; i++) { w += emit_param(b + w, n - w, i); if (i < P_COUNT - 1) b[w++] = ','; }
-    b[w++] = ']'; b[w] = 0;
+/* Pages (levels): each is a named grid page of up to 8 knobs. Root holds the performance macros and the preset browser.
+ * Keys only here; metadata, full names and short cell names come from chain_params. Enforced by tests/host_test.c. */
+#define K_ROOT  "\"cutoff\",\"resonance\",\"filter_drive\",\"flt_fm1\",\"env2_a\",\"env2_r\",\"drive\",\"volume\""
+#define K_OSC   "\"osc1_wave\",\"osc1_shape\",\"osc2_wave\",\"osc2_shape\",\"osc2_coarse\",\"osc2_fine\",\"osc1_level\",\"osc2_level\""
+#define K_FILT  "\"cutoff\",\"resonance\",\"filter_drive\",\"filter_mode\",\"flt_fm1\",\"flt_fm2\",\"key_track\",\"drive\""
+#define K_ENV1  "\"env1_a\",\"env1_d\",\"env1_s\",\"env1_r\""
+#define K_ENV2  "\"env2_a\",\"env2_d\",\"env2_s\",\"env2_r\""
+#define K_MOD   "\"osc1_fm1\",\"osc2_fm1\",\"osc1_fm2\",\"osc2_fm2\",\"xmod_2to1\",\"shape_mod\",\"lfo_rate\",\"lfo_wave\""
+#define K_PLAY  "\"noise_level\",\"glide\",\"vibrato_depth\",\"bend_range\",\"drift\",\"legato\",\"drone\",\"volume\""
+#define K_PERF  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\",\"priority\",\"octave\",\"vib_rate\",\"tune\""
+#define LEVEL(id, title, keys) "\"" id "\":{\"name\":\"" title "\",\"children\":null,\"knobs\":[" keys "],\"params\":[" keys "]}"
+static const char HIERARCHY[] =
+    "{\"modes\":null,\"levels\":{"
+    "\"root\":{\"name\":\"Mean Module\",\"list_param\":\"preset\",\"count_param\":\"preset_count\",\"name_param\":\"preset_name\",\"children\":null,"
+        "\"knobs\":[" K_ROOT "],"
+        "\"params\":[{\"level\":\"osc\",\"label\":\"Oscillators\"},{\"level\":\"filter\",\"label\":\"Filter\"},{\"level\":\"env1\",\"label\":\"Env 1\"},"
+        "{\"level\":\"env2\",\"label\":\"Env 2\"},{\"level\":\"mod\",\"label\":\"Modulation\"},{\"level\":\"play\",\"label\":\"Play\"},"
+        "{\"level\":\"perform\",\"label\":\"Perform\"},"
+        "{\"key\":\"flt_fm1\",\"short_name\":\"FEnv\"},{\"key\":\"env2_a\",\"short_name\":\"AmpA\"},{\"key\":\"env2_r\",\"short_name\":\"AmpR\"}]},"
+    LEVEL("osc", "Oscillators", K_OSC) ","
+    LEVEL("filter", "Filter", K_FILT) ","
+    LEVEL("env1", "Env 1", K_ENV1) ","
+    LEVEL("env2", "Env 2", K_ENV2) ","
+    LEVEL("mod", "Modulation", K_MOD) ","
+    LEVEL("play", "Play", K_PLAY) ","
+    LEVEL("perform", "Perform", K_PERF)
+    "}}";
+
+static void build_json(mm_t *m) {
+    int n = JSON_MAX, w = 0;
+    char *b = m->chain_json;
+    w = app(b, n, w, "[{\"key\":\"preset\",\"name\":\"Preset\",\"type\":\"int\",\"min\":0,\"max\":%d}", N_PRESETS - 1);
+    for (int i = 0; i < P_COUNT; i++) { w = app(b, n, w, ","); w = emit_param(b, n, w, i); }
+    w = app(b, n, w, "]");
+    if (w >= n - 1) { snprintf(b, (size_t)n, "[]"); w = 2; }   /* too big for the host: refuse cleanly rather than send a cut-off document */
     m->chain_len = w;
+    m->ui_len = (int)strlen(HIERARCHY);
+    memcpy(m->ui_json, HIERARCHY, (size_t)m->ui_len + 1);
 }
 
 /* ---------------------------------------------------------------- plugin API */
@@ -627,7 +683,7 @@ static void destroy_instance(void *inst) {
 static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
     (void)src;
     mm_t *m = inst;
-    if (len < 1) return;
+    if (!m || !msg || len < 1) return;
     int st = msg[0] & 0xF0, d1 = len > 1 ? msg[1] & 0x7F : 0, d2 = len > 2 ? msg[2] & 0x7F : 0;
     switch (st) {
     case 0x90: if (d2 > 0) note_on(m, d1, d2); else note_off(m, d1); break;
@@ -637,7 +693,9 @@ static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
     case 0xD0: m->at = d1 / 127.0f; break;                 /* channel pressure */
     case 0xB0:
         if (d1 == 1) m->modwheel = d2 / 127.0f;
-        else if (d1 == 123 || d1 == 120) { m->n_notes = 0; m->latched = 0; gate_off(m); }
+        else if (d1 == 64) pedal(m, d2 >= 64);
+        else if (d1 == 121) { m->modwheel = 0.0f; m->at = 0.0f; m->bend = 0.0f; pedal(m, 0); }   /* reset all controllers */
+        else if (d1 == 123 || d1 == 120) { memset(m->pend_off, 0, sizeof m->pend_off); m->sustain = 0; m->n_notes = 0; m->latched = 0; gate_off(m); }
         break;
     default: break;
     }
@@ -645,7 +703,7 @@ static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
 
 static void set_param(void *inst, const char *key, const char *val) {
     mm_t *m = inst;
-    if (!key || !val) return;
+    if (!m || !key || !val) return;
     if (!strcmp(key, "state")) { state_read(m, val); return; }
     if (!strcmp(key, "preset")) { char *e; float v = strtof(val, &e); if (e != val && isfinite(v)) apply_preset(m, (int)v); return; }
     for (int k = 0; k < P_COUNT; k++)
@@ -661,10 +719,11 @@ static void set_param(void *inst, const char *key, const char *val) {
 }
 static int get_param(void *inst, const char *key, char *buf, int n) {
     mm_t *m = inst;
-    if (!key || n <= 0) return -1;
+    if (!m || !key || !buf || n <= 0) return -1;
     for (int k = 0; k < P_COUNT; k++)
         if (!strcmp(key, PD[k].key))
             return PD[k].kind == K_F ? snprintf(buf, n, "%.4f", m->p[k]) : snprintf(buf, n, "%d", (int)m->p[k]);
+    if (!strcmp(key, "name")) return snprintf(buf, (size_t)n, "Mean Module");
     if (!strcmp(key, "state")) return state_write(m, buf, n);
     if (!strcmp(key, "preset")) return snprintf(buf, n, "%d", m->preset);
     if (!strcmp(key, "preset_count")) return snprintf(buf, n, "%d", N_PRESETS);
@@ -783,7 +842,7 @@ static inline void fpcr_write(unsigned long v) { __asm__ volatile("msr fpcr, %0"
 
 static void render_block(void *inst, int16_t *out, int frames) {
     mm_t *m = inst;
-    if (frames <= 0) return;
+    if (!m || !out || frames <= 0) return;
     if (m->e2.stage == ENV_IDLE) {      /* silent voice: output exact zeros and spend no CPU */
         if (!m->was_idle) {
             m->f_s1 = m->f_s2 = m->f_s3 = 0.0f; m->dc_x = m->dc_y = 0.0f;
