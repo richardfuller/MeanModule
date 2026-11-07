@@ -94,6 +94,22 @@
           ]
         },
         {
+          "title": "LFOs",
+          "lines": [
+            "Two LFOs: Rate, Wave,",
+            "Sync each.",
+            "Waves: Tri, Square,",
+            "Saw Down, Saw Up,",
+            "Random (S&H).",
+            "Sync: 1/2 1/4 1/8 1/8T",
+            "1/16 1/16T 1/32,",
+            "locked to the beat",
+            "while Move plays.",
+            "LFO 2 is used through",
+            "the Matrix."
+          ]
+        },
+        {
           "title": "Matrix",
           "lines": [
             "Six slots: Src, Dst, Amt",
@@ -101,11 +117,11 @@
             "3-4 and 5-6 pages.",
             "Src: LFO Env1 Env2",
             "Vel Wheel AfterT StkX",
-            "StkY Key Random.",
+            "StkY Key Random LFO2.",
             "Dst: Pitch Pitch2",
             "Shape1/2 Lvl1/2 Noise",
             "Cutoff Res Input Drive",
-            "Amp XMod LFO Rate.",
+            "Amp XMod LFO Rates.",
             "Slots add up; Off or",
             "0 amount does nothing."
           ]

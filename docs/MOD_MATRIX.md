@@ -22,7 +22,7 @@ and to the stored knob values; it never changes the stored values.
 
 | Source | Range | Notes |
 | --- | --- | --- |
-| LFO | -1..+1 | the one LFO (Rate, Wave on the Matrix 1-2 page) |
+| LFO, LFO 2 | -1..+1 | the two LFOs (LFOs page: rate, wave, sync) |
 | Env 1, Env 2 | 0..1 | Env 2 is also the VCA |
 | Velocity | 0..1 | of the sounding note |
 | Mod Wheel | 0..1 | CC1 |
@@ -44,15 +44,24 @@ and to the stored knob values; it never changes the stored values.
 | Drive | +1.0 | post-VCA drive, clamped 0..1.6 |
 | Amp | gain = 1 + amount x source | clamped 0..2; negative amounts duck the sound |
 | X-Mod | +1.0 | clamped 0..1 |
-| LFO Rate | +1.0 on the 0..1 rate knob | from the previous sample, so it cannot feed back on itself |
+| LFO Rate, LFO 2 Rate | +1.0 on the 0..1 rate knob | from the previous sample, so it cannot feed back on itself; ignored while that LFO is synced |
 
 Examples: LFO -> Cutoff 0.4 (wobble); Velocity -> Drive 0.4 (harder = dirtier); Stick Y -> Filter Input 0.7 (push into
 saturation); Random -> Cutoff 0.35 (each note a different brightness); Env 2 -> Osc 2 Pitch (pitch drop).
 
 ## UI
 
-Root -> Matrix 1-2, Matrix 3-4, Matrix 5-6 (immediately after Modulation). Each slot is three knobs, Src / Dst / Amt,
-shown with three-letter options. Matrix 1-2 also carries LFO Rate and LFO Wave.
+Root -> Matrix 1-2, Matrix 3-4, Matrix 5-6 (after LFOs). Each slot is three knobs, Src / Dst / Amt,
+shown with three-letter options.
 
 Cost: only active slots are evaluated; sources are read per sample, targets that need extra maths (Filter Input, Drive,
 LFO Rate) recompute only when a slot uses them.
+
+## LFOs
+
+Two LFOs on the LFOs page (Root -> LFOs, after Modulation): Rate, Wave, Sync each.
+
+* Waves: Triangle, Square, Saw Down, Saw Up, Random (a new sample-and-hold value every cycle).
+* Sync: Free, or 1/2, 1/4, 1/8, 1/8T, 1/16, 1/16T, 1/32 of the tempo, one cycle per division. While Move's transport runs the
+  phase is locked to the beat position; with the transport stopped the LFO free-runs at the host tempo. Rate is ignored when synced.
+* LFO 1 also feeds the fixed routings (Cutoff, osc FM, Shape). LFO 2 is available through the matrix only.

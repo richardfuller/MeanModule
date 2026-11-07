@@ -194,6 +194,7 @@ int main(int argc, char **argv) {
             CHECK(m.rms > 0.002, "preset %d '%s' dies while a note is held (rms %.4f at 1.2 s)", pi, nm, m.rms);
             midi(inst, 0x80, 48, 0);
             CHECK(drain(inst, out) >= 0, "preset %d '%s' never goes silent after release", pi, nm);
+            render(inst, out, 400);   /* let slow release tails finish so the next preset starts from true silence */
         }
         setp(inst, "preset", "9999"); setp(inst, "preset", "-5");  /* out of range must be ignored */
         setp(inst, "preset", "0");
@@ -351,11 +352,31 @@ int main(int argc, char **argv) {
         int distinct = 0; for (int n = 1; n < 4; n++) if (fabs(hz[n] - hz[0]) > 3.0) distinct++;
         printf("matrix random: %.1f %.1f %.1f %.1f Hz\n", hz[0], hz[1], hz[2], hz[3]);
         CHECK(distinct >= 2, "Random source should give a different pitch per note (%d distinct)", distinct);
+        /* LFO sync: a synced square LFO on pitch (+-6 semitones) flips on the beat grid; LFO 2 works as a source */
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "vibrato_depth", "0"); setp(inst, "drift", "0");
+        setp(inst, "osc1_wave", "2"); setp(inst, "resonance", "0"); setp(inst, "flt_fm1", "0"); setp(inst, "cutoff", "0.5"); setp(inst, "drive", "0");
+        setp(inst, "lfo_wave", "1"); setp(inst, "lfo_sync", "2");                       /* square, 1/4 note = one cycle per beat */
+        setp(inst, "m1_src", "1"); setp(inst, "m1_dst", "1"); setp(inst, "m1_amt", "0.5");
+        g_transport = 1; g_beat_samples = 0; g_beat_off = 0.1;
+        midi(inst, 0x90, 48, 100); render(inst, out, 200);
+        double hi = pitch_hz(out, (int)(0.02 * 44100), 6000), lo = pitch_hz(out, (int)(0.23 * 44100), 9000);   /* beats 0.14-0.4 and 0.56-0.97 */
+        printf("lfo sync square: high %.1f Hz, low %.1f Hz (ratio %.2f, expect 2)\n", hi, lo, hi / lo);
+        CHECK(fabs(hi / lo - 2.0) < 0.2, "synced LFO should flip pitch on the beat grid (%.1f vs %.1f Hz)", hi, lo);
+        g_transport = 0; midi(inst, 0x80, 48, 0); drain(inst, out);
+        setp(inst, "lfo_sync", "0"); setp(inst, "lfo_wave", "0"); setp(inst, "lfo2_wave", "1"); setp(inst, "lfo2_rate", "0.5");
+        setp(inst, "m1_src", "11"); setp(inst, "m1_amt", "0.5");
+        midi(inst, 0x90, 48, 100); render(inst, out, 200);
+        double mn = 1e9, mx = 0; for (int w = 0; w < 10; w++) { double h = pitch_hz(out, 2000 + w * 2400, 2000); if (h < mn) mn = h; if (h > mx) mx = h; }
+        printf("lfo2 square on pitch: %.1f .. %.1f Hz\n", mn, mx);
+        CHECK(mx / mn > 1.5, "LFO 2 as a matrix source should move pitch (%.1f..%.1f)", mn, mx);
+        midi(inst, 0x80, 48, 0); drain(inst, out);
         /* every source x target pair at both polarities stays finite, bounded and silent after release */
         setp(inst, "preset", "0"); setp(inst, "lfo_rate", "0.6");
         double worst = 0; int nodrain = 0;
-        for (int s = 1; s <= 10; s++) for (int d = 1; d <= 14; d++) for (int pol = 0; pol < 2; pol++) {
-            char sv[8], dv[8]; snprintf(sv, sizeof sv, "%d", s); snprintf(dv, sizeof dv, "%d", d);
+        for (int s = 1; s <= 11; s++) for (int d = 1; d <= 15; d++) for (int pol = 0; pol < 2; pol++) {
+            char sv[12], dv[12], wv[12], yv[12]; snprintf(sv, sizeof sv, "%d", s); snprintf(dv, sizeof dv, "%d", d);
+            snprintf(wv, sizeof wv, "%d", (s + d) % 5); snprintf(yv, sizeof yv, "%d", (s * d) % 8);
+            setp(inst, "lfo_wave", wv); setp(inst, "lfo2_wave", wv); setp(inst, "lfo2_sync", yv); setp(inst, "lfo_sync", d % 3 == 0 ? yv : "0");
             setp(inst, "m1_src", sv); setp(inst, "m1_dst", dv); setp(inst, "m1_amt", pol ? "-1" : "1");
             setp(inst, "stick_x", "1"); setp(inst, "stick_y", "0.7");
             midi(inst, 0xB0, 1, 127); midi(inst, 0xD0, 100, 0); midi(inst, 0x90, 48, 120); render(inst, out, 25);
