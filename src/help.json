@@ -216,7 +216,11 @@
         "slot preset row.",
         "All parameters are",
         "saved with the set",
-        "and in My Presets."
+        "and in My Presets.",
+        "A * at the end of a",
+        "name means the preset",
+        "uses the Stick through",
+        "the Matrix."
       ]
     },
     {
