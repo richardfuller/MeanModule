@@ -1,8 +1,8 @@
 {
   "id": "meanmodule",
-  "name": "Mean Module",
+  "name": "Mean Mod",
   "abbrev": "MM",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Gritty analog-style mono synth with a saturating Sallen-Key filter",
   "author": "Richard Fuller",
   "license": "MIT",

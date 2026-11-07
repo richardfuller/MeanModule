@@ -71,6 +71,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     CHECK(nh > 0 && nh < (int)sizeof hier, "ui_hierarchy missing or oversize (%d)", nh);
     char nm[64]; rt_enter(); int nn = api->get_param(inst, "name", nm, sizeof nm); rt_leave();
     CHECK(nn > 0 && !strcmp(nm, "Mean Module"), "module name is '%s'", nn > 0 ? nm : "(none)");
+    CHECK(strstr(cp, "\"group\":\"amp\"") && strstr(cp, "\"group\":\"fenv\"") && strstr(cp, "\"group\":\"filter\""), "viz groups missing from chain_params");
     int c = 0;
     for (char *p = cp; n > 0 && (p = strstr(p, "\"key\":\"")) && c < max; ) {
         p += 7; char *e = strchr(p, '"'); if (!e) break;
@@ -211,6 +212,22 @@ int main(int argc, char **argv) {
         m = measure(out + 300 * FRAMES * 2, 100 * FRAMES);
         CHECK(m.peak < 0.001, "pedal up should release the held note (peak %.4f)", m.peak);
         midi(inst, 0xB0, 123, 0); drain(inst, out);
+        setp(inst, "preset", "0");
+    }
+    /* 2g. Grit/Dark macro: + is darker and more saturated, - is brighter; centre leaves the patch alone */
+    {
+        double bright[3], rmsv[3]; const char *gv[3] = {"-1", "0", "1"};
+        for (int g = 0; g < 3; g++) {
+            setp(inst, "preset", "0"); setp(inst, "osc1_wave", "7"); setp(inst, "grit", gv[g]); setp(inst, "env2_s", "1");
+            midi(inst, 0x90, 48, 110); render(inst, out, 200);
+            const int16_t *x = out + 100 * FRAMES * 2; int N = 100 * FRAMES; double d = 0, a = 0, r2 = 0;
+            for (int i = 1; i < N; i++) { d += fabs((double)x[2 * i] - x[2 * (i - 1)]); a += fabs((double)x[2 * i]); r2 += (double)x[2 * i] * x[2 * i]; }
+            bright[g] = d / (a + 1.0); rmsv[g] = sqrt(r2 / N) / 32768.0;
+            midi(inst, 0xB0, 123, 0); drain(inst, out);
+        }
+        printf("grit -1/0/+1: brightness %.3f %.3f %.3f  rms %.3f %.3f %.3f\n", bright[0], bright[1], bright[2], rmsv[0], rmsv[1], rmsv[2]);
+        CHECK(bright[0] > bright[1] && bright[1] > bright[2], "grit should darken monotonically");
+        CHECK(rmsv[2] > 0.01 && rmsv[0] > 0.01, "grit extremes should stay audible");
         setp(inst, "preset", "0");
     }
     /* 2c. state round trip, tiny-buffer refusal, malformed state */

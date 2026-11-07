@@ -26,7 +26,9 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - Drone: OFF / HOLD (amp open while a key is down) / LATCH (holds after release until CC123/120, preset change or drone off).
   A drone never sounds without a note.
 - aarch64 builds set FPCR.FZ during render (restored after); filter/DC-blocker states are flushed of denormals.
-- Presets are named "<Category> <Name>" (Bass, Lead, Keys, Pad, Drone) and sorted by category; Init is first.
+- Grit/Dark (`grit`, -1..+1) is a macro applied at render time on top of the patch (filter drive, drive, resonance, noise, drift,
+  cutoff); stored params are untouched; 0 = patch as saved. Envelope/filter graphics come from `VIZ_*` tables (chain_params `viz`).
+- Presets are named "<Category> <Name>" (Bass, Lead, Keys, Brass, Pad, Drone) and sorted by category; Init is first.
 
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.
@@ -35,4 +37,5 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   per page) near `HIERARCHY`. It is automatically in state, chain_params and the stress tests; the host test fails if a param
   has no name, no short_name or is on no page.
 - UI: pages are levels in `HIERARCHY` (Oscillators, Filter, Env 1, Env 2, Modulation, Play, Perform); root carries the
-  performance macros and preset browser. `get_param("name")` returns "Mean Module"; manifest abbrev is "MM".
+  performance macros and preset browser. `get_param("name")` returns "Mean Module"; module.json `name` is "Mean Mod" (the slot header
+  cuts longer names) and abbrev is "MM".

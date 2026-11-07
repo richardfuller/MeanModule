@@ -4,25 +4,41 @@
     {
       "title": "Overview",
       "lines": [
-        "Gritty analog-style",
-        "mono synth.",
+        "Mean Module: a gritty",
+        "analog-style mono synth.",
         "",
-        "2 oscillators +",
-        "noise, a saturating",
-        "2-pole Sallen-Key",
-        "multimode filter,",
+        "2 oscillators + noise,",
+        "a saturating 2-pole",
+        "Sallen-Key filter,",
         "2 ADSRs, LFO and a",
         "post-filter drive.",
         "",
-        "Mono, last-note",
-        "priority (or low /",
-        "high). Runs 2x",
-        "oversampled."
+        "Mono: last, low or",
+        "high note priority.",
+        "2x oversampled."
       ]
     },
     {
       "title": "Pages",
       "children": [
+        {
+          "title": "Main (root)",
+          "lines": [
+            "Cutoff, Res, Input,",
+            "Grit, AmpA, AmpR,",
+            "Drive, Vol.",
+            "",
+            "Grit: one knob for",
+            "grit and darkness.",
+            "Up = more drive and",
+            "filter saturation,",
+            "darker, a little",
+            "noise and drift.",
+            "Down = cleaner and",
+            "brighter. Centre =",
+            "the preset as saved."
+          ]
+        },
         {
           "title": "Oscillators",
           "lines": [
