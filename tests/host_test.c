@@ -56,6 +56,18 @@ static int drain(void *inst, int16_t *out) {
     }
     return -1;
 }
+static void midi_src(void *inst, uint8_t a, uint8_t b, uint8_t c, int src) {
+    uint8_t m3[3] = {a, b, c}; rt_enter(); api->on_midi(inst, m3, 3, src); rt_leave();
+}
+/* Rising zero crossings per second in the left channel over [start, start+len) frames. */
+static double pitch_hz(const int16_t *x, int start, int len) {
+    int zc = 0;
+    for (int i = start + 1; i < start + len; i++) if (x[2 * (i - 1)] < 0 && x[2 * i] >= 0) zc++;
+    return zc / (len / 44100.0);
+}
+static double rms_win(const int16_t *x, int start, int len) {
+    double a = 0; for (int i = start; i < start + len; i++) { double v = x[2 * i] / 32768.0; a += v * v; } return sqrt(a / len);
+}
 static void midi(void *inst, uint8_t a, uint8_t b, uint8_t c) {
     uint8_t m[3] = {a, b, c}; rt_enter(); api->on_midi(inst, m, 3, MOVE_MIDI_SOURCE_EXTERNAL); rt_leave();
 }
@@ -70,7 +82,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     rt_enter(); int nh = api->get_param(inst, "ui_hierarchy", hier, sizeof hier); rt_leave();
     CHECK(nh > 0 && nh < (int)sizeof hier, "ui_hierarchy missing or oversize (%d)", nh);
     char nm[64]; rt_enter(); int nn = api->get_param(inst, "name", nm, sizeof nm); rt_leave();
-    CHECK(nn > 0 && !strcmp(nm, "Mean Module"), "module name is '%s'", nn > 0 ? nm : "(none)");
+    CHECK(nn > 0 && !strcmp(nm, "Mean Mod"), "module name is '%s'", nn > 0 ? nm : "(none)");
     CHECK(strstr(cp, "\"group\":\"amp\"") && strstr(cp, "\"group\":\"fenv\"") && strstr(cp, "\"group\":\"filter\""), "viz groups missing from chain_params");
     int c = 0;
     for (char *p = cp; n > 0 && (p = strstr(p, "\"key\":\"")) && c < max; ) {
@@ -229,6 +241,95 @@ int main(int argc, char **argv) {
         CHECK(bright[0] > bright[1] && bright[1] > bright[2], "grit should darken monotonically");
         CHECK(rmsv[2] > 0.01 && rmsv[0] > 0.01, "grit extremes should stay audible");
         setp(inst, "preset", "0");
+    }
+    /* 2h. Hold: notes keep sounding after release; a fresh press replaces them; Hold off releases */
+    {
+        setp(inst, "preset", "0"); setp(inst, "env2_r", "0.2"); setp(inst, "hold", "1");
+        midi(inst, 0x90, 60, 100); midi(inst, 0x90, 64, 100); midi(inst, 0x90, 67, 100); render(inst, out, 40);
+        midi(inst, 0x80, 60, 0); midi(inst, 0x80, 64, 0); midi(inst, 0x80, 67, 0); render(inst, out, 200);
+        CHECK(rms_win(out, 150 * FRAMES, 40 * FRAMES) > 0.05, "Hold should keep the notes sounding after release");
+        midi(inst, 0x90, 72, 100); render(inst, out, 120);   /* new gesture: replaces the latched chord (last-note priority) */
+        double hz = pitch_hz(out, 60 * FRAMES, 50 * FRAMES);
+        printf("hold replace pitch: %.1f Hz (expect ~523.3)\n", hz);
+        CHECK(fabs(hz - 523.3) < 25.0, "fresh press under Hold should replace latched notes (%.1f Hz)", hz);
+        midi(inst, 0x80, 72, 0); render(inst, out, 60);
+        CHECK(rms_win(out, 30 * FRAMES, 30 * FRAMES) > 0.05, "Hold should keep the new note");
+        setp(inst, "hold", "0"); render(inst, out, 400);
+        CHECK(rms_win(out, 300 * FRAMES, 80 * FRAMES) < 0.001, "Hold off should release latched notes");
+        setp(inst, "preset", "0");
+    }
+    /* 2i. arpeggiator: pattern order, gate length, latching with Hold (host tempo defaults to 120 BPM in this harness) */
+    {
+        const double fexp[3] = {130.81, 164.81, 196.0}; const char *modes[2] = {"1", "2"};
+        for (int mi = 0; mi < 2; mi++) {   /* Up, then Down */
+            setp(inst, "preset", "0"); setp(inst, "env2_r", "0.2"); setp(inst, "arp_mode", modes[mi]); setp(inst, "arp_rate", "3"); setp(inst, "arp_gate", "1");
+            midi(inst, 0x90, 55, 100); midi(inst, 0x90, 48, 100); midi(inst, 0x90, 52, 100);   /* played out of order on purpose */
+            render(inst, out, 300);
+            int bad = 0;
+            for (int k = 0; k < 6; k++) {
+                double hz = pitch_hz(out, (int)(k * 5512.5) + 882, 4410);
+                int want = mi == 0 ? k % 3 : 2 - (k % 3);
+                int got = 0; double bd = 1e9; for (int j = 0; j < 3; j++) if (fabs(hz - fexp[j]) < bd) { bd = fabs(hz - fexp[j]); got = j; }
+                if (got != want || bd > 14.0) bad++;
+            }
+            printf("arp %s: pattern %s\n", mi ? "down" : "up", bad ? "WRONG" : "ok");
+            CHECK(bad == 0, "arp %s pattern wrong (%d of 6 steps)", mi ? "down" : "up", bad);
+            midi(inst, 0x80, 55, 0); midi(inst, 0x80, 48, 0); midi(inst, 0x80, 52, 0);
+            render(inst, out, 80);
+            CHECK(rms_win(out, 60 * FRAMES, 20 * FRAMES) < 0.001, "arp should stop when the keys are released");
+            drain(inst, out);
+        }
+        /* gate: 50% of a 125 ms step -> sounding early in the step, silent late */
+        setp(inst, "preset", "0"); setp(inst, "env2_r", "0.1"); setp(inst, "arp_mode", "1"); setp(inst, "arp_rate", "3"); setp(inst, "arp_gate", "0.5");
+        midi(inst, 0x90, 48, 100); render(inst, out, 160);
+        double early = rms_win(out, (int)(2 * 5512.5) + 441, 1800), late = rms_win(out, (int)(2 * 5512.5) + 4000, 1200);
+        printf("arp gate .5: early rms %.3f late rms %.4f\n", early, late);
+        CHECK(early > 0.05 && late < 0.01, "arp gate length wrong (early %.3f late %.4f)", early, late);
+        midi(inst, 0x80, 48, 0); drain(inst, out);
+        /* latch: Hold keeps the arp running after the keys are up; Hold off stops it */
+        setp(inst, "preset", "0"); setp(inst, "env2_r", "0.2"); setp(inst, "arp_mode", "1"); setp(inst, "arp_gate", "1"); setp(inst, "hold", "1");
+        midi(inst, 0x90, 48, 100); midi(inst, 0x90, 55, 100); render(inst, out, 30); midi(inst, 0x80, 48, 0); midi(inst, 0x80, 55, 0); render(inst, out, 200);
+        CHECK(rms_win(out, 150 * FRAMES, 40 * FRAMES) > 0.05, "arp should keep running while latched");
+        setp(inst, "hold", "0"); render(inst, out, 80);
+        CHECK(rms_win(out, 60 * FRAMES, 20 * FRAMES) < 0.001, "arp should stop when Hold is turned off");
+        drain(inst, out); setp(inst, "preset", "0");
+    }
+    /* 2j. stick: touch makes it hold, release springs it back; no touch events -> timed recentre; stick down toggles Hold */
+    {
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1");
+        midi_src(inst, 0x90, 0, 127, MOVE_MIDI_SOURCE_TOUCH); midi_src(inst, 0x80, 0, 0, MOVE_MIDI_SOURCE_TOUCH);
+        render(inst, out, 20);
+        CHECK(measure(out, 20 * FRAMES).peak == 0.0, "a touch event must never sound a note");
+        char v[32];
+        midi(inst, 0x90, 55, 100); render(inst, out, 140);
+        double base = pitch_hz(out, 30 * FRAMES, 100 * FRAMES);
+        midi_src(inst, 0x90, 0, 127, MOVE_MIDI_SOURCE_TOUCH); setp(inst, "stick_x", "1"); render(inst, out, 300);
+        rt_enter(); api->get_param(inst, "stick_x", v, sizeof v); rt_leave();
+        CHECK(atof(v) > 0.99, "stick should stay while the knob is touched (%s)", v);
+        double bent = pitch_hz(out, 190 * FRAMES, 100 * FRAMES);
+        printf("stick bend: base %.1f Hz, bent %.1f Hz (ratio %.3f, expect ~1.122)\n", base, bent, bent / base);
+        CHECK(fabs(bent / base - 1.1225) < 0.04, "stick X bend ratio %.3f", bent / base);
+        midi_src(inst, 0x80, 0, 0, MOVE_MIDI_SOURCE_TOUCH);
+        rt_enter(); api->get_param(inst, "stick_x", v, sizeof v); rt_leave();
+        CHECK(atof(v) == 0.0, "stick should spring back on touch release (%s)", v);
+        render(inst, out, 160);
+        double back = pitch_hz(out, 40 * FRAMES, 100 * FRAMES);
+        CHECK(fabs(back / base - 1.0) < 0.03, "pitch should return after release (%.1f vs %.1f)", back, base);
+        setp(inst, "stick_y", "-1"); rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 1, "stick down should switch Hold on (%s)", v);
+        midi_src(inst, 0x80, 1, 0, MOVE_MIDI_SOURCE_TOUCH);   /* release centres Y */
+        setp(inst, "stick_y", "-1"); rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "second stick-down should switch Hold off (%s)", v);
+        midi_src(inst, 0x80, 1, 0, MOVE_MIDI_SOURCE_TOUCH);
+        midi(inst, 0xB0, 123, 0); drain(inst, out); setp(inst, "preset", "0");
+        /* a fresh instance that never sees touch events: displaced stick recentres by itself */
+        rt_enter(); void *i2 = api->create_instance(".", NULL); rt_leave();
+        if (i2) {
+            api->set_param(i2, "stick_x", "1"); for (int b = 0; b < 200; b++) api->render_block(i2, out, FRAMES);
+            api->get_param(i2, "stick_x", v, sizeof v);
+            CHECK(atof(v) == 0.0, "stick should recentre on its own without touch events (%s)", v);
+            api->destroy_instance(i2);
+        }
     }
     /* 2c. state round trip, tiny-buffer refusal, malformed state */
     {

@@ -17,7 +17,7 @@
 #define SR 44100.0f
 #define MAX_NOTES 16
 #define MAX_INSTANCES 16     /* static pool; create_instance returns NULL when exhausted */
-#define JSON_MAX 24576
+#define JSON_MAX 32768
 #define OS 2                 /* oversampling factor for the oscillator/nonlinear core */
 #define HB_N 47              /* halfband decimation FIR length (odd) */
 #define HB_NZ 25             /* nonzero taps: center + 12 odd offsets each side */
@@ -31,6 +31,10 @@ typedef enum { K_F, K_I, K_E } kind_t;
 #define FMODES "Lowpass,Bandpass,Highpass,LP+HP,BP+LP"
 #define ATDEST "Off,Cutoff,Vibrato,Drive,FM"
 #define PRIO "Last,Low,High"
+#define XTO "Bend,Vibrato Speed,Cutoff,Grit"
+#define YTO "Glide,Vibrato Depth,Cutoff,Grit"
+#define ARPMODE "Off,Up,Down,Up and Down,Random,As Played"
+#define ARPRATE "1/4,1/8,1/8 Triplet,1/16,1/16 Triplet,1/32"
 
 /* id, key, label, kind, min, max, default, step, options */
 #define PARAMS(X) \
@@ -74,7 +78,16 @@ typedef enum { K_F, K_I, K_E } kind_t;
  X(OCTAVE, "octave", "Octave", K_I, -2, 2, 0, 1, NULL) \
  X(VIB_RATE, "vib_rate", "Vibrato Rate", K_F, 0, 1, 0.5, 0.02, NULL) \
  X(TUNE, "tune", "Tune", K_F, -50, 50, 0, 1, NULL) \
- X(GRIT, "grit", "Grit and Dark", K_F, -1, 1, 0.0, 0.02, NULL)
+ X(GRIT, "grit", "Grit and Dark", K_F, -1, 1, 0.0, 0.02, NULL) \
+ X(STICK_X, "stick_x", "Stick Left-Right", K_F, -1, 1, 0.0, 0.05, NULL) \
+ X(STICK_Y, "stick_y", "Stick Up-Down", K_F, -1, 1, 0.0, 0.05, NULL) \
+ X(STICK_X_TO, "stick_x_to", "Stick X To", K_E, 0, 3, 0, 1, XTO) \
+ X(STICK_Y_TO, "stick_y_to", "Stick Y To", K_E, 0, 3, 1, 1, YTO) \
+ X(HOLD, "hold", "Hold", K_E, 0, 1, 0, 1, OFFON) \
+ X(ARP_MODE, "arp_mode", "Arp Mode", K_E, 0, 5, 0, 1, ARPMODE) \
+ X(ARP_RATE, "arp_rate", "Arp Rate", K_E, 0, 5, 3, 1, ARPRATE) \
+ X(ARP_OCT, "arp_octaves", "Arp Octaves", K_I, 1, 3, 1, 1, NULL) \
+ X(ARP_GATE, "arp_gate", "Arp Gate", K_F, 0.1, 1, 0.6, 0.05, NULL)
 
 typedef struct { const char *key, *label; kind_t kind; float min, max, def, step; const char *opts; } pdef_t;
 enum {
@@ -101,6 +114,8 @@ static const char *const SHORT_NAME[P_COUNT] = {
     [P_DRONE]="Drone", [P_VOLUME]="Vol",
     [P_VEL_CUTOFF]="VCut", [P_VEL_AMP]="VAmp", [P_AT_DEST]="AT", [P_AT_AMOUNT]="Amt", [P_PRIORITY]="Prio", [P_OCTAVE]="Oct",
     [P_VIB_RATE]="VibRt", [P_TUNE]="Tune", [P_GRIT]="Grit",
+    [P_STICK_X]="StkX", [P_STICK_Y]="StkY", [P_STICK_X_TO]="X To", [P_STICK_Y_TO]="Y To", [P_HOLD]="Hold",
+    [P_ARP_MODE]="Arp", [P_ARP_RATE]="Rate", [P_ARP_OCT]="Oct", [P_ARP_GATE]="Gate",
 };
 /* Graphics: envelopes draw as ADSR curves, cutoff+resonance as a filter response, volume as a fader. A group only draws when its
  * params sit contiguously on one row of a page: Env 1 / Env 2 have their four knobs first, Filter and root have cutoff, resonance first. */
@@ -118,6 +133,8 @@ static const char *const VIZ_KIND[P_COUNT] = { [P_VOLUME]="fader" };
 static const char *const SHORT_OPTS[P_COUNT] = {
     [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR",
     [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
+    [P_STICK_X_TO]="BND,VSP,CUT,GRT", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT", [P_HOLD]="OFF,ON",
+    [P_ARP_MODE]="OFF,UP,DWN,U+D,RND,ASP", [P_ARP_RATE]="1/4,1/8,8T,16,16T,32",
 };
 
 /* ---------------------------------------------------------------- DSP state */
@@ -146,6 +163,11 @@ typedef struct {
     float dc_x, dc_y;
     float noise_lp1, noise_lp2;
     int preset;
+    uint8_t phys[128]; int phys_n;       /* keys physically down */
+    int held[MAX_NOTES], held_vel[MAX_NOTES], held_n;   /* notes held by keys, pedal or Hold (the arp / voice source) */
+    int prev_arp, prev_hold;
+    int arp_running, arp_idx, arp_note; float arp_pos;
+    int touch_seen; uint8_t touched[2]; int stick_age[2]; int y_down;   /* joystick emulation */
     int sustain;                /* CC64 pedal down */
     uint8_t pend_off[128];      /* note-offs deferred by the pedal */
     int latched;                /* drone LATCH: sound holds after note-off until panic / preset / drone change */
@@ -246,8 +268,9 @@ static int pick_idx(const mm_t *m) {
     }
     return idx;
 }
-static void note_on(mm_t *m, int note, int vel) {
-    if (note >= 0 && note < 128) m->pend_off[note] = 0;
+static void voice_on(mm_t *m, int note, int vel) {
+    if (note < 0) note = 0;
+    if (note > 127) note = 127;
     remove_note(m, note);
     if (m->n_notes == MAX_NOTES) remove_note(m, m->notes[0]);
     int was_gate = m->gate;
@@ -274,7 +297,7 @@ static void unlatch(mm_t *m) {
     m->latched = 0;
     if (!m->gate) release_envs(m);
 }
-static void note_off_now(mm_t *m, int note) {
+static void voice_off(mm_t *m, int note) {
     remove_note(m, note);
     if (m->n_notes > 0) {  /* fall back to the winning held note */
         int idx = pick_idx(m), winner = m->notes[idx];
@@ -286,15 +309,115 @@ static void note_off_now(mm_t *m, int note) {
         gate_off(m);
     }
 }
-static void note_off(mm_t *m, int note) {
-    if (m->sustain) { if (note >= 0 && note < 128) m->pend_off[note] = 1; return; }   /* pedal holds it */
-    note_off_now(m, note);
+
+/* ---- input layer: keys, sustain pedal and Hold decide which notes are "held"; the held set feeds the voice or the arp. */
+static void held_remove(mm_t *m, int note) {
+    for (int i = 0; i < m->held_n; i++)
+        if (m->held[i] == note) {
+            memmove(&m->held[i], &m->held[i + 1], (size_t)(m->held_n - i - 1) * sizeof(int));
+            memmove(&m->held_vel[i], &m->held_vel[i + 1], (size_t)(m->held_n - i - 1) * sizeof(int));
+            m->held_n--;
+            return;
+        }
+}
+static void sink_off(mm_t *m, int note) { if ((int)m->p[P_ARP_MODE] == 0) voice_off(m, note); }
+static void held_add(mm_t *m, int note, int vel) {
+    held_remove(m, note);
+    if (m->held_n == MAX_NOTES) { int old = m->held[0]; held_remove(m, old); sink_off(m, old); }
+    m->held[m->held_n] = note; m->held_vel[m->held_n++] = vel;
+}
+static void in_on(mm_t *m, int note, int vel) {
+    if (note < 0 || note > 127) return;
+    if (!m->phys[note]) { m->phys[note] = 1; m->phys_n++; }
+    m->pend_off[note] = 0;
+    if ((int)m->p[P_HOLD] == 1 && m->phys_n == 1) {   /* first key of a new gesture replaces the latched notes */
+        while (m->held_n > 0) { int old = m->held[0]; held_remove(m, old); sink_off(m, old); }
+    }
+    held_add(m, note, vel);
+    if ((int)m->p[P_ARP_MODE] == 0) voice_on(m, note, vel);
+}
+static void in_off(mm_t *m, int note) {
+    if (note < 0 || note > 127) return;
+    if (m->phys[note]) { m->phys[note] = 0; m->phys_n--; }
+    if (m->sustain || (int)m->p[P_HOLD] == 1) { m->pend_off[note] = 1; return; }   /* pedal or Hold keeps it sounding */
+    held_remove(m, note);
+    sink_off(m, note);
+}
+static void release_pending(mm_t *m) {
+    for (int n = 0; n < 128; n++)
+        if (m->pend_off[n]) {
+            m->pend_off[n] = 0;
+            if (!m->phys[n]) { held_remove(m, n); sink_off(m, n); }
+        }
 }
 static void pedal(mm_t *m, int down) {
     m->sustain = down;
-    if (down) return;
-    for (int n = 0; n < 128; n++)
-        if (m->pend_off[n]) { m->pend_off[n] = 0; note_off_now(m, n); }
+    if (!down && (int)m->p[P_HOLD] == 0) release_pending(m);
+}
+
+/* ---- arpeggiator: reads the held set, drives the voice one step at a time (clock: host tempo, free-running) */
+static int arp_build(mm_t *m, int *seq) {   /* returns pattern length (<= 3 * MAX_NOTES) */
+    int tmp[MAX_NOTES], n = m->held_n, mode = (int)m->p[P_ARP_MODE], oct = (int)m->p[P_ARP_OCT], len = 0;
+    if (n == 0) return 0;
+    for (int i = 0; i < n; i++) tmp[i] = m->held[i];
+    if (mode != 5) for (int i = 1; i < n; i++) { int v = tmp[i], j = i - 1; while (j >= 0 && tmp[j] > v) { tmp[j + 1] = tmp[j]; j--; } tmp[j + 1] = v; }
+    int up[3 * MAX_NOTES], ul = 0;
+    for (int o = 0; o < oct; o++) for (int i = 0; i < n; i++) { int v = tmp[i] + 12 * o; up[ul++] = v > 127 ? 127 : v; }
+    if (mode == 2) { for (int i = ul - 1; i >= 0; i--) seq[len++] = up[i]; }
+    else if (mode == 3) { for (int i = 0; i < ul; i++) seq[len++] = up[i]; for (int i = ul - 2; i >= 1; i--) seq[len++] = up[i]; }
+    else { for (int i = 0; i < ul; i++) seq[len++] = up[i]; }
+    return len;
+}
+static void arp_stop(mm_t *m) {
+    m->arp_running = 0;
+    if (m->arp_note >= 0) { voice_off(m, m->arp_note); m->arp_note = -1; }
+}
+static void arp_step(mm_t *m) {
+    int seq[3 * MAX_NOTES + 2], len = arp_build(m, seq);
+    if (len == 0) { arp_stop(m); return; }
+    int i;
+    if ((int)m->p[P_ARP_MODE] == 4) {   /* random */
+        uint32_t x = m->rng; x ^= x << 13; x ^= x >> 17; x ^= x << 5; m->rng = x;
+        i = (int)(x % (uint32_t)len);
+    } else {
+        i = m->arp_idx % len; m->arp_idx = i + 1;
+    }
+    int note = seq[i], vel = m->held_vel[m->held_n - 1];
+    int tie = m->p[P_ARP_GATE] >= 0.999f;
+    if (!tie && m->arp_note >= 0) voice_off(m, m->arp_note);
+    else if (tie && m->arp_note >= 0 && m->arp_note != note) { int old = m->arp_note; voice_on(m, note, vel); voice_off(m, old); m->arp_note = note; return; }
+    voice_on(m, note, vel);
+    m->arp_note = note;
+}
+static void arp_gate_off(mm_t *m) {
+    if (m->arp_note >= 0) { voice_off(m, m->arp_note); m->arp_note = -1; }
+}
+
+/* Mode switches (arp on/off, Hold on/off) take effect here, wherever the param came from (knob, preset, state). */
+static void sync_modes(mm_t *m) {
+    int am = (int)m->p[P_ARP_MODE];
+    if (am != m->prev_arp) {
+        if (am == 0) {                       /* arp off: voice takes over the held notes again */
+            arp_stop(m);
+            m->n_notes = 0;
+            for (int i = 0; i < m->held_n; i++) voice_on(m, m->held[i], m->held_vel[i]);
+        } else if (m->prev_arp == 0) {       /* arp on: the arp now owns the voice */
+            m->n_notes = 0; m->arp_running = 0; m->arp_idx = 0;
+            if (m->gate) gate_off(m);
+        }
+        m->prev_arp = am;
+    }
+    int hd = (int)m->p[P_HOLD];
+    if (hd != m->prev_hold) {
+        m->prev_hold = hd;
+        if (hd == 0 && !m->sustain) release_pending(m);
+    }
+}
+static void panic(mm_t *m) {
+    memset(m->pend_off, 0, sizeof m->pend_off); memset(m->phys, 0, sizeof m->phys);
+    m->phys_n = 0; m->held_n = 0; m->sustain = 0; m->n_notes = 0; m->latched = 0;
+    m->arp_running = 0; m->arp_note = -1;
+    gate_off(m);
 }
 
 /* ---------------------------------------------------------------- factory presets (compiled in: no file I/O)
@@ -308,206 +431,215 @@ typedef struct { const char *name; const pv_t *v; int n; } preset_t;
 static const preset_t PRESETS[] = {
     PRE("Init", {P_VOLUME, 0.7f}),
     PRE("Bass Acid Line",{P_CUTOFF,.35f},{P_RESONANCE,.6f},{P_FLT_FM1,.8f},{P_ENV1_D,.6f},{P_ENV2_D,.68f},{P_ENV2_S,.35f},
-        {P_ENV2_R,.25f},{P_GLIDE,.15f},{P_LEGATO,1},{P_DRIVE,.4f},{P_FILTER_DRIVE,.6f}),
+        {P_ENV2_R,.25f},{P_GLIDE,.15f},{P_LEGATO,1},{P_DRIVE,.4f}),
     PRE("Bass Acid Squelch",{P_OSC2_LEVEL,0},{P_CUTOFF,.28f},{P_RESONANCE,.78f},{P_FLT_FM1,1},{P_ENV1_D,.5f},{P_ENV2_D,.6f},
-        {P_ENV2_S,.7f},{P_ENV2_R,.2f},{P_GLIDE,.12f},{P_LEGATO,1},{P_FILTER_DRIVE,.65f}),
+        {P_ENV2_S,.7f},{P_ENV2_R,.2f},{P_GLIDE,.12f},{P_LEGATO,1}),
     PRE("Bass Brute",{P_OSC1_WAVE,7},{P_OSC1_LEVEL,1},{P_OSC2_WAVE,7},{P_OSC2_FINE,7},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.45f},
-        {P_RESONANCE,0.35f},{P_FILTER_DRIVE,1},{P_DRIVE,1},{P_FLT_FM1,0.3f},{P_ENV2_R,0.2f}),
+        {P_RESONANCE,0.35f},{P_FILTER_DRIVE,1},{P_DRIVE,1},{P_FLT_FM1,0.3f}),
     PRE("Bass Chewy",{P_FILTER_MODE,4},{P_OSC1_WAVE,1},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,0.5f},{P_OSC2_COARSE,-12},{P_CUTOFF,0.38f},
-        {P_RESONANCE,0.6f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_FLT_FM2,0.45f},{P_LFO_RATE,0.55f},{P_FLT_FM1,0.3f}),
+        {P_RESONANCE,0.6f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_FLT_FM2,0.45f},{P_LFO_RATE,0.55f}),
     PRE("Bass Dirty Sub",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,0.9f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,0.2f},{P_OSC2_COARSE,-12},
-        {P_OSC2_LEVEL,0.4f},{P_CUTOFF,0.35f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.8f},{P_ENV2_R,0.3f},
-        {P_OCTAVE,-1}),
+        {P_OSC2_LEVEL,0.4f},{P_CUTOFF,0.35f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.8f},{P_ENV2_R,0.3f}),
     PRE("Bass Dub Sub",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_OSC2_LEVEL,0},{P_CUTOFF,.36f},{P_RESONANCE,.25f},{P_FLT_FM1,.1f},
-        {P_ENV2_A,.1f},{P_ENV2_R,.4f},{P_FILTER_DRIVE,.4f}),
+        {P_ENV2_A,.1f},{P_ENV2_R,.4f}),
     PRE("Bass Fat Pulse",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.7f},{P_OSC2_COARSE,-12},
-        {P_OSC2_FINE,6},{P_CUTOFF,.35f},{P_RESONANCE,.25f},{P_FLT_FM1,.6f},{P_ENV1_D,.5f}),
+        {P_OSC2_FINE,6},{P_CUTOFF,.35f},{P_RESONANCE,.25f},{P_FLT_FM1,.6f}),
     PRE("Bass Funk",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.25f},{P_OSC2_WAVE,2},{P_OSC2_COARSE,-12},{P_OSC2_LEVEL,.6f},{P_FILTER_MODE,4},
-        {P_CUTOFF,.33f},{P_RESONANCE,.45f},{P_FLT_FM1,.85f},{P_ENV1_D,.42f},{P_ENV1_S,0},{P_ENV2_D,.55f},{P_ENV2_S,.6f},
-        {P_ENV2_R,.15f}),
+        {P_CUTOFF,.33f},{P_RESONANCE,.45f},{P_FLT_FM1,.85f},{P_ENV1_D,.42f},{P_ENV1_S,0},{P_ENV2_D,.55f},{P_ENV2_S,.6f}),
     PRE("Bass Fuzz Mono",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_FINE,5},{P_CUTOFF,0.5f},{P_RESONANCE,0.25f},
-        {P_FILTER_DRIVE,0.95f},{P_DRIVE,0.95f},{P_GLIDE,0.12f},{P_LEGATO,1},{P_PRIORITY,1},{P_FLT_FM1,0.35f},{P_ENV2_R,0.2f}),
+        {P_FILTER_DRIVE,0.95f},{P_DRIVE,0.95f},{P_GLIDE,0.12f},{P_LEGATO,1},{P_PRIORITY,1},{P_FLT_FM1,0.35f}),
     PRE("Bass Gnarl",{P_OSC1_WAVE,5},{P_OSC1_SHAPE,0.4f},{P_OSC2_WAVE,1},{P_OSC2_FINE,14},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.34f},
         {P_RESONANCE,0.55f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.7f},{P_FLT_FM1,0.6f},{P_ENV1_D,0.5f},{P_ENV1_S,0.1f},
-        {P_ENV2_D,0.6f},{P_ENV2_S,0.8f},{P_ENV2_R,0.2f}),
+        {P_ENV2_D,0.6f},{P_ENV2_S,0.8f}),
     PRE("Bass Gravel",{P_OSC1_WAVE,7},{P_OSC2_WAVE,4},{P_OSC2_COARSE,-12},{P_OSC2_LEVEL,0.6f},{P_NOISE_LEVEL,0.18f},
-        {P_FILTER_MODE,4},{P_CUTOFF,0.42f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.75f},{P_DRIVE,0.8f},{P_FLT_FM1,0.35f},
-        {P_ENV2_S,0.9f}),
+        {P_FILTER_MODE,4},{P_CUTOFF,0.42f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.75f},{P_DRIVE,0.8f},{P_FLT_FM1,0.35f}),
     PRE("Bass Grind",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,6},{P_OSC2_LEVEL,0.9f},{P_XMOD,0.7f},
-        {P_CUTOFF,0.36f},{P_RESONANCE,0.5f},{P_FILTER_DRIVE,0.9f},{P_DRIVE,0.75f},{P_FLT_FM1,0.5f},{P_ENV1_D,0.5f}),
+        {P_CUTOFF,0.36f},{P_RESONANCE,0.5f},{P_FILTER_DRIVE,0.9f},{P_DRIVE,0.75f},{P_FLT_FM1,0.5f}),
     PRE("Bass Hollow Sub",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,-12},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.5f},
-        {P_RESONANCE,0},{P_FILTER_DRIVE,.3f},{P_FLT_FM1,0}),
+        {P_RESONANCE,0},{P_FILTER_DRIVE,.3f}),
     PRE("Bass Mean Acid",{P_OSC2_LEVEL,0},{P_CUTOFF,0.26f},{P_RESONANCE,0.82f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_FLT_FM1,1},
-        {P_ENV1_D,0.55f},{P_ENV1_S,0.05f},{P_ENV2_D,0.6f},{P_ENV2_S,0.7f},{P_ENV2_R,0.2f},{P_GLIDE,0.12f},{P_LEGATO,1}),
+        {P_ENV1_D,0.55f},{P_ENV1_S,0.05f},{P_ENV2_D,0.6f},{P_ENV2_S,0.7f},{P_ENV2_R,0.2f},{P_GLIDE,0.12f}),
     PRE("Bass Overdriven",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_FINE,6},{P_CUTOFF,.5f},{P_RESONANCE,.35f},{P_FILTER_DRIVE,.9f},
-        {P_DRIVE,.9f},{P_FLT_FM1,.3f},{P_ENV1_D,.5f},{P_ENV2_R,.2f}),
+        {P_DRIVE,.9f},{P_FLT_FM1,.3f},{P_ENV1_D,.5f}),
     PRE("Bass Pulse Walker",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.6f},{P_OSC2_COARSE,-12},
-        {P_OSC2_FINE,4},{P_CUTOFF,.4f},{P_RESONANCE,.3f},{P_FLT_FM1,.5f},{P_ENV1_D,.45f},{P_ENV1_S,.2f},{P_PRIORITY,1},
-        {P_GLIDE,.1f}),
+        {P_OSC2_FINE,4},{P_CUTOFF,.4f},{P_RESONANCE,.3f},{P_FLT_FM1,.5f},{P_ENV1_D,.45f},{P_ENV1_S,.2f},{P_PRIORITY,1}),
     PRE("Bass Rubber",{P_OSC1_WAVE,4},{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,0},{P_GLIDE,.2f},{P_LEGATO,1},
-        {P_CUTOFF,.3f},{P_RESONANCE,.35f},{P_FLT_FM1,.7f},{P_ENV1_D,.45f}),
+        {P_CUTOFF,.3f},{P_RESONANCE,.35f},{P_FLT_FM1,.7f}),
     PRE("Bass Rust",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.3f},{P_OSC2_WAVE,1},{P_OSC2_FINE,-11},{P_OSC2_LEVEL,0.7f},{P_CUTOFF,0.4f},
         {P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_NOISE_LEVEL,0.06f},{P_FLT_FM1,0.4f},{P_ENV1_D,0.55f},
-        {P_ENV2_S,0.85f},{P_ENV2_R,0.22f}),
+        {P_ENV2_S,0.85f}),
     PRE("Bass Snarl",{P_OSC1_WAVE,5},{P_OSC1_SHAPE,.45f},{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_CUTOFF,.30f},{P_RESONANCE,.5f},
-        {P_FILTER_DRIVE,.6f},{P_FLT_FM1,.5f},{P_ENV1_D,.45f},{P_ENV2_D,.6f},{P_ENV2_S,.8f},{P_ENV2_R,.25f}),
+        {P_FILTER_DRIVE,.6f},{P_FLT_FM1,.5f},{P_ENV1_D,.45f},{P_ENV2_D,.6f},{P_ENV2_S,.8f}),
     PRE("Bass Sub Saw",{P_OSC1_WAVE,1},{P_OSC2_WAVE,2},{P_OSC2_COARSE,-12},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.38f},
-        {P_RESONANCE,.2f},{P_FLT_FM1,.4f},{P_ENV1_D,.5f},{P_ENV2_R,.2f},{P_DRIVE,.3f}),
+        {P_RESONANCE,.2f},{P_FLT_FM1,.4f},{P_ENV1_D,.5f},{P_ENV2_R,.2f}),
     PRE("Bass Sync Growl",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,3},{P_XMOD,.55f},{P_CUTOFF,.42f},
-        {P_RESONANCE,.4f},{P_FLT_FM1,.4f},{P_ENV1_D,.55f},{P_FLT_FM2,.3f},{P_LFO_RATE,.45f}),
+        {P_RESONANCE,.4f},{P_FLT_FM1,.4f},{P_ENV1_D,.55f},{P_FLT_FM2,.3f}),
     PRE("Bass Wobble",{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,5},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.3f},{P_RESONANCE,.55f},
-        {P_FLT_FM2,.8f},{P_LFO_RATE,.6f},{P_DRIVE,.5f}),
+        {P_FLT_FM2,.8f},{P_LFO_RATE,.6f}),
     PRE("Lead Broken Radio",{P_FILTER_MODE,1},{P_OSC1_WAVE,5},{P_OSC2_WAVE,4},{P_OSC2_FINE,18},{P_NOISE_LEVEL,0.12f},
-        {P_CUTOFF,0.62f},{P_RESONANCE,0.6f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.7f},{P_FLT_FM2,0.3f}),
+        {P_CUTOFF,0.62f},{P_RESONANCE,0.6f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.7f}),
     PRE("Lead Bubble",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,3},{P_VIB_DEPTH,.3f},{P_OSC1_FM2,.15f},
-        {P_LFO_RATE,.7f},{P_GLIDE,.3f},{P_LEGATO,1},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FLT_FM1,.3f}),
+        {P_LFO_RATE,.7f},{P_GLIDE,.3f},{P_LEGATO,1},{P_CUTOFF,.6f},{P_RESONANCE,.4f}),
     PRE("Lead Burn",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,4},{P_CUTOFF,0.56f},{P_RESONANCE,0.65f},
         {P_FILTER_DRIVE,1},{P_DRIVE,0.85f},{P_FLT_FM1,0.35f},{P_ENV1_D,0.6f},{P_ENV1_S,0.35f},{P_AT_DEST,1},{P_AT_AMOUNT,0.7f},
-        {P_LEGATO,1},{P_GLIDE,0.15f}),
+        {P_LEGATO,1}),
     PRE("Lead Dirty Square",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.5f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,0.35f},{P_OSC2_FINE,12},
-        {P_CUTOFF,0.6f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.7f},{P_SHAPE_MOD,0.3f},{P_LFO_RATE,0.4f}),
+        {P_CUTOFF,0.6f},{P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.7f},{P_SHAPE_MOD,0.3f}),
     PRE("Lead Dive",{P_OSC1_WAVE,5},{P_OSC2_LEVEL,0},{P_OSC1_FM1,.35f},{P_ENV1_D,.36f},{P_ENV1_S,0},{P_CUTOFF,.7f},
-        {P_RESONANCE,.35f},{P_FLT_FM1,.2f},{P_ENV2_S,.9f},{P_ENV2_R,.3f},{P_VIB_DEPTH,.2f}),
+        {P_RESONANCE,.35f},{P_FLT_FM1,.2f},{P_ENV2_S,.9f},{P_ENV2_R,.3f}),
     PRE("Lead Expressive",{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_OSC2_LEVEL,.6f},{P_CUTOFF,.5f},{P_RESONANCE,.45f},{P_FLT_FM1,.2f},
-        {P_ENV1_D,.6f},{P_ENV1_S,.4f},{P_VEL_CUTOFF,.7f},{P_VEL_AMP,.4f},{P_AT_DEST,1},{P_AT_AMOUNT,.8f},{P_VIB_DEPTH,.1f}),
+        {P_ENV1_D,.6f},{P_ENV1_S,.4f},{P_VEL_CUTOFF,.7f},{P_VEL_AMP,.4f},{P_AT_DEST,1},{P_AT_AMOUNT,.8f}),
     PRE("Lead FM Zap",{P_OSC1_WAVE,2},{P_OSC2_WAVE,1},{P_OSC2_COARSE,12},{P_XMOD,.8f},{P_OSC1_FM1,.9f},{P_ENV1_D,.55f},
-        {P_ENV2_D,.7f},{P_ENV2_S,.4f},{P_ENV2_R,.3f},{P_CUTOFF,.8f},{P_RESONANCE,.2f}),
+        {P_ENV2_D,.7f},{P_ENV2_S,.4f},{P_ENV2_R,.3f},{P_CUTOFF,.8f}),
     PRE("Lead Fifth",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.66f},
-        {P_RESONANCE,.25f},{P_FLT_FM1,.25f},{P_ENV1_D,.55f},{P_ENV1_S,.4f},{P_GLIDE,.12f},{P_LEGATO,1}),
+        {P_RESONANCE,.25f},{P_FLT_FM1,.25f},{P_ENV1_D,.55f},{P_ENV1_S,.4f},{P_GLIDE,.12f}),
     PRE("Lead Fuzz",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_FINE,7},{P_CUTOFF,.7f},{P_RESONANCE,.3f},{P_FILTER_DRIVE,.95f},
-        {P_DRIVE,.8f},{P_FLT_FM1,.2f},{P_ENV1_D,.6f},{P_ENV1_S,.5f},{P_GLIDE,.18f},{P_LEGATO,1}),
+        {P_DRIVE,.8f},{P_FLT_FM1,.2f},{P_ENV1_D,.6f},{P_ENV1_S,.5f},{P_GLIDE,.18f}),
     PRE("Lead Grit Fifth",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,0.75f},{P_XMOD,0.3f},
-        {P_CUTOFF,0.6f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.7f},{P_NOISE_LEVEL,0.04f},{P_GLIDE,0.1f}),
-    PRE("Lead Laser Sweep",{P_OSC2_LEVEL,0},{P_CUTOFF,.85f},{P_FLT_FM1,-.8f},{P_ENV1_D,.6f},{P_ENV1_S,0},{P_RESONANCE,.5f},
-        {P_ENV2_D,.7f}),
+        {P_CUTOFF,0.6f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.7f},{P_NOISE_LEVEL,0.04f}),
+    PRE("Lead Laser Sweep",{P_OSC2_LEVEL,0},{P_CUTOFF,.85f},{P_FLT_FM1,-.8f},{P_ENV1_D,.6f},{P_ENV1_S,0},{P_RESONANCE,.5f}),
     PRE("Lead Mono Sync",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,12},{P_OSC2_FINE,2},{P_XMOD,.7f},{P_CUTOFF,.68f},
-        {P_RESONANCE,.3f},{P_FLT_FM1,.3f},{P_ENV1_D,.6f},{P_ENV1_S,.4f},{P_VIB_DEPTH,.2f},{P_GLIDE,.15f},{P_LEGATO,1}),
+        {P_RESONANCE,.3f},{P_FLT_FM1,.3f},{P_ENV1_D,.6f},{P_ENV1_S,.4f},{P_VIB_DEPTH,.2f},{P_GLIDE,.15f}),
     PRE("Lead Rasp",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_CUTOFF,0.62f},{P_RESONANCE,0.5f},{P_FILTER_DRIVE,0.9f},
-        {P_DRIVE,0.6f},{P_FLT_FM1,0.3f},{P_ENV1_D,0.6f},{P_ENV1_S,0.4f},{P_VIB_DEPTH,0.18f},{P_GLIDE,0.1f}),
+        {P_DRIVE,0.6f},{P_FLT_FM1,0.3f},{P_ENV1_D,0.6f},{P_ENV1_S,0.4f},{P_VIB_DEPTH,0.18f}),
     PRE("Lead Scream Hot",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,6},{P_CUTOFF,0.7f},{P_RESONANCE,0.72f},
         {P_FILTER_DRIVE,0.95f},{P_DRIVE,0.8f},{P_FLT_FM1,0.25f},{P_GLIDE,0.2f},{P_LEGATO,1},{P_VIB_DEPTH,0.25f},
-        {P_VIB_RATE,0.65f},{P_PRIORITY,2}),
+        {P_VIB_RATE,0.65f}),
     PRE("Lead Screamer",{P_OSC2_WAVE,1},{P_OSC2_FINE,8},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.62f},{P_RESONANCE,.7f},{P_FILTER_DRIVE,.3f},
-        {P_GLIDE,.25f},{P_VIB_DEPTH,.25f},{P_ENV2_R,.3f},{P_LEGATO,1},{P_FLT_FM1,.3f}),
+        {P_GLIDE,.25f},{P_VIB_DEPTH,.25f},{P_ENV2_R,.3f},{P_LEGATO,1}),
     PRE("Lead Siren",{P_OSC1_WAVE,2},{P_OSC2_LEVEL,0},{P_OSC1_FM2,.5f},{P_LFO_RATE,.55f},{P_CUTOFF,.7f},{P_RESONANCE,.3f},
-        {P_FLT_FM1,0},{P_DRONE,0},{P_ENV2_A,.3f},{P_ENV2_R,.5f}),
+        {P_FLT_FM1,0},{P_DRONE,0},{P_ENV2_A,.3f}),
     PRE("Lead Snarl Sync",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,12},{P_OSC2_FINE,3},{P_XMOD,0.85f},{P_CUTOFF,0.65f},
-        {P_RESONANCE,0.35f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_OSC2_FM1,0.1f},{P_FLT_FM1,0.3f},{P_ENV1_D,0.55f},
-        {P_GLIDE,0.12f}),
+        {P_RESONANCE,0.35f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_OSC2_FM1,0.1f},{P_FLT_FM1,0.3f},{P_ENV1_D,0.55f}),
     PRE("Lead Soft Tri",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,5},{P_OSC2_LEVEL,.4f},{P_CUTOFF,.62f},{P_RESONANCE,.15f},
-        {P_FLT_FM1,.2f},{P_ENV1_D,.6f},{P_ENV1_S,.5f},{P_ENV2_A,.2f},{P_ENV2_R,.4f},{P_GLIDE,.2f},{P_LEGATO,1},{P_VIB_DEPTH,.1f}),
+        {P_FLT_FM1,.2f},{P_ENV1_D,.6f},{P_ENV1_S,.5f},{P_ENV2_A,.2f},{P_ENV2_R,.4f},{P_GLIDE,.2f},{P_LEGATO,1}),
     PRE("Lead Whistle",{P_OSC1_LEVEL,.05f},{P_OSC2_LEVEL,0},{P_RESONANCE,1},{P_CUTOFF,.7f},{P_KEY_TRACK,1},{P_FLT_FM1,0},
-        {P_FILTER_DRIVE,.3f},{P_VIB_DEPTH,.2f},{P_GLIDE,.15f},{P_LEGATO,1}),
+        {P_FILTER_DRIVE,.3f},{P_VIB_DEPTH,.2f},{P_GLIDE,.15f}),
     PRE("Keys Bell Metal",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_XMOD,.6f},{P_OSC1_FM1,.3f},
-        {P_ENV1_D,.5f},{P_ENV2_D,.75f},{P_ENV2_S,0},{P_ENV2_R,.6f},{P_CUTOFF,.8f},{P_RESONANCE,.1f}),
+        {P_ENV1_D,.5f},{P_ENV2_D,.75f},{P_ENV2_S,0},{P_ENV2_R,.6f},{P_CUTOFF,.8f}),
     PRE("Keys Bounce",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,1},{P_OSC2_COARSE,12},{P_OSC2_LEVEL,.4f},{P_CUTOFF,.5f},
-        {P_RESONANCE,.4f},{P_FLT_FM1,.6f},{P_ENV1_D,.58f},{P_ENV2_D,.66f},{P_ENV2_S,.3f}),
+        {P_RESONANCE,.4f},{P_FLT_FM1,.6f},{P_ENV1_D,.58f},{P_ENV2_D,.66f}),
     PRE("Keys Broken Piano",{P_OSC1_WAVE,5},{P_OSC1_SHAPE,0.3f},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_LEVEL,0.4f},
         {P_CUTOFF,0.5f},{P_RESONANCE,0.2f},{P_FILTER_DRIVE,0.75f},{P_DRIVE,0.6f},{P_FLT_FM1,0.5f},{P_ENV1_D,0.6f},
-        {P_ENV2_D,0.72f},{P_ENV2_S,0.2f},{P_ENV2_R,0.35f},{P_SHAPE_MOD,0.2f},{P_LFO_RATE,0.2f}),
+        {P_ENV2_D,0.72f},{P_ENV2_S,0.2f},{P_ENV2_R,0.35f},{P_SHAPE_MOD,0.2f}),
     PRE("Keys Crunch Stab",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_FINE,8},{P_CUTOFF,0.46f},{P_RESONANCE,0.3f},
         {P_FILTER_DRIVE,0.85f},{P_DRIVE,0.75f},{P_FLT_FM1,0.6f},{P_ENV1_A,0.3f},{P_ENV1_D,0.55f},{P_ENV1_S,0.3f},{P_ENV2_D,0.66f},
-        {P_ENV2_S,0.45f},{P_ENV2_R,0.2f},{P_VEL_AMP,0.5f}),
+        {P_ENV2_S,0.45f},{P_ENV2_R,0.2f}),
     PRE("Keys Dirty Clav",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.2f},{P_OSC2_LEVEL,0},{P_FILTER_MODE,4},{P_CUTOFF,.35f},{P_RESONANCE,.3f},
-        {P_FLT_FM1,.8f},{P_ENV1_D,.55f},{P_ENV2_D,.66f},{P_ENV2_S,.25f}),
+        {P_FLT_FM1,.8f},{P_ENV1_D,.55f},{P_ENV2_D,.66f}),
     PRE("Keys Dirty Organ",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.5f},{P_OSC2_WAVE,4},{P_OSC2_COARSE,12},{P_OSC2_SHAPE,0.5f},
         {P_OSC2_FINE,0},{P_OSC2_LEVEL,0.6f},{P_CUTOFF,0.62f},{P_RESONANCE,0.15f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},
-        {P_VIB_DEPTH,0.2f},{P_VIB_RATE,0.55f},{P_ENV2_A,0.2f},{P_ENV2_R,0.25f}),
+        {P_VIB_DEPTH,0.2f},{P_VIB_RATE,0.55f},{P_ENV2_A,0.2f}),
     PRE("Keys Grit Bell",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,5},{P_XMOD,0.5f},{P_CUTOFF,0.7f},
-        {P_RESONANCE,0.25f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_ENV2_D,0.75f},{P_ENV2_S,0},{P_ENV2_R,0.5f},{P_ENV1_D,0.6f},
-        {P_OSC1_FM1,0.25f}),
+        {P_RESONANCE,0.25f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_ENV2_D,0.75f},{P_ENV2_S,0},{P_ENV2_R,0.5f},{P_ENV1_D,0.6f}),
     PRE("Keys Gritty Clav",{P_FILTER_MODE,4},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.2f},{P_OSC2_LEVEL,0},{P_CUTOFF,0.36f},
-        {P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_FLT_FM1,0.8f},{P_ENV1_D,0.55f},{P_ENV2_D,0.68f},
-        {P_ENV2_S,0.25f}),
+        {P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_FLT_FM1,0.8f},{P_ENV1_D,0.55f},{P_ENV2_D,0.68f}),
     PRE("Keys Mallet",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,19},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.3f},{P_CUTOFF,.7f},
-        {P_RESONANCE,.15f},{P_FLT_FM1,.3f},{P_ENV1_D,.5f},{P_ENV1_S,0},{P_ENV2_D,.72f},{P_ENV2_S,.15f},{P_ENV2_R,.4f}),
+        {P_RESONANCE,.15f},{P_FLT_FM1,.3f},{P_ENV1_D,.5f},{P_ENV1_S,0},{P_ENV2_D,.72f},{P_ENV2_S,.15f}),
     PRE("Keys Metal Clang",{P_OSC1_WAVE,7},{P_OSC2_WAVE,7},{P_OSC2_COARSE,5},{P_OSC2_FINE,40},{P_XMOD,1},{P_OSC1_FM2,.3f},
-        {P_LFO_RATE,.8f},{P_CUTOFF,.9f},{P_RESONANCE,.3f},{P_ENV2_D,.72f},{P_ENV2_S,.2f},{P_ENV2_R,.5f},{P_FLT_FM1,0}),
+        {P_LFO_RATE,.8f},{P_CUTOFF,.9f},{P_RESONANCE,.3f},{P_ENV2_D,.72f},{P_ENV2_S,.2f},{P_ENV2_R,.5f}),
     PRE("Keys Pluck",{P_OSC2_LEVEL,0},{P_CUTOFF,.4f},{P_RESONANCE,.5f},{P_FLT_FM1,.85f},{P_ENV1_D,.62f},{P_ENV2_D,.7f},
-        {P_ENV2_S,.3f},{P_ENV2_R,.35f},{P_FILTER_DRIVE,.55f}),
-    PRE("Keys Reso Pluck",{P_OSC2_LEVEL,0},{P_CUTOFF,.3f},{P_RESONANCE,.65f},{P_FLT_FM1,.9f},{P_ENV1_D,.6f},{P_ENV2_D,.68f},
-        {P_ENV2_S,.2f}),
+        {P_ENV2_S,.3f},{P_ENV2_R,.35f}),
+    PRE("Keys Reso Pluck",{P_OSC2_LEVEL,0},{P_CUTOFF,.3f},{P_RESONANCE,.65f},{P_FLT_FM1,.9f},{P_ENV1_D,.6f},{P_ENV2_D,.68f}),
     PRE("Keys Rusty Pluck",{P_OSC1_WAVE,1},{P_OSC2_WAVE,4},{P_OSC2_COARSE,12},{P_OSC2_LEVEL,0.4f},{P_CUTOFF,0.34f},
         {P_RESONANCE,0.55f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.55f},{P_FLT_FM1,0.9f},{P_ENV1_D,0.6f},{P_ENV1_S,0.05f},
-        {P_ENV2_D,0.7f},{P_ENV2_S,0.25f},{P_ENV2_R,0.3f}),
+        {P_ENV2_D,0.7f},{P_ENV2_S,0.25f}),
     PRE("Keys Soft",{P_OSC1_WAVE,2},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.3f},{P_OSC2_LEVEL,.35f},{P_CUTOFF,.58f},{P_RESONANCE,.1f},
-        {P_FLT_FM1,.4f},{P_ENV1_D,.55f},{P_ENV1_S,.1f},{P_ENV2_D,.7f},{P_ENV2_S,.3f},{P_ENV2_R,.4f},{P_VEL_AMP,.5f}),
+        {P_FLT_FM1,.4f},{P_ENV1_D,.55f},{P_ENV1_S,.1f},{P_ENV2_D,.7f},{P_ENV2_S,.3f},{P_ENV2_R,.4f}),
     PRE("Keys Trance Pluck",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_FINE,10},{P_CUTOFF,.45f},{P_RESONANCE,.45f},{P_FLT_FM1,.7f},
-        {P_ENV1_D,.6f},{P_ENV2_D,.68f},{P_ENV2_S,.3f}),
+        {P_ENV1_D,.6f},{P_ENV2_D,.68f}),
     PRE("Brass Fanfare",{P_OSC1_WAVE,1},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,0.4f},{P_OSC2_FINE,8},{P_OSC2_LEVEL,0.6f},{P_CUTOFF,0.52f},
         {P_RESONANCE,0.25f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_FLT_FM1,0.5f},{P_ENV1_A,0.36f},{P_ENV1_D,0.55f},
-        {P_ENV1_S,0.55f},{P_ENV2_A,0.28f},{P_ENV2_S,0.85f},{P_ENV2_R,0.28f},{P_VIB_DEPTH,0.15f},{P_VEL_AMP,0.4f}),
+        {P_ENV1_S,0.55f},{P_ENV2_A,0.28f},{P_ENV2_S,0.85f},{P_ENV2_R,0.28f},{P_VIB_DEPTH,0.15f}),
     PRE("Brass Fat Stab",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_OSC2_COARSE,-12},{P_OSC2_LEVEL,0.7f},{P_CUTOFF,0.38f},
         {P_RESONANCE,0.25f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_FLT_FM1,0.8f},{P_ENV1_A,0.32f},{P_ENV1_D,0.55f},
-        {P_ENV1_S,0.25f},{P_ENV2_A,0.25f},{P_ENV2_D,0.62f},{P_ENV2_S,0.6f},{P_ENV2_R,0.25f},{P_VEL_AMP,0.5f},{P_VEL_CUTOFF,0.4f}),
+        {P_ENV1_S,0.25f},{P_ENV2_A,0.25f},{P_ENV2_D,0.62f},{P_ENV2_S,0.6f},{P_ENV2_R,0.25f},{P_VEL_AMP,0.5f}),
     PRE("Brass Gritty Solo",{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},{P_OSC2_FINE,6},{P_CUTOFF,0.42f},{P_RESONANCE,0.3f},
         {P_FILTER_DRIVE,0.9f},{P_DRIVE,0.75f},{P_FLT_FM1,0.6f},{P_ENV1_A,0.4f},{P_ENV1_D,0.6f},{P_ENV1_S,0.45f},{P_ENV2_A,0.3f},
         {P_ENV2_S,0.9f},{P_ENV2_R,0.3f},{P_GLIDE,0.12f},{P_LEGATO,1},{P_VIB_DEPTH,0.2f},{P_VIB_RATE,0.6f},{P_AT_DEST,1},
-        {P_AT_AMOUNT,0.6f},{P_VOLUME,0.6f}),
+        {P_AT_AMOUNT,0.6f}),
     PRE("Brass Low Horn",{P_OSC1_WAVE,1},{P_OSC2_WAVE,2},{P_OSC2_FINE,4},{P_OSC2_LEVEL,0.6f},{P_CUTOFF,0.32f},{P_RESONANCE,0.15f},
         {P_FILTER_DRIVE,0.6f},{P_DRIVE,0.4f},{P_FLT_FM1,0.7f},{P_ENV1_A,0.48f},{P_ENV1_D,0.6f},{P_ENV1_S,0.5f},{P_ENV2_A,0.38f},
-        {P_ENV2_S,0.9f},{P_ENV2_R,0.35f},{P_OCTAVE,-1},{P_VIB_DEPTH,0.1f}),
+        {P_ENV2_S,0.9f},{P_ENV2_R,0.35f},{P_OCTAVE,-1}),
     PRE("Brass Mean Section",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,11},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.4f},
         {P_RESONANCE,0.2f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_FLT_FM1,0.6f},{P_ENV1_A,0.5f},{P_ENV1_D,0.6f},{P_ENV1_S,0.5f},
-        {P_ENV2_A,0.35f},{P_ENV2_S,0.9f},{P_ENV2_R,0.3f},{P_VIB_DEPTH,0.1f},{P_VIB_RATE,0.55f},{P_DRIFT,0.5f}),
+        {P_ENV2_A,0.35f},{P_ENV2_S,0.9f},{P_ENV2_R,0.3f},{P_VIB_DEPTH,0.1f},{P_VIB_RATE,0.55f}),
     PRE("Brass Reedy",{P_FILTER_MODE,4},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.35f},{P_OSC2_WAVE,1},{P_OSC2_FINE,7},{P_OSC2_LEVEL,0.6f},
         {P_CUTOFF,0.5f},{P_RESONANCE,0.45f},{P_FILTER_DRIVE,0.75f},{P_DRIVE,0.5f},{P_FLT_FM1,0.45f},{P_ENV1_A,0.42f},
-        {P_ENV1_D,0.6f},{P_ENV1_S,0.5f},{P_ENV2_A,0.3f},{P_ENV2_S,0.9f},{P_ENV2_R,0.28f},{P_VIB_DEPTH,0.12f}),
+        {P_ENV1_D,0.6f},{P_ENV1_S,0.5f},{P_ENV2_A,0.3f},{P_ENV2_S,0.9f},{P_ENV2_R,0.28f}),
     PRE("Brass Slow Swell",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,7},{P_CUTOFF,0.34f},{P_RESONANCE,0.2f},
         {P_FILTER_DRIVE,0.65f},{P_DRIVE,0.4f},{P_FLT_FM1,0.85f},{P_ENV1_A,0.72f},{P_ENV1_D,0.75f},{P_ENV1_S,0.7f},
-        {P_ENV2_A,0.62f},{P_ENV2_S,1},{P_ENV2_R,0.5f},{P_VIB_DEPTH,0.15f},{P_DRIFT,0.6f}),
+        {P_ENV2_A,0.62f},{P_ENV2_S,1},{P_ENV2_R,0.5f},{P_VIB_DEPTH,0.15f}),
     PRE("Brass Stab",{P_OSC2_WAVE,1},{P_OSC2_FINE,10},{P_ENV1_A,.35f},{P_ENV1_D,.5f},{P_ENV1_S,.4f},{P_FLT_FM1,.6f},
-        {P_CUTOFF,.45f},{P_RESONANCE,.2f},{P_ENV2_A,.2f},{P_ENV2_D,.5f},{P_ENV2_S,.8f}),
+        {P_CUTOFF,.45f},{P_RESONANCE,.2f},{P_ENV2_A,.2f},{P_ENV2_D,.5f}),
     PRE("Brass Sync Horn",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,3},{P_XMOD,0.5f},{P_CUTOFF,0.46f},
         {P_RESONANCE,0.3f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_FLT_FM1,0.6f},{P_ENV1_A,0.4f},{P_ENV1_D,0.6f},{P_ENV1_S,0.4f},
-        {P_ENV2_A,0.3f},{P_ENV2_S,0.9f},{P_ENV2_R,0.3f},{P_GLIDE,0.1f},{P_LEGATO,1},{P_VOLUME,0.6f}),
+        {P_ENV2_A,0.3f},{P_ENV2_S,0.9f},{P_ENV2_R,0.3f},{P_GLIDE,0.1f},{P_LEGATO,1}),
+    PRE("Arp Acid Run",{P_ARP_MODE,1},{P_ARP_RATE,3},{P_ARP_OCT,2},{P_ARP_GATE,0.55f},{P_OSC2_LEVEL,0},{P_CUTOFF,0.3f},
+        {P_RESONANCE,0.75f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.5f},{P_FLT_FM1,1},{P_ENV1_D,0.5f},{P_ENV1_S,0.05f},{P_ENV2_D,0.55f},
+        {P_ENV2_S,0.6f},{P_ENV2_R,0.2f},{P_VEL_CUTOFF,0.5f}),
+    PRE("Arp Bass Walk",{P_ARP_MODE,5},{P_ARP_RATE,1},{P_ARP_OCT,1},{P_ARP_GATE,0.7f},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.3f},
+        {P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.34f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.8f},
+        {P_DRIVE,0.6f},{P_FLT_FM1,0.6f},{P_ENV1_D,0.5f},{P_ENV2_S,0.8f},{P_ENV2_R,0.2f}),
+    PRE("Arp Bell Cascade",{P_ARP_MODE,2},{P_ARP_RATE,3},{P_ARP_OCT,3},{P_ARP_GATE,0.8f},{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},
+        {P_OSC2_COARSE,12},{P_XMOD,0.3f},{P_CUTOFF,0.75f},{P_RESONANCE,0.2f},{P_ENV2_D,0.6f},{P_ENV2_S,0.2f},{P_ENV2_R,0.5f}),
+    PRE("Arp Brass Pulse",{P_ARP_MODE,1},{P_ARP_RATE,1},{P_ARP_OCT,1},{P_ARP_GATE,0.6f},{P_OSC2_WAVE,1},{P_OSC2_FINE,9},
+        {P_CUTOFF,0.42f},{P_RESONANCE,0.25f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.6f},{P_FLT_FM1,0.7f},{P_ENV1_A,0.35f},
+        {P_ENV1_D,0.55f},{P_ENV1_S,0.4f},{P_ENV2_A,0.25f},{P_ENV2_S,0.8f},{P_ENV2_R,0.25f}),
+    PRE("Arp Dark Climb",{P_ARP_MODE,1},{P_ARP_RATE,4},{P_ARP_OCT,3},{P_ARP_GATE,0.6f},{P_OSC1_WAVE,1},{P_OSC2_WAVE,4},
+        {P_OSC2_SHAPE,0.4f},{P_OSC2_FINE,6},{P_CUTOFF,0.36f},{P_RESONANCE,0.5f},{P_FILTER_DRIVE,0.9f},{P_DRIVE,0.6f},
+        {P_FLT_FM1,0.7f},{P_ENV1_D,0.55f},{P_ENV2_S,0.8f},{P_ENV2_R,0.2f}),
+    PRE("Arp Gritty Pulse",{P_ARP_MODE,3},{P_ARP_RATE,1},{P_ARP_OCT,2},{P_ARP_GATE,0.5f},{P_OSC1_WAVE,5},{P_OSC2_WAVE,1},
+        {P_OSC2_FINE,9},{P_CUTOFF,0.45f},{P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.7f},{P_FLT_FM1,0.6f},
+        {P_ENV1_D,0.5f},{P_ENV2_S,0.8f},{P_ENV2_R,0.2f}),
+    PRE("Arp Random Grit",{P_ARP_MODE,4},{P_ARP_RATE,3},{P_ARP_OCT,2},{P_ARP_GATE,0.45f},{P_OSC1_WAVE,7},{P_OSC2_LEVEL,0},
+        {P_CUTOFF,0.5f},{P_RESONANCE,0.45f},{P_FILTER_DRIVE,1},{P_DRIVE,0.8f},{P_FLT_FM1,0.5f},{P_ENV1_D,0.45f},{P_ENV2_S,0.7f},
+        {P_ENV2_R,0.2f},{P_VOLUME,0.6f}),
     PRE("Pad Breath Noise",{P_OSC1_LEVEL,.2f},{P_OSC2_LEVEL,0},{P_NOISE_LEVEL,.7f},{P_FILTER_MODE,1},{P_CUTOFF,.6f},
-        {P_RESONANCE,.65f},{P_KEY_TRACK,.9f},{P_FLT_FM1,0},{P_ENV2_A,.65f}),
+        {P_RESONANCE,.65f},{P_KEY_TRACK,.9f},{P_FLT_FM1,0}),
     PRE("Pad Burnt Strings",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,0.4f},{P_OSC2_WAVE,1},{P_OSC2_FINE,9},{P_CUTOFF,0.5f},
         {P_RESONANCE,0.35f},{P_FILTER_DRIVE,0.95f},{P_DRIVE,0.7f},{P_SHAPE_MOD,0.6f},{P_LFO_RATE,0.3f},{P_ENV2_A,0.6f},
-        {P_ENV2_R,0.7f},{P_VIB_DEPTH,0.15f}),
+        {P_ENV2_R,0.7f}),
     PRE("Pad Choir Reso",{P_OSC2_WAVE,1},{P_OSC2_FINE,-10},{P_FILTER_MODE,4},{P_RESONANCE,.7f},{P_CUTOFF,.5f},{P_ENV2_A,.5f},
-        {P_ENV2_R,.7f},{P_VIB_DEPTH,.2f},{P_FLT_FM1,0}),
+        {P_ENV2_R,.7f},{P_VIB_DEPTH,.2f}),
     PRE("Pad Cinder",{P_OSC1_WAVE,7},{P_OSC1_LEVEL,0.5f},{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,8},{P_OSC2_LEVEL,0.7f},
         {P_CUTOFF,0.4f},{P_RESONANCE,0.45f},{P_FILTER_DRIVE,0.85f},{P_DRIVE,0.65f},{P_FLT_FM2,0.3f},{P_LFO_RATE,0.18f},
-        {P_ENV2_A,0.75f},{P_ENV2_R,0.85f}),
+        {P_ENV2_A,0.75f}),
     PRE("Pad Dark",{P_OSC2_WAVE,1},{P_OSC2_FINE,-13},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.38f},{P_RESONANCE,.35f},{P_FLT_FM1,.2f},
-        {P_FLT_FM2,.25f},{P_LFO_RATE,.2f},{P_ENV2_A,.7f},{P_ENV2_R,.8f},{P_ENV1_A,.6f},{P_ENV1_S,.5f}),
+        {P_FLT_FM2,.25f},{P_LFO_RATE,.2f},{P_ENV2_A,.7f},{P_ENV2_R,.8f},{P_ENV1_A,.6f}),
     PRE("Pad Detuned Saw",{P_OSC2_WAVE,1},{P_OSC2_FINE,14},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.55f},{P_RESONANCE,.2f},{P_ENV2_A,.7f},
-        {P_ENV2_D,.5f},{P_ENV2_S,.9f},{P_ENV2_R,.8f},{P_FLT_FM1,.25f},{P_ENV1_A,.6f},{P_ENV1_S,.6f}),
+        {P_ENV2_D,.5f},{P_ENV2_S,.9f},{P_ENV2_R,.8f},{P_FLT_FM1,.25f},{P_ENV1_A,.6f}),
     PRE("Pad Dusty Saw",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,17},{P_OSC2_LEVEL,0.75f},{P_NOISE_LEVEL,0.1f},
         {P_CUTOFF,0.52f},{P_RESONANCE,0.2f},{P_FILTER_DRIVE,0.6f},{P_DRIVE,0.4f},{P_ENV2_A,0.7f},{P_ENV2_R,0.85f},
-        {P_FLT_FM1,0.2f},{P_ENV1_A,0.65f},{P_ENV1_S,0.55f}),
+        {P_FLT_FM1,0.2f},{P_ENV1_A,0.65f}),
     PRE("Pad Glass",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,6},{P_OSC2_LEVEL,.5f},{P_XMOD,.15f},
-        {P_CUTOFF,.78f},{P_RESONANCE,.2f},{P_FLT_FM1,.1f},{P_ENV2_A,.65f},{P_ENV2_R,.8f},{P_SHAPE_MOD,.4f}),
+        {P_CUTOFF,.78f},{P_RESONANCE,.2f},{P_FLT_FM1,.1f},{P_ENV2_A,.65f},{P_ENV2_R,.8f}),
     PRE("Pad Gravel",{P_OSC1_WAVE,5},{P_OSC2_WAVE,4},{P_OSC2_FINE,11},{P_NOISE_LEVEL,0.15f},{P_FILTER_MODE,4},{P_CUTOFF,0.5f},
-        {P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.55f},{P_FLT_FM2,0.3f},{P_LFO_RATE,0.25f},{P_ENV2_A,0.65f}),
+        {P_RESONANCE,0.4f},{P_FILTER_DRIVE,0.7f},{P_DRIVE,0.55f},{P_FLT_FM2,0.3f},{P_LFO_RATE,0.25f}),
     PRE("Pad Hollow Grit",{P_FILTER_MODE,3},{P_OSC1_WAVE,2},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,0.5f},{P_OSC2_FINE,7},{P_CUTOFF,0.55f},
-        {P_RESONANCE,0.5f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.55f},{P_FLT_FM2,0.4f},{P_LFO_RATE,0.3f},{P_ENV2_A,0.65f}),
-    PRE("Pad Phasing",{P_OSC2_WAVE,1},{P_OSC2_FINE,11},{P_OSC2_LEVEL,.7f},{P_FILTER_MODE,3},{P_CUTOFF,.6f},{P_RESONANCE,.45f},
-        {P_FLT_FM2,.4f}),
+        {P_RESONANCE,0.5f},{P_FILTER_DRIVE,0.8f},{P_DRIVE,0.55f},{P_FLT_FM2,0.4f},{P_LFO_RATE,0.3f}),
+    PRE("Pad Phasing",{P_OSC2_WAVE,1},{P_OSC2_FINE,11},{P_OSC2_LEVEL,.7f},{P_FILTER_MODE,3},{P_CUTOFF,.6f},{P_RESONANCE,.45f}),
     PRE("Pad Pulse",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_FINE,10},{P_SHAPE_MOD,.9f},{P_LFO_RATE,.3f},{P_CUTOFF,.52f},
-        {P_RESONANCE,.2f},{P_ENV2_A,.7f},{P_ENV2_R,.75f},{P_FLT_FM1,.2f},{P_ENV1_A,.6f}),
+        {P_RESONANCE,.2f},{P_ENV2_A,.7f},{P_ENV2_R,.75f},{P_FLT_FM1,.2f}),
     PRE("Pad Pulse Strings",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_FINE,-9},{P_SHAPE_MOD,.8f},{P_LFO_RATE,.35f},{P_CUTOFF,.6f},
-        {P_RESONANCE,.15f},{P_ENV2_A,.6f},{P_ENV2_R,.6f}),
+        {P_RESONANCE,.15f},{P_ENV2_A,.6f}),
     PRE("Pad Reso Vox",{P_OSC2_WAVE,1},{P_OSC2_FINE,8},{P_FILTER_MODE,4},{P_CUTOFF,.55f},{P_RESONANCE,.6f},{P_FLT_FM2,.3f},
-        {P_LFO_RATE,.28f},{P_ENV2_A,.65f},{P_ENV2_R,.75f}),
+        {P_LFO_RATE,.28f},{P_ENV2_A,.65f}),
     PRE("Pad Rust",{P_OSC1_WAVE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,-14},{P_OSC2_LEVEL,0.8f},{P_CUTOFF,0.44f},{P_RESONANCE,0.3f},
-        {P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_FLT_FM1,0.3f},{P_ENV1_A,0.7f},{P_ENV1_S,0.5f},{P_ENV2_A,0.7f},{P_ENV2_R,0.8f},
-        {P_DRIFT,0.8f}),
+        {P_FILTER_DRIVE,0.7f},{P_DRIVE,0.5f},{P_FLT_FM1,0.3f},{P_ENV1_A,0.7f},{P_ENV1_S,0.5f},{P_ENV2_A,0.7f},{P_ENV2_R,0.8f}),
     PRE("Pad Slow Swell",{P_OSC2_WAVE,1},{P_OSC2_FINE,12},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.48f},{P_RESONANCE,.25f},{P_FLT_FM1,.5f},
-        {P_ENV1_A,.85f},{P_ENV1_D,.8f},{P_ENV1_S,.6f},{P_ENV1_R,.8f},{P_ENV2_A,.8f},{P_ENV2_S,1}),
+        {P_ENV1_A,.85f},{P_ENV1_D,.8f},{P_ENV1_S,.6f},{P_ENV1_R,.8f},{P_ENV2_A,.8f}),
     PRE("Drone Chaos",{P_OSC1_WAVE,5},{P_OSC2_WAVE,5},{P_OSC2_COARSE,7},{P_OSC2_FINE,23},{P_XMOD,.8f},{P_OSC1_FM2,.4f},
         {P_OSC2_FM2,.3f},{P_LFO_RATE,.7f},{P_SHAPE_MOD,.8f},{P_CUTOFF,.6f},{P_RESONANCE,.55f},{P_FLT_FM2,.5f},{P_FLT_FM1,0},
-        {P_DRONE,1},{P_OSC1_LEVEL,.4f}),
+        {P_DRONE,1}),
     PRE("Drone Growl",{P_DRONE,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,25},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.45f},{P_RESONANCE,.55f},
-        {P_FLT_FM2,.5f},{P_LFO_RATE,.2f},{P_DRIVE,.5f},{P_FLT_FM1,0}),
+        {P_FLT_FM2,.5f},{P_LFO_RATE,.2f},{P_DRIVE,.5f}),
     PRE("Drone Metal",{P_DRONE,1},{P_OSC1_WAVE,7},{P_OSC2_WAVE,7},{P_OSC2_COARSE,5},{P_OSC2_FINE,18},{P_XMOD,.6f},
-        {P_OSC1_FM2,.2f},{P_LFO_RATE,.25f},{P_CUTOFF,.58f},{P_RESONANCE,.5f},{P_FLT_FM2,.4f},{P_FLT_FM1,0},{P_OSC1_LEVEL,.4f}),
+        {P_OSC1_FM2,.2f},{P_LFO_RATE,.25f},{P_CUTOFF,.58f},{P_RESONANCE,.5f},{P_FLT_FM2,.4f},{P_FLT_FM1,0}),
     PRE("Drone Sub",{P_DRONE,1},{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,-12},{P_OSC2_FINE,4},{P_OSC2_LEVEL,.7f},
-        {P_CUTOFF,.42f},{P_RESONANCE,.35f},{P_FLT_FM2,.2f},{P_LFO_RATE,.15f},{P_FLT_FM1,0},{P_KEY_TRACK,.2f}),
+        {P_CUTOFF,.42f},{P_RESONANCE,.35f},{P_FLT_FM2,.2f},{P_LFO_RATE,.15f},{P_FLT_FM1,0}),
     PRE("Drone Wind",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.9f},{P_FILTER_MODE,1},{P_RESONANCE,.8f},{P_CUTOFF,.55f},{P_FLT_FM2,.6f},
-        {P_LFO_RATE,.25f},{P_DRONE,1},{P_FLT_FM1,0}),
+        {P_LFO_RATE,.25f},{P_DRONE,1}),
 };
 #define N_PRESETS ((int)(sizeof PRESETS / sizeof PRESETS[0]))
 
@@ -520,6 +652,7 @@ static void apply_preset(mm_t *m, int idx) {
     }
     m->preset = idx;
     unlatch(m);
+    sync_modes(m);
 }
 
 
@@ -542,7 +675,9 @@ static void state_read(mm_t *m, const char *js) {
         v = clampf(v, PD[i].min, PD[i].max);
         m->p[i] = PD[i].kind == K_F ? v : floorf(v + 0.5f);
     }
+    m->p[P_STICK_X] = 0.0f; m->p[P_STICK_Y] = 0.0f;   /* the stick always starts centred */
     if ((int)m->p[P_DRONE] != 2) unlatch(m);
+    sync_modes(m);
     const char *q = strstr(js, "\"preset\":");
     if (q) { int pi = atoi(q + 9); if (pi >= 0 && pi < N_PRESETS) m->preset = pi; }
 }
@@ -591,6 +726,8 @@ static int emit_param(char *b, int n, int w, int i) {
 #define K_MOD   "\"osc1_fm1\",\"osc2_fm1\",\"osc1_fm2\",\"osc2_fm2\",\"xmod_2to1\",\"shape_mod\",\"lfo_rate\",\"lfo_wave\""
 #define K_PLAY  "\"noise_level\",\"glide\",\"vibrato_depth\",\"bend_range\",\"drift\",\"legato\",\"drone\",\"volume\""
 #define K_PERF  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\",\"priority\",\"octave\",\"vib_rate\",\"tune\""
+#define K_STICK "\"stick_x\",\"stick_y\",\"stick_x_to\",\"stick_y_to\",\"hold\",\"bend_range\",\"vibrato_depth\",\"glide\""
+#define K_ARP   "\"arp_mode\",\"arp_rate\",\"arp_octaves\",\"arp_gate\",\"hold\""
 #define LEVEL(id, title, keys) "\"" id "\":{\"name\":\"" title "\",\"children\":null,\"knobs\":[" keys "],\"params\":[" keys "]}"
 static const char HIERARCHY[] =
     "{\"modes\":null,\"levels\":{"
@@ -598,7 +735,7 @@ static const char HIERARCHY[] =
         "\"knobs\":[" K_ROOT "],"
         "\"params\":[{\"level\":\"osc\",\"label\":\"Oscillators\"},{\"level\":\"filter\",\"label\":\"Filter\"},{\"level\":\"env1\",\"label\":\"Env 1\"},"
         "{\"level\":\"env2\",\"label\":\"Env 2\"},{\"level\":\"mod\",\"label\":\"Modulation\"},{\"level\":\"play\",\"label\":\"Play\"},"
-        "{\"level\":\"perform\",\"label\":\"Perform\"},"
+        "{\"level\":\"perform\",\"label\":\"Perform\"},{\"level\":\"stick\",\"label\":\"Stick\"},{\"level\":\"arp\",\"label\":\"Arp\"},"
         "{\"key\":\"env2_a\",\"short_name\":\"AmpA\"},{\"key\":\"env2_r\",\"short_name\":\"AmpR\"}]},"
     LEVEL("osc", "Oscillators", K_OSC) ","
     LEVEL("filter", "Filter", K_FILT) ","
@@ -606,7 +743,9 @@ static const char HIERARCHY[] =
     LEVEL("env2", "Env 2", K_ENV2) ","
     LEVEL("mod", "Modulation", K_MOD) ","
     LEVEL("play", "Play", K_PLAY) ","
-    LEVEL("perform", "Perform", K_PERF)
+    LEVEL("perform", "Perform", K_PERF) ","
+    LEVEL("stick", "Stick", K_STICK) ","
+    LEVEL("arp", "Arp", K_ARP)
     "}}";
 
 static void build_json(mm_t *m) {
@@ -625,7 +764,7 @@ static void build_json(mm_t *m) {
 static const host_api_v1_t *g_host;
 
 static void reset_state(mm_t *m) {
-    m->n_notes = 0; m->gate = 0; m->cur_note = -1; m->cur_semi = m->tgt_semi = 48.0f; m->vel = 0.8f;
+    m->n_notes = 0; m->gate = 0; m->cur_note = -1; m->arp_note = -1; m->cur_semi = m->tgt_semi = 48.0f; m->vel = 0.8f;
     m->bend = m->at = m->modwheel = 0.0f;
     memset(&m->e1, 0, sizeof m->e1); memset(&m->e2, 0, sizeof m->e2);
 }
@@ -707,13 +846,21 @@ static void destroy_instance(void *inst) {
 }
 
 static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
-    (void)src;
     mm_t *m = inst;
     if (!m || !msg || len < 1) return;
     int st = msg[0] & 0xF0, d1 = len > 1 ? msg[1] & 0x7F : 0, d2 = len > 2 ? msg[2] & 0x7F : 0;
+    if (src == MOVE_MIDI_SOURCE_TOUCH) {   /* capacitive touch of Knobs 1-8 (notes 0-7): never a played note */
+        if ((st == 0x90 || st == 0x80) && d1 < 2) {
+            int down = (st == 0x90 && d2 > 0);
+            m->touched[d1] = (uint8_t)down;
+            if (down) m->touch_seen = 1;
+            else { m->p[d1 ? P_STICK_Y : P_STICK_X] = 0.0f; m->stick_age[d1] = 0; if (d1) m->y_down = 0; }   /* the stick springs back */
+        }
+        return;
+    }
     switch (st) {
-    case 0x90: if (d2 > 0) note_on(m, d1, d2); else note_off(m, d1); break;
-    case 0x80: note_off(m, d1); break;
+    case 0x90: if (d2 > 0) in_on(m, d1, d2); else in_off(m, d1); break;
+    case 0x80: in_off(m, d1); break;
     case 0xE0: m->bend = ((((d2 << 7) | d1) - 8192) / 8192.0f) * m->p[P_BEND_RANGE]; break;
     case 0xA0: m->at = d2 / 127.0f; break;                 /* poly AT (mono voice: any key) */
     case 0xD0: m->at = d1 / 127.0f; break;                 /* channel pressure */
@@ -721,7 +868,7 @@ static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
         if (d1 == 1) m->modwheel = d2 / 127.0f;
         else if (d1 == 64) pedal(m, d2 >= 64);
         else if (d1 == 121) { m->modwheel = 0.0f; m->at = 0.0f; m->bend = 0.0f; pedal(m, 0); }   /* reset all controllers */
-        else if (d1 == 123 || d1 == 120) { memset(m->pend_off, 0, sizeof m->pend_off); m->sustain = 0; m->n_notes = 0; m->latched = 0; gate_off(m); }
+        else if (d1 == 123 || d1 == 120) panic(m);
         break;
     default: break;
     }
@@ -740,6 +887,13 @@ static void set_param(void *inst, const char *key, const char *val) {
             if (PD[k].kind != K_F) v = floorf(v + 0.5f);
             m->p[k] = v;
             if (k == P_DRONE && (int)v != 2) unlatch(m);
+            if (k == P_STICK_X) m->stick_age[0] = 0;
+            if (k == P_STICK_Y) {
+                m->stick_age[1] = 0;
+                if (v <= -0.6f && !m->y_down) { m->y_down = 1; m->p[P_HOLD] = ((int)m->p[P_HOLD] == 1) ? 0.0f : 1.0f; }   /* stick down toggles Hold */
+                else if (v > -0.3f) m->y_down = 0;
+            }
+            if (k == P_ARP_MODE || k == P_HOLD || k == P_STICK_Y) sync_modes(m);
             return;
         }
 }
@@ -749,7 +903,7 @@ static int get_param(void *inst, const char *key, char *buf, int n) {
     for (int k = 0; k < P_COUNT; k++)
         if (!strcmp(key, PD[k].key))
             return PD[k].kind == K_F ? snprintf(buf, n, "%.4f", m->p[k]) : snprintf(buf, n, "%d", (int)m->p[k]);
-    if (!strcmp(key, "name")) return snprintf(buf, (size_t)n, "Mean Module");
+    if (!strcmp(key, "name")) return snprintf(buf, (size_t)n, "Mean Mod");
     if (!strcmp(key, "state")) return state_write(m, buf, n);
     if (!strcmp(key, "preset")) return snprintf(buf, n, "%d", m->preset);
     if (!strcmp(key, "preset_count")) return snprintf(buf, n, "%d", N_PRESETS);
@@ -767,31 +921,39 @@ static int get_error(void *i, char *buf, int n) { (void)i; (void)buf; (void)n; r
 static void render_active(mm_t *m, int16_t *out, int frames) {
     const float *p = m->p;
 
+    /* Joystick emulation: X and Y each drive one chosen target; both spring back to centre when the knob is released. */
+    const int xt = (int)p[P_STICK_X_TO], yt = (int)p[P_STICK_Y_TO];
+    const float xv = p[P_STICK_X], yv = p[P_STICK_Y], yu = yv > 0.0f ? yv : 0.0f;
+    const float stick_bend = xt == 0 ? xv * p[P_BEND_RANGE] : 0.0f;
+    const float stick_cut_oct = (xt == 2 ? xv * 2.0f : 0.0f) + (yt == 2 ? yu * 2.0f : 0.0f);
+    const float grit_in = clampf(p[P_GRIT] + (xt == 3 ? xv : 0.0f) + (yt == 3 ? yu : 0.0f), -1.0f, 1.0f);
+    const float g_glide = clampf(p[P_GLIDE] + (yt == 0 ? yu : 0.0f), 0.0f, 1.0f);
+
     /* block-rate constants */
     const int w1 = (int)p[P_OSC1_WAVE], w2 = (int)p[P_OSC2_WAVE];
     const float a1 = coef(env_time(p[P_ENV1_A]), 1.466f), d1 = coef(env_time(p[P_ENV1_D]), 4.0f), r1 = coef(env_time(p[P_ENV1_R]), 4.0f);
     const float a2 = coef(env_time(p[P_ENV2_A]), 1.466f), d2 = coef(env_time(p[P_ENV2_D]), 4.0f), r2 = coef(env_time(p[P_ENV2_R]), 4.0f);
     const float lfo_hz = 0.05f * powf(800.0f, p[P_LFO_RATE]);
-    const float lfo_inc = lfo_hz / SR, vib_inc = (3.0f + 5.0f * p[P_VIB_RATE]) / SR;
-    const float glide_s = 2.0f * p[P_GLIDE] * p[P_GLIDE];
+    const float lfo_inc = lfo_hz / SR, vib_inc = clampf(3.0f + 5.0f * p[P_VIB_RATE] + (xt == 1 ? xv * 4.0f : 0.0f), 0.5f, 14.0f) / SR;
+    const float glide_s = 2.0f * g_glide * g_glide;
     const float glide_c = glide_s > 0.0005f ? 1.0f - expf(-1.0f / (glide_s * SR * 0.25f)) : 1.0f;
     const int at_dest = (int)p[P_AT_DEST];
     const float at = p[P_AT_AMOUNT] * m->at;                    /* aftertouch, scaled */
-    const float vib_depth = clampf(p[P_VIB_DEPTH] + 0.5f * m->modwheel + (at_dest == 2 ? at : 0.0f), 0.0f, 1.0f) * 0.6f;  /* semitones */
+    const float vib_depth = clampf(p[P_VIB_DEPTH] + 0.5f * m->modwheel + (at_dest == 2 ? at : 0.0f) + (yt == 1 ? yu : 0.0f), 0.0f, 1.0f) * 0.6f;  /* semitones */
     const float at_cut_oct = at_dest == 1 ? at * 3.0f : 0.0f;
     const float xmod_eff = clampf(p[P_XMOD] + (at_dest == 4 ? at * 0.5f : 0.0f), 0.0f, 1.0f);
     const float vel_cut_oct = p[P_VEL_CUTOFF] * (m->vel - 0.5f) * 6.0f;
     const float vel_scale = 1.0f - p[P_VEL_AMP] * (1.0f - m->vel);
     const float pitch_off = 12.0f * p[P_OCTAVE] + p[P_TUNE] / 100.0f;
     /* Grit / Dark macro, applied on top of the patch (the stored params are untouched). + = grittier and darker, - = cleaner and brighter. */
-    const float gp = p[P_GRIT] > 0.0f ? p[P_GRIT] : 0.0f, gn = p[P_GRIT] < 0.0f ? -p[P_GRIT] : 0.0f;
-    const float g_fdrive = clampf(p[P_FILTER_DRIVE] + 0.5f * gp - 0.4f * gn, 0.0f, 1.0f);
-    const float g_drive  = clampf(p[P_DRIVE] + 0.5f * gp - 0.3f * gn, 0.0f, 1.0f);
-    const float g_res    = clampf(p[P_RESONANCE] + 0.15f * gp - 0.1f * gn, 0.0f, 1.0f);
-    const float g_noise  = clampf(p[P_NOISE_LEVEL] + 0.08f * gp, 0.0f, 1.0f);
-    const float g_drift  = clampf(p[P_DRIFT] + 0.4f * gp - 0.2f * gn, 0.0f, 1.0f);
-    const float g_cut_oct = -1.5f * gp + 1.0f * gn;
-    const float g_makeup = 1.0f + 0.8f * gn;     /* clean end loses filter-input gain: keep the level */
+    const float gp = grit_in > 0.0f ? grit_in : 0.0f, gn = grit_in < 0.0f ? -grit_in : 0.0f;
+    const float g_fdrive = clampf(p[P_FILTER_DRIVE] + 0.9f * gp - 0.4f * gn, 0.0f, 2.0f);   /* beyond 1: extra saturation only Grit can reach */
+    const float g_drive  = clampf(p[P_DRIVE] + 0.9f * gp - 0.3f * gn, 0.0f, 1.6f);
+    const float g_res    = clampf(p[P_RESONANCE] + 0.2f * gp - 0.1f * gn, 0.0f, 1.0f);
+    const float g_noise  = clampf(p[P_NOISE_LEVEL] + 0.12f * gp, 0.0f, 1.0f);
+    const float g_drift  = clampf(p[P_DRIFT] + 0.5f * gp - 0.2f * gn, 0.0f, 1.0f);
+    const float g_cut_oct = -2.0f * gp + 1.0f * gn;
+    const float g_makeup = 1.0f + 0.8f * gn + 0.5f * gp;     /* clean end loses filter-input gain: keep the level */
     const float drift_amt = g_drift * 0.03f;  /* semitones (3 cents) */
     const float drift_c = 1.0f - expf(-6.2831853f * 0.4f / SR);
     const float k1 = exp2f((0.5f - p[P_OSC1_SHAPE]) * 2.0f), k2 = exp2f((0.5f - p[P_OSC2_SHAPE]) * 2.0f);
@@ -803,7 +965,7 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     const float res_K = g_res * 3.6f;                 /* ~2 is linear self-oscillation */
     const float ig = 0.25f * exp2f(4.0f * g_fdrive), inv_sqrt_ig = 1.0f / sqrtf(ig);
     const int fmode = (int)p[P_FILTER_MODE];
-    const float drv = clampf(g_drive + (at_dest == 3 ? at * 0.6f : 0.0f), 0.0f, 1.0f), drv_g = 1.0f + 5.0f * drv, drv_b = 0.15f * drv, drv_bias_out = tanhf(drv_b);
+    const float drv = clampf(g_drive + (at_dest == 3 ? at * 0.6f : 0.0f), 0.0f, 1.6f), drv_g = 1.0f + 5.0f * drv + 6.0f * drv * drv, drv_b = 0.15f * drv, drv_bias_out = tanhf(drv_b);
     const float drv_norm = 1.0f / sqrtf(drv_g);
 
     for (int i = 0; i < frames; i++) {
@@ -819,10 +981,10 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         m->cur_semi += (m->tgt_semi - m->cur_semi) * glide_c;
         m->o1.drift += (frand(&m->rng) - m->o1.drift) * drift_c * 0.02f;  /* slow wander */
         m->o2.drift += (frand(&m->rng) - m->o2.drift) * drift_c * 0.02f;
-        float semi = m->cur_semi + pitch_off + m->bend + vib;
+        float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib;
 
         float cut_oct = p[P_CUTOFF] * 9.8138f + g_cut_oct + p[P_FLT_FM1] * e1 * 5.0f + p[P_FLT_FM2] * lfo * 3.0f
-                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct;
+                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct + stick_cut_oct;
         float fc = clampf(20.0f * exp2f(cut_oct), 15.0f, 19000.0f);
         float g = tanf(3.14159265f * fc / (SR * OS)), G = g / (1.0f + g);
 
@@ -875,9 +1037,7 @@ static inline unsigned long fpcr_read(void) { unsigned long v; __asm__ volatile(
 static inline void fpcr_write(unsigned long v) { __asm__ volatile("msr fpcr, %0" : : "r"(v)); }
 #endif
 
-static void render_block(void *inst, int16_t *out, int frames) {
-    mm_t *m = inst;
-    if (!m || !out || frames <= 0) return;
+static void render_seg(mm_t *m, int16_t *out, int frames) {
     if (m->e2.stage == ENV_IDLE) {      /* silent voice: output exact zeros and spend no CPU */
         if (!m->was_idle) {
             m->f_s1 = m->f_s2 = m->f_s3 = 0.0f; m->dc_x = m->dc_y = 0.0f;
@@ -889,11 +1049,58 @@ static void render_block(void *inst, int16_t *out, int frames) {
         return;
     }
     m->was_idle = 0;
+    render_active(m, out, frames);
+}
+
+static void render_block(void *inst, int16_t *out, int frames) {
+    mm_t *m = inst;
+    if (!m || !out || frames <= 0) return;
+
+    /* Stick safety net: a displaced axis that is not being touched recentres (covers a missed touch-release, or no touch events at all). */
+    for (int k = 0; k < 2; k++) {
+        int pi = k ? P_STICK_Y : P_STICK_X;
+        if (m->p[pi] != 0.0f && !m->touched[k]) {
+            if (++m->stick_age[k] > (m->touch_seen ? 150 : 120)) { m->p[pi] = 0.0f; m->stick_age[k] = 0; if (k) m->y_down = 0; }
+        } else m->stick_age[k] = 0;
+    }
+
 #if defined(__aarch64__)
     unsigned long fpcr_old = fpcr_read();
     fpcr_write(fpcr_old | (1UL << 24));   /* FPCR.FZ */
 #endif
-    render_active(m, out, frames);
+    static const float STEPS_PER_BEAT[6] = {1.0f, 2.0f, 3.0f, 4.0f, 6.0f, 8.0f};
+    float bpm = (g_host && g_host->get_bpm) ? g_host->get_bpm() : 120.0f;
+    if (!(bpm >= 30.0f && bpm <= 300.0f)) bpm = 120.0f;
+    const float step_len = SR * 60.0f / bpm / STEPS_PER_BEAT[(int)m->p[P_ARP_RATE] % 6];
+    const float gate_len = step_len * m->p[P_ARP_GATE];
+    const int tie = m->p[P_ARP_GATE] >= 0.999f;
+
+    int remaining = frames;
+    int16_t *ptr = out;
+    while (remaining > 0) {
+        int n = remaining;
+        if ((int)m->p[P_ARP_MODE] == 0) {
+            if (m->arp_running) arp_stop(m);
+        } else {
+            if (m->held_n > 0 && !m->arp_running) { m->arp_running = 1; m->arp_pos = step_len; m->arp_idx = 0; }
+            else if (m->held_n == 0 && m->arp_running) arp_stop(m);
+            while (m->arp_running && m->arp_pos >= step_len) { m->arp_pos -= step_len; arp_step(m); }
+            if (m->arp_running) {
+                float nx = step_len - m->arp_pos;
+                if (m->arp_note >= 0 && !tie && m->arp_pos < gate_len && gate_len - m->arp_pos < nx) nx = gate_len - m->arp_pos;
+                n = (int)ceilf(nx);
+                if (n < 1) n = 1;
+                if (n > remaining) n = remaining;
+            }
+        }
+        render_seg(m, ptr, n);
+        if (m->arp_running) {
+            m->arp_pos += (float)n;
+            if (m->arp_note >= 0 && !tie && m->arp_pos >= gate_len) arp_gate_off(m);
+        }
+        ptr += (size_t)n * 2;
+        remaining -= n;
+    }
 #if defined(__aarch64__)
     fpcr_write(fpcr_old);
 #endif

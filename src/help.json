@@ -120,6 +120,42 @@
             "Prio: last/low/high.",
             "Oct, VibRt, Tune."
           ]
+        },
+        {
+          "title": "Stick",
+          "lines": [
+            "Joystick emulation.",
+            "StkX (knob 1) and",
+            "StkY (knob 2) spring",
+            "back to centre when",
+            "you let go.",
+            "X To: Bend, Vibrato",
+            "Speed, Cutoff, Grit.",
+            "Y To: Glide, Vibrato",
+            "Depth, Cutoff, Grit.",
+            "Stick Y down toggles",
+            "Hold. Hold keeps",
+            "notes sounding after",
+            "release; the next",
+            "fresh press replaces",
+            "them."
+          ]
+        },
+        {
+          "title": "Arp",
+          "lines": [
+            "Arp: Off, Up, Down,",
+            "Up+Down, Random,",
+            "As Played.",
+            "Rate: 1/4 to 1/32",
+            "(host tempo).",
+            "Oct: 1-3 octaves.",
+            "Gate: note length;",
+            "100% ties notes.",
+            "Turn Hold on to",
+            "latch a chord, then",
+            "move the Stick."
+          ]
         }
       ]
     },
