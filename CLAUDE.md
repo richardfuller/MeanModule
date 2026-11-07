@@ -17,9 +17,9 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - `src/module.json`, `src/help.json` manifest and on-device help. `release.json` placeholder for Schwung Manager.
 - `tests/host_test.c` desktop host test; `tests/rt_guard.c` LD_PRELOAD malloc/lock guard; `tests/render.c` WAV renderer.
 - `scripts/`: `build.sh` (aarch64 via Docker -> dist/), `test.sh` (ASan, UBSan, RT guard), `listen.sh` (WAV suites ->
-  out/), `install.sh` (scp to the Move). Docker Desktop required; on Windows add
+  out/), `install.sh` (scp, needs SSH key; not set up). Docker Desktop required; on Windows add
   `/c/Program Files/Docker/Docker/resources/bin` to PATH in Git Bash.
-- `docs/ABI_NOTES.md` verified platform facts.
+- `docs/ABI_NOTES.md` verified platform facts; `docs/DEPLOY.md` how to build, package and install on the Move (works, no SSH).
 
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.

@@ -17,5 +17,9 @@ cat build/dsp.so > dist/meanmodule/dsp.so
 [ -f src/help.json ] && cat src/help.json > dist/meanmodule/help.json
 cp LICENSE THIRD_PARTY_LICENSES dist/meanmodule/
 chmod +x dist/meanmodule/dsp.so
-(cd dist && tar -czf meanmodule-module.tar.gz meanmodule/)
+# Explicit modes + root ownership: Schwung Manager extracts this on the Move and fails on read-only dirs.
+find dist/meanmodule -type d -exec chmod 755 {} +
+find dist/meanmodule -type f -exec chmod 644 {} +
+chmod 755 dist/meanmodule/dsp.so
+(cd dist && rm -f meanmodule-module.tar.gz && tar --owner=0 --group=0 --numeric-owner -czf meanmodule-module.tar.gz meanmodule/)
 file build/dsp.so
