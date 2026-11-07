@@ -29,11 +29,11 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - Grit/Dark (`grit`, -1..+1) is a macro applied at render time on top of the patch (filter drive, drive, resonance, noise, drift,
   cutoff); stored params are untouched; 0 = patch as saved. Envelope/filter graphics come from `VIZ_*` tables (chain_params `viz`).
 - Input layer: keys / sustain pedal (CC64) / Hold decide the held set (`held[]`); it feeds the voice directly, or the arp when
-  `arp_mode` != 0. Hold latches notes; the first key of a new gesture replaces them. Arp = free-running at host tempo
-  (`get_bpm`, default 120), not phase-locked to the transport; gate 100% ties notes. render_block splits at arp events.
+  `arp_mode` != 0. Hold latches notes; the first key of a new gesture replaces them. Arp = host tempo (`get_bpm`, default 120), steps locked to the
+  transport grid via `get_beat_position` when it runs (free-running otherwise; the first note sounds at once); gate 100% ties notes. render_block splits at arp events.
 - Stick (joystick emulation): `stick_x`/`stick_y` live on the Stick page as knobs 1 and 2; `touch_observe` delivers knob touch
   edges (source 5, notes 0/1) and release springs the value to 0. With no touch events a timer recentres (120-150 blocks).
-  Stick down toggles Hold. Targets: X = Bend / Vibrato Speed / Cutoff / Grit; Y = Glide / Vibrato Depth / Cutoff / Grit.
+  Y held fully down ~0.23 s toggles Hold (a sweep never does); stick bend is >= 7 semitones (2x Bend Range). Targets: X = Bend / Vibrato Speed / Cutoff / Grit; Y = Glide / Vibrato Depth / Cutoff / Grit.
 - The 4-slot screen shows `get_param("name")` ("Mean Mod"); the Remote UI header also uses it.
 - Presets are named "<Category> <Name>" (Bass, Lead, Keys, Brass, Arp, Pad, Drone) and sorted by category; Init is first.
 

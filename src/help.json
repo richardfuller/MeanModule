@@ -133,12 +133,12 @@
             "Speed, Cutoff, Grit.",
             "Y To: Glide, Vibrato",
             "Depth, Cutoff, Grit.",
-            "Stick Y down toggles",
-            "Hold. Hold keeps",
-            "notes sounding after",
-            "release; the next",
-            "fresh press replaces",
-            "them."
+            "Hold the Y knob fully",
+            "down to toggle Hold.",
+            "Hold keeps notes",
+            "sounding after",
+            "release; a fresh",
+            "press replaces them."
           ]
         },
         {
@@ -148,7 +148,7 @@
             "Up+Down, Random,",
             "As Played.",
             "Rate: 1/4 to 1/32",
-            "(host tempo).",
+            "(synced to Move).",
             "Oct: 1-3 octaves.",
             "Gate: note length;",
             "100% ties notes.",

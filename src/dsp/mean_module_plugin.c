@@ -167,7 +167,7 @@ typedef struct {
     int held[MAX_NOTES], held_vel[MAX_NOTES], held_n;   /* notes held by keys, pedal or Hold (the arp / voice source) */
     int prev_arp, prev_hold;
     int arp_running, arp_idx, arp_note; float arp_pos;
-    int touch_seen; uint8_t touched[2]; int stick_age[2]; int y_down;   /* joystick emulation */
+    int touch_seen; uint8_t touched[2]; int stick_age[2]; int y_down, y_dwell;   /* joystick emulation */
     int sustain;                /* CC64 pedal down */
     uint8_t pend_off[128];      /* note-offs deferred by the pedal */
     int latched;                /* drone LATCH: sound holds after note-off until panic / preset / drone change */
@@ -854,7 +854,7 @@ static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
             int down = (st == 0x90 && d2 > 0);
             m->touched[d1] = (uint8_t)down;
             if (down) m->touch_seen = 1;
-            else { m->p[d1 ? P_STICK_Y : P_STICK_X] = 0.0f; m->stick_age[d1] = 0; if (d1) m->y_down = 0; }   /* the stick springs back */
+            else { m->p[d1 ? P_STICK_Y : P_STICK_X] = 0.0f; m->stick_age[d1] = 0; if (d1) { m->y_down = 0; m->y_dwell = 0; } }   /* the stick springs back */
         }
         return;
     }
@@ -890,8 +890,7 @@ static void set_param(void *inst, const char *key, const char *val) {
             if (k == P_STICK_X) m->stick_age[0] = 0;
             if (k == P_STICK_Y) {
                 m->stick_age[1] = 0;
-                if (v <= -0.6f && !m->y_down) { m->y_down = 1; m->p[P_HOLD] = ((int)m->p[P_HOLD] == 1) ? 0.0f : 1.0f; }   /* stick down toggles Hold */
-                else if (v > -0.3f) m->y_down = 0;
+                if (v > -0.3f) { m->y_down = 0; m->y_dwell = 0; }   /* re-arms the Hold toggle (see render_block) */
             }
             if (k == P_ARP_MODE || k == P_HOLD || k == P_STICK_Y) sync_modes(m);
             return;
@@ -924,22 +923,22 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     /* Joystick emulation: X and Y each drive one chosen target; both spring back to centre when the knob is released. */
     const int xt = (int)p[P_STICK_X_TO], yt = (int)p[P_STICK_Y_TO];
     const float xv = p[P_STICK_X], yv = p[P_STICK_Y], yu = yv > 0.0f ? yv : 0.0f;
-    const float stick_bend = xt == 0 ? xv * p[P_BEND_RANGE] : 0.0f;
-    const float stick_cut_oct = (xt == 2 ? xv * 2.0f : 0.0f) + (yt == 2 ? yu * 2.0f : 0.0f);
+    const float stick_bend = xt == 0 ? xv * fmaxf(7.0f, 2.0f * p[P_BEND_RANGE]) : 0.0f;   /* a fifth at least, like a real stick throw */
+    const float stick_cut_oct = (xt == 2 ? xv * 4.0f : 0.0f) + (yt == 2 ? yu * 4.0f : 0.0f);
     const float grit_in = clampf(p[P_GRIT] + (xt == 3 ? xv : 0.0f) + (yt == 3 ? yu : 0.0f), -1.0f, 1.0f);
-    const float g_glide = clampf(p[P_GLIDE] + (yt == 0 ? yu : 0.0f), 0.0f, 1.0f);
+    const float g_glide = clampf(p[P_GLIDE] + (yt == 0 ? sqrtf(yu) : 0.0f), 0.0f, 1.0f);   /* sqrt: a small push is already audible */
 
     /* block-rate constants */
     const int w1 = (int)p[P_OSC1_WAVE], w2 = (int)p[P_OSC2_WAVE];
     const float a1 = coef(env_time(p[P_ENV1_A]), 1.466f), d1 = coef(env_time(p[P_ENV1_D]), 4.0f), r1 = coef(env_time(p[P_ENV1_R]), 4.0f);
     const float a2 = coef(env_time(p[P_ENV2_A]), 1.466f), d2 = coef(env_time(p[P_ENV2_D]), 4.0f), r2 = coef(env_time(p[P_ENV2_R]), 4.0f);
     const float lfo_hz = 0.05f * powf(800.0f, p[P_LFO_RATE]);
-    const float lfo_inc = lfo_hz / SR, vib_inc = clampf(3.0f + 5.0f * p[P_VIB_RATE] + (xt == 1 ? xv * 4.0f : 0.0f), 0.5f, 14.0f) / SR;
+    const float lfo_inc = lfo_hz / SR, vib_inc = clampf(3.0f + 5.0f * p[P_VIB_RATE] + (xt == 1 ? xv * 9.0f : 0.0f), 0.5f, 18.0f) / SR;
     const float glide_s = 2.0f * g_glide * g_glide;
     const float glide_c = glide_s > 0.0005f ? 1.0f - expf(-1.0f / (glide_s * SR * 0.25f)) : 1.0f;
     const int at_dest = (int)p[P_AT_DEST];
     const float at = p[P_AT_AMOUNT] * m->at;                    /* aftertouch, scaled */
-    const float vib_depth = clampf(p[P_VIB_DEPTH] + 0.5f * m->modwheel + (at_dest == 2 ? at : 0.0f) + (yt == 1 ? yu : 0.0f), 0.0f, 1.0f) * 0.6f;  /* semitones */
+    const float vib_depth = clampf(p[P_VIB_DEPTH] + 0.5f * m->modwheel + (at_dest == 2 ? at : 0.0f), 0.0f, 1.0f) * 0.6f + (yt == 1 ? yu * 1.5f : 0.0f);  /* semitones; the stick adds up to 1.5 on top */
     const float at_cut_oct = at_dest == 1 ? at * 3.0f : 0.0f;
     const float xmod_eff = clampf(p[P_XMOD] + (at_dest == 4 ? at * 0.5f : 0.0f), 0.0f, 1.0f);
     const float vel_cut_oct = p[P_VEL_CUTOFF] * (m->vel - 0.5f) * 6.0f;
@@ -1060,9 +1059,14 @@ static void render_block(void *inst, int16_t *out, int frames) {
     for (int k = 0; k < 2; k++) {
         int pi = k ? P_STICK_Y : P_STICK_X;
         if (m->p[pi] != 0.0f && !m->touched[k]) {
-            if (++m->stick_age[k] > (m->touch_seen ? 150 : 120)) { m->p[pi] = 0.0f; m->stick_age[k] = 0; if (k) m->y_down = 0; }
+            if (++m->stick_age[k] > (m->touch_seen ? 150 : 120)) { m->p[pi] = 0.0f; m->stick_age[k] = 0; if (k) { m->y_down = 0; m->y_dwell = 0; } }
         } else m->stick_age[k] = 0;
     }
+    /* Stick down toggles Hold, but only when Y is pushed all the way down and kept there (~0.23 s):
+     * sweeping the knob through the lower half, or a quick wiggle, must never flip Hold. */
+    if (m->p[P_STICK_Y] <= -0.999f && !m->y_down) {
+        if (++m->y_dwell >= 80) { m->y_down = 1; m->y_dwell = 0; m->p[P_HOLD] = ((int)m->p[P_HOLD] == 1) ? 0.0f : 1.0f; sync_modes(m); }
+    } else if (m->p[P_STICK_Y] > -0.999f) m->y_dwell = 0;
 
 #if defined(__aarch64__)
     unsigned long fpcr_old = fpcr_read();
@@ -1075,6 +1079,25 @@ static void render_block(void *inst, int16_t *out, int frames) {
     const float gate_len = step_len * m->p[P_ARP_GATE];
     const int tie = m->p[P_ARP_GATE] >= 0.999f;
 
+    /* Transport sync: when Move's transport runs, steps sit on the beat grid (position inside the current step = fractional beat * steps/beat).
+     * The first note after a key press still sounds at once; later steps then fall on the grid. Stopped transport -> free-running. */
+    double beat = (g_host && g_host->get_beat_position) ? g_host->get_beat_position() : -1.0;
+    float grid_pos = -1.0f;   /* samples since the last grid step boundary at the start of this block, or -1 if unsynced */
+    if (beat >= 0.0 && beat < 1e9) {
+        double s = beat * (double)STEPS_PER_BEAT[(int)m->p[P_ARP_RATE] % 6];
+        grid_pos = (float)((s - floor(s)) * (double)step_len);
+    }
+    if (grid_pos >= 0.0f && m->arp_running) {
+        int pend = m->arp_pos >= step_len;
+        float cur = pend ? m->arp_pos - step_len : m->arp_pos, diff = grid_pos - cur;
+        if (diff > step_len * 0.5f) diff -= step_len; else if (diff < -step_len * 0.5f) diff += step_len;
+        if (diff > 1.5f || diff < -1.5f) {
+            float np = cur + diff;
+            if (np < 0.0f) np += step_len;
+            m->arp_pos = np + (pend ? step_len : 0.0f);
+        }
+    }
+
     int remaining = frames;
     int16_t *ptr = out;
     while (remaining > 0) {
@@ -1082,7 +1105,10 @@ static void render_block(void *inst, int16_t *out, int frames) {
         if ((int)m->p[P_ARP_MODE] == 0) {
             if (m->arp_running) arp_stop(m);
         } else {
-            if (m->held_n > 0 && !m->arp_running) { m->arp_running = 1; m->arp_pos = step_len; m->arp_idx = 0; }
+            if (m->held_n > 0 && !m->arp_running) {
+                m->arp_running = 1; m->arp_idx = 0;
+                m->arp_pos = step_len + (grid_pos >= 0.0f ? grid_pos : 0.0f);   /* step now; afterwards continue from the grid phase */
+            }
             else if (m->held_n == 0 && m->arp_running) arp_stop(m);
             while (m->arp_running && m->arp_pos >= step_len) { m->arp_pos -= step_len; arp_step(m); }
             if (m->arp_running) {

@@ -40,9 +40,13 @@ static metrics_t measure(const int16_t *s, int frames) {
     m.dc = sum / (frames * 2); m.rms = sqrt(sq / (frames * 2)); return m;
 }
 
+/* Mock transport: beat position derived from rendered samples at 120 BPM; g_beat_off shifts the grid, g_transport turns it on. */
+static int g_transport; static double g_beat_samples, g_beat_off;
+static double mock_beat(void) { return g_transport ? g_beat_off + g_beat_samples / 44100.0 * 2.0 : -1.0; }
 static void render(void *inst, int16_t *out, int blocks) {
     for (int b = 0; b < blocks; b++) {
         rt_enter(); api->render_block(inst, out + b * FRAMES * 2, FRAMES); rt_leave();
+        g_beat_samples += FRAMES;
     }
 }
 /* Release everything and render until the plugin outputs exact silence (returns blocks taken, or -1 if it never does). */
@@ -120,7 +124,7 @@ int main(int argc, char **argv) {
     if (!init) { fprintf(stderr, "no %s\n", MOVE_PLUGIN_INIT_V2_SYMBOL); return 2; }
 
     host_api_v1_t host; memset(&host, 0, sizeof host);
-    host.api_version = 1; host.sample_rate = MOVE_SAMPLE_RATE; host.frames_per_block = FRAMES;
+    host.api_version = 1; host.sample_rate = MOVE_SAMPLE_RATE; host.frames_per_block = FRAMES; host.get_beat_position = mock_beat;
     api = init(&host);
     CHECK(api && api->api_version == 2, "bad api struct");
     CHECK(api->create_instance && api->destroy_instance && api->on_midi && api->set_param &&
@@ -294,6 +298,30 @@ int main(int argc, char **argv) {
         CHECK(rms_win(out, 60 * FRAMES, 20 * FRAMES) < 0.001, "arp should stop when Hold is turned off");
         drain(inst, out); setp(inst, "preset", "0");
     }
+    /* 2i2. arp transport sync: with a running transport, step onsets land on the beat grid (125 ms at 1/16, 120 BPM), wherever the key was pressed */
+    {
+        setp(inst, "preset", "0"); setp(inst, "env2_a", "0"); setp(inst, "env2_r", "0.05"); setp(inst, "arp_mode", "1"); setp(inst, "arp_rate", "3"); setp(inst, "arp_gate", "0.3");
+        g_transport = 1; g_beat_samples = 0; g_beat_off = 0.1;   /* grid boundary every 5512.5 samples; first at beat 0.25 */
+        render(inst, out, 7);   /* idle time offsets the key press off the grid */
+        midi(inst, 0x90, 48, 100); render(inst, out, 200);
+        /* beat of each onset: find rising edges of the left-channel envelope */
+        int onsets = 0, last = -100000, bad = 0; double maxdev = 0;
+        for (int i = 6000; i < 200 * FRAMES; i++) {   /* skip the immediate first note and its tail */
+            if (fabs(out[2 * i] / 32768.0) > 0.02 && i - last > 3000) {
+                last = i; onsets++;
+                {
+                    double beat = g_beat_off + ((double)(7 * FRAMES) + i) / 44100.0 * 2.0 - 0.0;
+                    double s = beat * 4.0, dev = fabs(s - floor(s + 0.5)) * 5512.5;
+                    printf("  onset %d at frame %d: %.0f samples from grid\n", onsets, i, (s - floor(s + 0.5)) * 5512.5);
+                    if (dev > maxdev) maxdev = dev;
+                    if (dev > 160) bad++;
+                }
+            }
+        }
+        printf("arp sync: %d onsets, max grid deviation %.0f samples\n", onsets, maxdev);
+        CHECK(onsets >= 4 && bad == 0, "arp onsets must sit on the beat grid (%d onsets, %d off-grid, max %.0f samples)", onsets, bad, maxdev);
+        midi(inst, 0x80, 48, 0); drain(inst, out); g_transport = 0; setp(inst, "preset", "0");
+    }
     /* 2j. stick: touch makes it hold, release springs it back; no touch events -> timed recentre; stick down toggles Hold */
     {
         setp(inst, "preset", "0"); setp(inst, "env2_s", "1");
@@ -307,18 +335,31 @@ int main(int argc, char **argv) {
         rt_enter(); api->get_param(inst, "stick_x", v, sizeof v); rt_leave();
         CHECK(atof(v) > 0.99, "stick should stay while the knob is touched (%s)", v);
         double bent = pitch_hz(out, 190 * FRAMES, 100 * FRAMES);
-        printf("stick bend: base %.1f Hz, bent %.1f Hz (ratio %.3f, expect ~1.122)\n", base, bent, bent / base);
-        CHECK(fabs(bent / base - 1.1225) < 0.04, "stick X bend ratio %.3f", bent / base);
+        printf("stick bend: base %.1f Hz, bent %.1f Hz (ratio %.3f, expect ~1.498, a fifth)\n", base, bent, bent / base);
+        CHECK(fabs(bent / base - 1.4983) < 0.06, "stick X bend ratio %.3f", bent / base);
         midi_src(inst, 0x80, 0, 0, MOVE_MIDI_SOURCE_TOUCH);
         rt_enter(); api->get_param(inst, "stick_x", v, sizeof v); rt_leave();
         CHECK(atof(v) == 0.0, "stick should spring back on touch release (%s)", v);
         render(inst, out, 160);
         double back = pitch_hz(out, 40 * FRAMES, 100 * FRAMES);
         CHECK(fabs(back / base - 1.0) < 0.03, "pitch should return after release (%.1f vs %.1f)", back, base);
-        setp(inst, "stick_y", "-1"); rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 1, "stick down should switch Hold on (%s)", v);
+        /* sweeping Y down through the lower half and back, or a brief tap of the bottom, must NOT touch Hold */
+        midi_src(inst, 0x90, 1, 127, MOVE_MIDI_SOURCE_TOUCH);
+        for (int s = 0; s <= 20; s++) { char sv[16]; snprintf(sv, sizeof sv, "%.2f", -s * 0.05); setp(inst, "stick_y", sv); render(inst, out, 2); }
+        for (int s = 20; s >= 0; s--) { char sv[16]; snprintf(sv, sizeof sv, "%.2f", -s * 0.05); setp(inst, "stick_y", sv); render(inst, out, 2); }
+        rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "a sweep of Y must not toggle Hold (%s)", v);
+        /* a deliberate push to the bottom, held, toggles Hold once */
+        setp(inst, "stick_y", "-1"); render(inst, out, 40);
+        rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "Hold must wait for the dwell (%s)", v);
+        render(inst, out, 80); rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 1, "stick held down should switch Hold on (%s)", v);
+        render(inst, out, 400); rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 1, "staying at the bottom must not keep toggling (%s)", v);
         midi_src(inst, 0x80, 1, 0, MOVE_MIDI_SOURCE_TOUCH);   /* release centres Y */
-        setp(inst, "stick_y", "-1"); rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        midi_src(inst, 0x90, 1, 127, MOVE_MIDI_SOURCE_TOUCH);
+        setp(inst, "stick_y", "-1"); render(inst, out, 120); rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 0, "second stick-down should switch Hold off (%s)", v);
         midi_src(inst, 0x80, 1, 0, MOVE_MIDI_SOURCE_TOUCH);
         midi(inst, 0xB0, 123, 0); drain(inst, out); setp(inst, "preset", "0");
