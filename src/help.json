@@ -154,6 +154,20 @@
           ]
         },
         {
+          "title": "Live",
+          "lines": [
+            "Performance page.",
+            "Hold, Drone, Arp mode,",
+            "Arp rate, Octave, Glide.",
+            "Touch Knob 3-8 plus",
+            "Touch Does: while you",
+            "touch that knob, Hold On,",
+            "Arp Faster, Grit Push",
+            "or Filter Open applies",
+            "and lets go on release."
+          ]
+        },
+        {
           "title": "Play",
           "lines": [
             "Noise, Glide, Vib,",
@@ -185,21 +199,19 @@
           "title": "Stick",
           "lines": [
             "Joystick emulation.",
-            "StkX (knob 1) and",
-            "StkY (knob 2) spring",
-            "back to centre when",
-            "you let go.",
-            "X To: Bend, Vibrato",
-            "Speed, Cutoff, Grit.",
-            "Y To: Glide, Vibrato",
-            "Depth, Cutoff, Grit,",
-            "or Hold Toggle: hold",
-            "Y fully down to flip",
-            "Hold (other targets",
-            "never touch Hold).",
-            "Hold keeps notes",
-            "sounding after release;",
-            "a fresh press replaces them."
+            "StkX (knob 1), StkY",
+            "(knob 2) spring back",
+            "when you let go.",
+            "X To: Bend, Vib Speed,",
+            "Cutoff, Grit, Arp Rate,",
+            "Arp Mode.",
+            "Y To: Glide, Vib Depth,",
+            "Cutoff, Grit, Hold",
+            "Toggle, Arp Rate, Arp Mode.",
+            "Arp Rate/Mode step once",
+            "per flick past 80%.",
+            "Hold Toggle: hold Y fully",
+            "down to flip Hold."
           ]
         },
         {

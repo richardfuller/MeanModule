@@ -323,6 +323,63 @@ int main(int argc, char **argv) {
         CHECK(onsets >= 4 && bad == 0, "arp onsets must sit on the beat grid (%d onsets, %d off-grid, max %.0f samples)", onsets, bad, maxdev);
         midi(inst, 0x80, 48, 0); drain(inst, out); g_transport = 0; setp(inst, "preset", "0");
     }
+    /* 2m. performance gestures: flick the stick to step Arp Mode / Arp Rate; touch a knob for a momentary action */
+    {
+        char v[32];
+        setp(inst, "preset", "0"); setp(inst, "stick_x_to", "5"); setp(inst, "stick_y_to", "5");   /* X = Arp Mode, Y = Arp Rate */
+        setp(inst, "arp_mode", "1"); setp(inst, "arp_rate", "3");
+        setp(inst, "stick_x", "1"); render(inst, out, 4);
+        rt_enter(); api->get_param(inst, "arp_mode", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 2, "a rightward flick should step Arp Mode up (%s)", v);
+        render(inst, out, 200);
+        rt_enter(); api->get_param(inst, "arp_mode", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 2, "holding the flick must step only once (%s)", v);
+        setp(inst, "stick_x", "0"); render(inst, out, 4); setp(inst, "stick_x", "-1"); render(inst, out, 4);
+        rt_enter(); api->get_param(inst, "arp_mode", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 1, "a leftward flick should step Arp Mode back (%s)", v);
+        setp(inst, "stick_x", "0"); render(inst, out, 4);
+        setp(inst, "arp_mode", "0"); setp(inst, "stick_x", "-1"); render(inst, out, 4);
+        rt_enter(); api->get_param(inst, "arp_mode", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 5, "Arp Mode should wrap from Off to As Played (%s)", v);
+        setp(inst, "stick_x", "0"); render(inst, out, 4); setp(inst, "arp_mode", "1");
+        setp(inst, "stick_y", "1"); render(inst, out, 4);
+        rt_enter(); api->get_param(inst, "arp_rate", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 4, "an upward flick should step Arp Rate (%s)", v);
+        setp(inst, "stick_y", "0"); render(inst, out, 4); setp(inst, "arp_rate", "5"); setp(inst, "stick_y", "1"); render(inst, out, 4);
+        rt_enter(); api->get_param(inst, "arp_rate", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 5, "Arp Rate must clamp at the fastest value (%s)", v);
+        setp(inst, "stick_y", "0"); setp(inst, "stick_x", "0"); render(inst, out, 4);
+        setp(inst, "stick_x_to", "0"); setp(inst, "stick_y_to", "1"); setp(inst, "arp_mode", "0"); setp(inst, "arp_rate", "3");
+        /* touch gestures: knob 3 = notes index 2 */
+        setp(inst, "touch_knob", "1"); setp(inst, "touch_does", "0");
+        midi(inst, 0x90, 48, 100); render(inst, out, 40);
+        midi_src(inst, 0x90, 2, 127, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 4);
+        rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 1, "touching the chosen knob should switch Hold on (%s)", v);
+        midi(inst, 0x80, 48, 0); render(inst, out, 200);
+        CHECK(rms_win(out, 150 * FRAMES, 40 * FRAMES) > 0.05, "the note should keep sounding while the knob is touched");
+        midi_src(inst, 0x80, 2, 0, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 600);
+        rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "releasing the knob should restore Hold (%s)", v);
+        CHECK(rms_win(out, 550 * FRAMES, 40 * FRAMES) < 0.001, "the held note should release with the knob");
+        midi_src(inst, 0x90, 3, 127, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 4);   /* a different knob does nothing */
+        rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "touching another knob must not act (%s)", v);
+        midi_src(inst, 0x80, 3, 0, MOVE_MIDI_SOURCE_TOUCH);
+        for (int a = 1; a <= 3; a++) {   /* grit push / faster arp / filter open: audible, finite, and gone on release */
+            char av[8]; snprintf(av, sizeof av, "%d", a); setp(inst, "touch_does", av);
+            midi(inst, 0x90, 48, 100); render(inst, out, 40);
+            double before = rms_win(out, 20 * FRAMES, 20 * FRAMES);
+            midi_src(inst, 0x90, 2, 127, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 60);
+            metrics_t mm = measure(out, 60 * FRAMES);
+            CHECK(isfinite(mm.rms) && mm.peak <= 1.0 && mm.peak > 0.005, "touch action %d should stay finite and audible", a);
+            midi_src(inst, 0x80, 2, 0, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 60);
+            double after = rms_win(out, 20 * FRAMES, 20 * FRAMES);
+            CHECK(fabs(after - before) < before * 0.35, "touch action %d should restore the sound on release (%.3f vs %.3f)", a, before, after);
+            midi(inst, 0x80, 48, 0); drain(inst, out);
+        }
+        setp(inst, "touch_knob", "0"); setp(inst, "preset", "0");
+    }
     /* 2l. Osc 1 tuning, noise / osc 2 as matrix sources into FM, controller CCs, Program Change, RPN bend range */
     {
         char v[32];

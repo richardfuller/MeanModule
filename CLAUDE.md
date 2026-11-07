@@ -44,12 +44,16 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - MIDI from EXTERNAL sources only: CC 5/7/11/71-74, bank CC0 + Program Change, RPN 0 bend range (see `docs/MOD_MATRIX.md`). Never map
   CCs from Move's own surface: CC 71-78 are its knobs.
 
+- Performance gestures (no claimed buttons, no JS UI): Stick X/Y targets Arp Rate / Arp Mode step once per flick past 80% (re-arm <40%);
+  `touch_knob` (3-8) + `touch_does` (Hold On / Arp Faster / Grit Push / Filter Open) apply while that knob is touched (touch_observe).
+  Root page order: Live, Play, Stick, Arp first.
+
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.
 - Parameter: add one `X(...)` row to `PARAMS` (use a proper-case label), a `SHORT_NAME` (<= 5 chars; the knob cell is
   ~5 chars wide) and `SHORT_OPTS` for enums (3-char squares), then put its key in a page macro (`K_OSC`, `K_FILT`, ... at most 8
   per page) near `HIERARCHY`. It is automatically in state, chain_params and the stress tests; the host test fails if a param
   has no name, no short_name or is on no page.
-- UI: pages are levels in `HIERARCHY` (Play, Stick, Arp first, then Oscillators, Tuning, Filter, Env 1, Env 2, Modulation, LFOs, Matrix 1-2/3-4/5-6, Perform); root carries the
+- UI: pages are levels in `HIERARCHY` (Live, Play, Stick, Arp first, then Oscillators, Tuning, Filter, Env 1, Env 2, Modulation, LFOs, Matrix 1-2/3-4/5-6, Perform); root carries the
   performance macros and preset browser. `get_param("name")` returns "Mean Module"; module.json `name` is "Mean Mod" (the slot header
   cuts longer names) and abbrev is "MM".

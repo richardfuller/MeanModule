@@ -32,8 +32,10 @@ typedef enum { K_F, K_I, K_E } kind_t;
 #define FMODES "Lowpass,Bandpass,Highpass,LP+HP,BP+LP"
 #define ATDEST "Off,Cutoff,Vibrato,Drive,FM"
 #define PRIO "Last,Low,High"
-#define XTO "Bend,Vibrato Speed,Cutoff,Grit"
-#define YTO "Glide,Vibrato Depth,Cutoff,Grit,Hold Toggle"
+#define XTO "Bend,Vibrato Speed,Cutoff,Grit,Arp Rate,Arp Mode"
+#define YTO "Glide,Vibrato Depth,Cutoff,Grit,Hold Toggle,Arp Rate,Arp Mode"
+#define TCHK "Off,Knob 3,Knob 4,Knob 5,Knob 6,Knob 7,Knob 8"
+#define TCHD "Hold On,Arp Faster,Grit Push,Filter Open"
 #define MXSRC "Off,LFO,Env 1,Env 2,Velocity,Mod Wheel,Aftertouch,Stick X,Stick Y,Key,Random,LFO 2,Noise,Osc 2"
 #define MXDST "Off,Pitch,Osc 2 Pitch,Osc 1 Shape,Osc 2 Shape,Osc 1 Level,Osc 2 Level,Noise,Cutoff,Resonance,Filter Input,Drive,Amp,X-Mod,LFO Rate,LFO 2 Rate,Osc 1 FM,Osc 2 FM"
 #define MXSRC_S "OFF,LFO,EN1,EN2,VEL,MOD,AFT,STX,STY,KEY,RND,LF2,NSE,OS2"
@@ -89,8 +91,8 @@ typedef enum { K_F, K_I, K_E } kind_t;
  X(GRIT, "grit", "Grit and Dark", K_F, -1, 1, 0.0, 0.02, NULL) \
  X(STICK_X, "stick_x", "Stick Left-Right", K_F, -1, 1, 0.0, 0.05, NULL) \
  X(STICK_Y, "stick_y", "Stick Up-Down", K_F, -1, 1, 0.0, 0.05, NULL) \
- X(STICK_X_TO, "stick_x_to", "Stick X To", K_E, 0, 3, 0, 1, XTO) \
- X(STICK_Y_TO, "stick_y_to", "Stick Y To", K_E, 0, 4, 1, 1, YTO) \
+ X(STICK_X_TO, "stick_x_to", "Stick X To", K_E, 0, 5, 0, 1, XTO) \
+ X(STICK_Y_TO, "stick_y_to", "Stick Y To", K_E, 0, 6, 1, 1, YTO) \
  X(HOLD, "hold", "Hold", K_E, 0, 1, 0, 1, OFFON) \
  X(ARP_MODE, "arp_mode", "Arp Mode", K_E, 0, 5, 0, 1, ARPMODE) \
  X(ARP_RATE, "arp_rate", "Arp Rate", K_E, 0, 5, 3, 1, ARPRATE) \
@@ -119,7 +121,9 @@ typedef enum { K_F, K_I, K_E } kind_t;
  X(LFO_SYNC, "lfo_sync", "LFO Sync", K_E, 0, 7, 0, 1, LSYNC) \
  X(LFO2_SYNC, "lfo2_sync", "LFO 2 Sync", K_E, 0, 7, 0, 1, LSYNC) \
  X(OSC1_COARSE, "osc1_coarse", "Osc 1 Coarse", K_I, -24, 24, 0, 1, NULL) \
- X(OSC1_FINE, "osc1_fine", "Osc 1 Fine", K_F, -50, 50, 0, 1, NULL)
+ X(OSC1_FINE, "osc1_fine", "Osc 1 Fine", K_F, -50, 50, 0, 1, NULL) \
+ X(TOUCH_KNOB, "touch_knob", "Touch Knob", K_E, 0, 6, 0, 1, TCHK) \
+ X(TOUCH_DOES, "touch_does", "Touch Does", K_E, 0, 3, 0, 1, TCHD)
 
 typedef struct { const char *key, *label; kind_t kind; float min, max, def, step; const char *opts; } pdef_t;
 enum {
@@ -135,7 +139,7 @@ static const pdef_t PD[P_COUNT] = {
 };
 
 static const char *const SHORT_NAME[P_COUNT] = {
-    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1",
+    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_TOUCH_KNOB]="TchK", [P_TOUCH_DOES]="Does",
     [P_OSC1_LEVEL]="Lvl1", [P_OSC2_LEVEL]="Lvl2",
     [P_ENV1_A]="Atk", [P_ENV1_D]="Dec", [P_ENV1_S]="Sus", [P_ENV1_R]="Rel", [P_ENV2_A]="Atk", [P_ENV2_D]="Dec", [P_ENV2_S]="Sus", [P_ENV2_R]="Rel",
     [P_OSC1_FM1]="EFM 1", [P_OSC2_FM1]="EFM 2", [P_OSC1_FM2]="LFM 1", [P_OSC2_FM2]="LFM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
@@ -166,7 +170,7 @@ static const char *const SHORT_OPTS[P_COUNT] = {
     [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR,SAW,RMP,RND", [P_LFO2_WAVE]="TRI,SQR,SAW,RMP,RND",
     [P_LFO_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32", [P_LFO2_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32",
     [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
-    [P_STICK_X_TO]="BND,VSP,CUT,GRT", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD", [P_HOLD]="OFF,ON",
+    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_TOUCH_KNOB]="OFF,K3,K4,K5,K6,K7,K8", [P_TOUCH_DOES]="HLD,FST,GRT,OPN", [P_HOLD]="OFF,ON",
     [P_ARP_MODE]="OFF,UP,DWN,U+D,RND,ASP", [P_ARP_RATE]="1/4,1/8,8T,16,16T,32",
     [P_M1_SRC]=MXSRC_S, [P_M1_DST]=MXDST_S, [P_M2_SRC]=MXSRC_S, [P_M2_DST]=MXDST_S, [P_M3_SRC]=MXSRC_S, [P_M3_DST]=MXDST_S, [P_M4_SRC]=MXSRC_S, [P_M4_DST]=MXDST_S, [P_M5_SRC]=MXSRC_S, [P_M5_DST]=MXDST_S, [P_M6_SRC]=MXSRC_S, [P_M6_DST]=MXDST_S,
 };
@@ -195,6 +199,8 @@ typedef struct {
     float lfo_ph, vib_ph;
     float lfo2_ph, lfo_rv[2], mx_lr2;   /* LFO 2 phase, random-wave values, previous LFO 2 rate mod */
     float blk_bpm; double blk_beat;     /* tempo and transport beat at the start of this block (beat < 0: transport stopped) */
+    uint8_t touch_mask; int touch_act, touch_hold_saved;   /* knob-touch gestures: which knobs are touched, active action (-1 none) */
+    int stk_lock[2];                                       /* stick flick-to-step latch per axis */
     float expr;                 /* CC11 expression, scales the output (1 = full) */
     int cc_bank, rpn_msb, rpn_lsb;   /* CC0 bank for Program Change; selected RPN */
     float rnd;                  /* Random mod source: sample-and-hold, new value per note trigger */
@@ -466,6 +472,7 @@ static void sync_modes(mm_t *m) {
     }
 }
 static void panic(mm_t *m) {
+    m->touch_mask = 0;
     memset(m->pend_off, 0, sizeof m->pend_off); memset(m->phys, 0, sizeof m->phys);
     m->phys_n = 0; m->held_n = 0; m->sustain = 0; m->n_notes = 0; m->latched = 0;
     m->arp_running = 0; m->arp_note = -1;
@@ -1028,6 +1035,7 @@ static int emit_param(char *b, int n, int w, int i) {
 #define K_OSC   "\"osc1_wave\",\"osc1_shape\",\"osc2_wave\",\"osc2_shape\",\"osc2_coarse\",\"osc2_fine\",\"osc1_level\",\"osc2_level\""
 #define K_FILT  "\"cutoff\",\"resonance\",\"filter_drive\",\"filter_mode\",\"flt_fm1\",\"flt_fm2\",\"key_track\",\"drive\""
 #define K_TUNE  "\"osc1_coarse\",\"osc1_fine\",\"osc2_coarse\",\"osc2_fine\",\"octave\",\"tune\",\"drift\",\"bend_range\""
+#define K_LIVE  "\"hold\",\"drone\",\"arp_mode\",\"arp_rate\",\"octave\",\"glide\",\"touch_knob\",\"touch_does\""
 #define K_ENV1  "\"env1_a\",\"env1_d\",\"env1_s\",\"env1_r\""
 #define K_ENV2  "\"env2_a\",\"env2_d\",\"env2_s\",\"env2_r\""
 #define K_MOD   "\"osc1_fm1\",\"osc2_fm1\",\"osc1_fm2\",\"osc2_fm2\",\"xmod_2to1\",\"shape_mod\",\"lfo_rate\",\"lfo_wave\""
@@ -1044,7 +1052,7 @@ static const char HIERARCHY[] =
     "{\"modes\":null,\"levels\":{"
     "\"root\":{\"name\":\"Mean Mod\",\"list_param\":\"preset\",\"count_param\":\"preset_count\",\"name_param\":\"preset_name\",\"children\":null,"
         "\"knobs\":[" K_ROOT "],"
-        "\"params\":[{\"level\":\"play\",\"label\":\"Play\"},{\"level\":\"stick\",\"label\":\"Stick\"},{\"level\":\"arp\",\"label\":\"Arp\"},"
+        "\"params\":[{\"level\":\"live\",\"label\":\"Live\"},{\"level\":\"play\",\"label\":\"Play\"},{\"level\":\"stick\",\"label\":\"Stick\"},{\"level\":\"arp\",\"label\":\"Arp\"},"
         "{\"level\":\"osc\",\"label\":\"Oscillators\"},{\"level\":\"tune\",\"label\":\"Tuning\"},{\"level\":\"filter\",\"label\":\"Filter\"},{\"level\":\"env1\",\"label\":\"Env 1\"},"
         "{\"level\":\"env2\",\"label\":\"Env 2\"},{\"level\":\"mod\",\"label\":\"Modulation\"},{\"level\":\"lfo\",\"label\":\"LFOs\"},{\"level\":\"mx1\",\"label\":\"Matrix 1-2\"},"
         "{\"level\":\"mx2\",\"label\":\"Matrix 3-4\"},{\"level\":\"mx3\",\"label\":\"Matrix 5-6\"},{\"level\":\"perform\",\"label\":\"Perform\"},"
@@ -1059,6 +1067,7 @@ static const char HIERARCHY[] =
     LEVEL("mx1", "Matrix 1-2", K_MX1) ","
     LEVEL("mx2", "Matrix 3-4", K_MX2) ","
     LEVEL("mx3", "Matrix 5-6", K_MX3) ","
+    LEVEL("live", "Live", K_LIVE) ","
     LEVEL("play", "Play", K_PLAY) ","
     LEVEL("perform", "Perform", K_PERF) ","
     LEVEL("stick", "Stick", K_STICK) ","
@@ -1083,6 +1092,7 @@ static const host_api_v1_t *g_host;
 static void reset_state(mm_t *m) {
     m->n_notes = 0; m->gate = 0; m->cur_note = -1; m->arp_note = -1; m->cur_semi = m->tgt_semi = 48.0f; m->vel = 0.8f;
     m->bend = m->at = m->modwheel = 0.0f;
+    m->touch_act = -1; m->touch_mask = 0;
     m->expr = 1.0f; m->rpn_msb = m->rpn_lsb = 127;
     memset(&m->e1, 0, sizeof m->e1); memset(&m->e2, 0, sizeof m->e2);
 }
@@ -1168,6 +1178,10 @@ static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
     if (!m || !msg || len < 1) return;
     int st = msg[0] & 0xF0, d1 = len > 1 ? msg[1] & 0x7F : 0, d2 = len > 2 ? msg[2] & 0x7F : 0;
     if (src == MOVE_MIDI_SOURCE_TOUCH) {   /* capacitive touch of Knobs 1-8 (notes 0-7): never a played note */
+        if ((st == 0x90 || st == 0x80) && d1 < 8) {
+            int down = (st == 0x90 && d2 > 0);
+            if (down) m->touch_mask |= (uint8_t)(1u << d1); else m->touch_mask &= (uint8_t)~(1u << d1);
+        }
         if ((st == 0x90 || st == 0x80) && d1 < 2) {
             int down = (st == 0x90 && d2 > 0);
             m->touched[d1] = (uint8_t)down;
@@ -1261,7 +1275,7 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     const float xv = p[P_STICK_X], yv = p[P_STICK_Y], yu = yv > 0.0f ? yv : 0.0f;
     const float stick_bend = xt == 0 ? xv * fmaxf(7.0f, 2.0f * p[P_BEND_RANGE]) : 0.0f;   /* a fifth at least, like a real stick throw */
     const float stick_cut_oct = (xt == 2 ? xv * 4.0f : 0.0f) + (yt == 2 ? yu * 4.0f : 0.0f);
-    const float grit_in = clampf(p[P_GRIT] + (xt == 3 ? xv : 0.0f) + (yt == 3 ? yu : 0.0f), -1.0f, 1.0f);
+    const float grit_in = clampf(p[P_GRIT] + (xt == 3 ? xv : 0.0f) + (yt == 3 ? yu : 0.0f) + (m->touch_act == 2 ? 0.7f : 0.0f), -1.0f, 1.0f);
     const float g_glide = clampf(p[P_GLIDE] + (yt == 0 ? sqrtf(yu) : 0.0f), 0.0f, 1.0f);   /* sqrt: a small push is already audible */
 
     /* block-rate constants */
@@ -1344,7 +1358,7 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib + 12.0f * mod[1];
 
         float cut_oct = p[P_CUTOFF] * 9.8138f + g_cut_oct + p[P_FLT_FM1] * e1 * 5.0f + p[P_FLT_FM2] * lfo * 3.0f
-                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct + stick_cut_oct + 5.0f * mod[8];
+                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct + stick_cut_oct + 5.0f * mod[8] + (m->touch_act == 3 ? 3.0f : 0.0f);
         float fc = clampf(20.0f * exp2f(cut_oct), 15.0f, 19000.0f);
         float g = tanf(3.14159265f * fc / (SR * OS)), G = g / (1.0f + g);
 
@@ -1436,6 +1450,30 @@ static void render_block(void *inst, int16_t *out, int frames) {
             if (++m->stick_age[k] > (m->touch_seen ? 150 : 120)) { m->p[pi] = 0.0f; m->stick_age[k] = 0; if (k) { m->y_down = 0; m->y_dwell = 0; } }
         } else m->stick_age[k] = 0;
     }
+    /* Flick-to-step stick targets (Arp Rate / Arp Mode): one step each time the axis is pushed past 0.8, re-armed below 0.4. */
+    for (int k = 0; k < 2; k++) {
+        int tgt = (int)m->p[k ? P_STICK_Y_TO : P_STICK_X_TO], kind = k ? (tgt == 5 ? 1 : (tgt == 6 ? 2 : 0)) : (tgt == 4 ? 1 : (tgt == 5 ? 2 : 0));
+        float v = m->p[k ? P_STICK_Y : P_STICK_X];
+        if (!kind) { m->stk_lock[k] = 0; continue; }
+        if (m->stk_lock[k] && fabsf(v) < 0.4f) m->stk_lock[k] = 0;
+        else if (!m->stk_lock[k] && fabsf(v) >= 0.8f) {
+            m->stk_lock[k] = 1;
+            int dir = v > 0 ? 1 : -1;
+            if (kind == 1) m->p[P_ARP_RATE] = (float)(((int)m->p[P_ARP_RATE] + dir < 0) ? 0 : (((int)m->p[P_ARP_RATE] + dir > 5) ? 5 : (int)m->p[P_ARP_RATE] + dir));
+            else m->p[P_ARP_MODE] = (float)(((int)m->p[P_ARP_MODE] + dir + 6) % 6);
+            sync_modes(m);
+        }
+    }
+    /* Knob-touch gesture: while the chosen knob (3-8) is touched, apply the chosen action; restore on release. */
+    {
+        int tk = (int)m->p[P_TOUCH_KNOB], want = -1;
+        if (tk > 0 && ((m->touch_mask >> (tk + 1)) & 1)) want = (int)m->p[P_TOUCH_DOES];
+        if (want != m->touch_act) {
+            if (m->touch_act == 0) { m->p[P_HOLD] = (float)m->touch_hold_saved; sync_modes(m); }
+            if (want == 0) { m->touch_hold_saved = (int)m->p[P_HOLD]; m->p[P_HOLD] = 1.0f; sync_modes(m); }
+            m->touch_act = want;
+        }
+    }
     /* With Y assigned to "Hold Toggle", stick down toggles Hold, but only when Y is pushed all the way down and kept there (~0.23 s):
      * sweeping the knob through the lower half, or a quick wiggle, must never flip Hold. */
     if ((int)m->p[P_STICK_Y_TO] == 4 && m->p[P_STICK_Y] <= -0.999f && !m->y_down) {
@@ -1449,7 +1487,8 @@ static void render_block(void *inst, int16_t *out, int frames) {
     static const float STEPS_PER_BEAT[6] = {1.0f, 2.0f, 3.0f, 4.0f, 6.0f, 8.0f};
     float bpm = (g_host && g_host->get_bpm) ? g_host->get_bpm() : 120.0f;
     if (!(bpm >= 30.0f && bpm <= 300.0f)) bpm = 120.0f;
-    const float step_len = SR * 60.0f / bpm / STEPS_PER_BEAT[(int)m->p[P_ARP_RATE] % 6];
+    const int arp_ri = ((int)m->p[P_ARP_RATE] + (m->touch_act == 1 ? 1 : 0)) > 5 ? 5 : ((int)m->p[P_ARP_RATE] + (m->touch_act == 1 ? 1 : 0));
+    const float step_len = SR * 60.0f / bpm / STEPS_PER_BEAT[arp_ri % 6];
     const float gate_len = step_len * m->p[P_ARP_GATE];
     const int tie = m->p[P_ARP_GATE] >= 0.999f;
 
@@ -1462,7 +1501,7 @@ static void render_block(void *inst, int16_t *out, int frames) {
         int s1 = (int)m->p[P_LFO_SYNC] & 7, s2 = (int)m->p[P_LFO2_SYNC] & 7;
         if (s1) { double c = beat / (double)SYNC_BEATS[s1]; m->lfo_ph = (float)(c - floor(c)); }
         if (s2) { double c = beat / (double)SYNC_BEATS[s2]; m->lfo2_ph = (float)(c - floor(c)); }
-        double s = beat * (double)STEPS_PER_BEAT[(int)m->p[P_ARP_RATE] % 6];
+        double s = beat * (double)STEPS_PER_BEAT[arp_ri % 6];
         grid_pos = (float)((s - floor(s)) * (double)step_len);
     }
     if (grid_pos >= 0.0f && m->arp_running) {
