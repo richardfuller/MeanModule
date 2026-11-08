@@ -15,12 +15,12 @@ Bank files (export and import), a harsher Horror bank, and a bite review of the 
 
 ### Horror
 * **Calliope** now has a fast attack, a short bright burst (filter and breath noise) at the start of each note that closes quickly, a very short release, more rasp and drive, and keeps its out-of-tune pitch wander (Mod Wheel detunes it further; held notes sag slightly).
-* **Calliope** now fakes a chord: the synth is mono, so held notes are cycled very quickly (a tied 1/32 arpeggio locked to Move's tempo), like several pipes speaking at once; a single note stays steady. **Calliope Solo** is the plain mono version.
-* The whole bank is harsher and more unsettling: minor-second and tritone clashes, heavy drive and resonance, random pitch and filter movement, noise. Two new presets: **Shriek** and **Hive Mind** (19 in the bank with Calliope Solo).
+* **Calliope** now fakes a chord: the synth is mono, so held notes are cycled very quickly (a tied 1/32 arpeggio locked to Move's tempo), like several pipes speaking at once; a single note stays steady. **Calliope Solo** is the plain mono version and **Calliope Fifths** puts the second pipe a (slightly flat) fifth above instead of an octave.
+* The whole bank is harsher and more unsettling: minor-second and tritone clashes, heavy drive and resonance, random pitch and filter movement, noise. Two new presets: **Shriek** and **Hive Mind** (20 in the bank with Calliope Solo and Calliope Fifths).
 
 ### Library bite review
 * Rendered and ranked every preset by drive, resonance, noise and brightness (`tests/preset_audit.c`). 44 presets that were meant to bite but sat at default drive got more filter drive and drive (Bass, Lead, Brass, Stab, Drone, FX and a few Sets). Deliberately clean, soft or bright presets were left alone.
-* 274 presets in total. Nothing here was judged by ear; levels, peaks and audibility are checked by the test suite.
+* 275 presets in total. Nothing here was judged by ear; levels, peaks and audibility are checked by the test suite.
 
 ## 0.9.2
 
