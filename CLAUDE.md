@@ -38,15 +38,26 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - Presets are named "<Category> <Name>" and kept in category order: Init, Bass, Sub, Lead, Pluck, Keys, Stab, Brass, Arp, Seq, Pad, Texture, Vox, Drone, FX (no percussion; dark/industrial theme). Matrix slots in presets use the `MX(slot, S_*, D_*, amt)` helper.
 
 - LFOs: two (`lfo_*`, `lfo2_*`), waves Tri/Sq/SawDn/SawUp/Random, Sync = 1/2..1/32 locked to `get_beat_position` (free-run at bpm when stopped).
-- Mod matrix: 6 slots (`m1_src/dst/amt`..), 20 sources x 25 targets (Noise, Osc 1/2, Pitch Bend, Arp Step, Note Age, Smooth Random, Sustain Pedal are sources; Osc 1/2 FM, Grit, Glide, Vib Depth, LFO 1/2 Depth, Env Amount, Drift are targets; LFO Depth is a gain with 0 = silent), summed per sample in render_active; design and ranges in
+- Mod matrix: 6 slots (`m1_src/dst/amt`..), 20 sources x 25 targets (Env 1/2 are named Filter Env / Amp Env in the UI; Noise, Osc 1/2, Pitch Bend, Arp Step, Note Age, Smooth Random, Sustain Pedal are sources; Osc 1/2 FM, Grit, Glide, Vib Depth, LFO 1/2 Depth, Env Amount, Drift are targets; LFO Depth is a gain with 0 = silent), summed per sample in render_active; design and ranges in
   `docs/MOD_MATRIX.md`. Stick Y target 4 = Hold Toggle is the only thing that flips Hold from the stick.
 
 - MIDI from EXTERNAL sources only: CC 5/7/11/71-74, bank CC0 + Program Change, RPN 0 bend range (see `docs/MOD_MATRIX.md`). Never map
   CCs from Move's own surface: CC 71-78 are its knobs.
 
-- Performance gestures (no claimed buttons, no JS UI): Stick X/Y targets Arp Rate / Arp Mode step once per flick past 80% (re-arm <40%);
-  `touch_knob` (3-8) + `touch_does` (Hold On / Arp Faster / Grit Push / Filter Open) apply while that knob is touched (touch_observe).
-  Root page order: Live, Play, Stick, Arp first.
+- FX Bank (no claimed buttons, no JS UI): knobs 1-4 are four touch effects (`fx1..4_type`, `fx1..4_lvl`; touch notes 0-3 via `touch_observe`, any page).
+  Touch applies the assigned effect at its level once the touch has lasted `FX_DELAY_BLK` (a tap stays silent); turning sets the level (kept);
+  a double tap (short first touch, second within `FX_DTAP_BLK`) steps the type and keeps the second touch silent. Effect amounts slew
+  (15 ms in, 50 ms out) so nothing clicks. 14 types (`FXT_*`): Grit, Filter Open/Close, Crunch, Resonance, Noise, Pitch Rise/Dive, Vibrato, Wobble
+  (tempo-locked 1/8), Gate Chop (tempo-locked 1/16), Detune, Arp Faster (+0..3 rate steps), Hold. Presets never touch the bank.
+  Stick X/Y can also flick Arp Rate / Arp Mode. Root page order: Perform, FX Bank, Stick first.
+- Knob smoothing: cutoff (+stick/aftertouch cutoff), resonance, filter drive, drive, grit and volume follow their knobs through ~12 ms one-poles
+  (`sm_*`), so a stepped knob never zippers; modulation is not smoothed. A note starting from (near) silence snaps to the knobs.
+- Preset Category (`preset_cat`) jumps to the first preset of that category and follows the current preset. Noise Color is a level-compensated one-pole (0 = exact white).
+- Audio-path changes are measured, not guessed: `tests/audio_eval.c` (alias share, noise floor, self-oscillation, zipper, cross-mod, noise tilt, cost).
+  Measured and rejected: soft limiter inside the 2x loop (no aliasing change, +6% CPU), IIR halfband (the FIR is ~3 us/block of ~35), 4x oversampling
+  (-3..-7 dB aliasing at ~1.9x CPU; revisit only with device CPU numbers).
+- UI previews: `bash scripts/preview.sh` renders every page with Schwung's own renderer (needs Docker and the `ref/schwung` clone) into build/prev/png.
+  Short names are <= 5 characters (6 fit but crowd); avoid the letter O next to digits (it reads as zero).
 
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.
@@ -54,6 +65,6 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   ~5 chars wide) and `SHORT_OPTS` for enums (3-char squares), then put its key in a page macro (`K_OSC`, `K_FILT`, ... at most 8
   per page) near `HIERARCHY`. It is automatically in state, chain_params and the stress tests; the host test fails if a param
   has no name, no short_name or is on no page.
-- UI: pages are levels in `HIERARCHY` (Live, Play, Stick, Arp first, then Oscillators, Tuning, Filter, Env 1, Env 2, Modulation, LFOs, Matrix 1-2/3-4/5-6, Perform); root carries the
+- UI: pages are levels in `HIERARCHY` (Perform, FX Bank, Stick first, then Oscillators, Filter, Amp Env, Filter Env, LFO 1, LFO 2, FM and X-Mod, Tuning, Voice, Response, Matrix 1-2/3-4/5-6); root (Main: filter graphic, Grit, amp A/R, Cat, Volume) carries the
   performance macros and preset browser. `get_param("name")` returns "Mean Module"; module.json `name` is "Mean Mod" (the slot header
   cuts longer names) and abbrev is "MM".

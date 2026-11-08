@@ -34,11 +34,17 @@ typedef enum { K_F, K_I, K_E } kind_t;
 #define PRIO "Last,Low,High"
 #define XTO "Bend,Vibrato Speed,Cutoff,Grit,Arp Rate,Arp Mode"
 #define YTO "Glide,Vibrato Depth,Cutoff,Grit,Hold Toggle,Arp Rate,Arp Mode"
-#define TCHK "Off,Knob 3,Knob 4,Knob 5,Knob 6,Knob 7,Knob 8"
-#define TCHD "Hold On,Arp Faster,Grit Push,Filter Open"
-#define MXSRC "Off,LFO,Env 1,Env 2,Velocity,Mod Wheel,Aftertouch,Stick X,Stick Y,Key,Random,LFO 2,Noise,Osc 2,Pitch Bend,Arp Step,Note Age,Smooth Random,Osc 1,Sustain Pedal"
+#define FXT "Off,Grit,Filter Open,Filter Close,Crunch,Resonance,Noise,Pitch Rise,Pitch Dive,Vibrato,Wobble,Gate Chop,Detune,Arp Faster,Hold"
+#define PCATS "Init,Bass,Sub,Lead,Pluck,Keys,Stab,Brass,Arp,Seq,Pad,Texture,Vox,Drone,FX"
+#define FXT_S "OFF,GRT,OPN,CLS,CRN,RES,NSE,RIS,DIV,VIB,WOB,CHP,DTN,ARP,HLD"
+#define N_FXT 15             /* FX bank effect types (0 = Off) */
+enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, FXT_RISE, FXT_DIVE, FXT_VIB, FXT_WOB, FXT_CHOP, FXT_DETUNE, FXT_ARP, FXT_HOLD };
+#define FX_DELAY_BLK 31      /* a touch must last ~90 ms before its effect starts, so a tap (half of a double tap) stays silent */
+#define FX_DTAP_BLK 150      /* second tap must start within ~0.43 s of the first */
+#define FX_SHORT_BLK 70      /* ... and the first tap must have been shorter than ~0.2 s */
+#define MXSRC "Off,LFO,Filter Env,Amp Env,Velocity,Mod Wheel,Aftertouch,Stick X,Stick Y,Key,Random,LFO 2,Noise,Osc 2,Pitch Bend,Arp Step,Note Age,Smooth Random,Osc 1,Sustain Pedal"
 #define MXDST "Off,Pitch,Osc 2 Pitch,Osc 1 Shape,Osc 2 Shape,Osc 1 Level,Osc 2 Level,Noise,Cutoff,Resonance,Filter Input,Drive,Amp,X-Mod,LFO Rate,LFO 2 Rate,Osc 1 FM,Osc 2 FM,Grit,Glide Time,Vibrato Depth,LFO Depth,LFO 2 Depth,Env Amount,Drift Amount"
-#define MXSRC_S "OFF,LFO,EN1,EN2,VEL,MOD,AFT,STX,STY,KEY,RND,LF2,NSE,OS2,BND,ARP,AGE,SMR,OS1,PED"
+#define MXSRC_S "OFF,LFO,FEN,AEN,VEL,MOD,AFT,STX,STY,KEY,RND,LF2,NSE,OS2,BND,ARP,AGE,SMR,OS1,PED"
 #define MXDST_S "OFF,PCH,PC2,SH1,SH2,LV1,LV2,NSE,CUT,RES,INP,DRV,AMP,XMD,LFR,LR2,FM1,FM2,GRT,GLD,VIB,LD1,LD2,ENV,DFT"
 #define N_SLOTS 6            /* mod matrix slots */
 #define N_MXSRC 20
@@ -56,23 +62,23 @@ typedef enum { K_F, K_I, K_E } kind_t;
  X(OSC2_FINE, "osc2_fine", "Osc 2 Fine", K_F, -50, 50, 7, 1, NULL) \
  X(OSC1_LEVEL, "osc1_level", "Osc 1 Level", K_F, 0, 1, 0.8, 0.02, NULL) \
  X(OSC2_LEVEL, "osc2_level", "Osc 2 Level", K_F, 0, 1, 0.6, 0.02, NULL) \
- X(ENV1_A, "env1_a", "Env 1 Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(ENV1_D, "env1_d", "Env 1 Decay", K_F, 0, 1, 0.45, 0.02, NULL) \
- X(ENV1_S, "env1_s", "Env 1 Sustain", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(ENV1_R, "env1_r", "Env 1 Release", K_F, 0, 1, 0.3, 0.02, NULL) \
- X(ENV2_A, "env2_a", "Env 2 Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(ENV2_D, "env2_d", "Env 2 Decay", K_F, 0, 1, 0.5, 0.02, NULL) \
- X(ENV2_S, "env2_s", "Env 2 Sustain", K_F, 0, 1, 1.0, 0.02, NULL) \
- X(ENV2_R, "env2_r", "Env 2 Release", K_F, 0, 1, 0.35, 0.02, NULL) \
- X(OSC1_FM1, "osc1_fm1", "Osc 1 Env FM", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(OSC2_FM1, "osc2_fm1", "Osc 2 Env FM", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(OSC1_FM2, "osc1_fm2", "Osc 1 LFO FM", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(OSC2_FM2, "osc2_fm2", "Osc 2 LFO FM", K_F, 0, 1, 0.0, 0.02, NULL) \
- X(XMOD, "xmod_2to1", "X-Mod 2 to 1", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(ENV1_A, "env1_a", "Filter Env Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(ENV1_D, "env1_d", "Filter Env Decay", K_F, 0, 1, 0.45, 0.02, NULL) \
+ X(ENV1_S, "env1_s", "Filter Env Sustain", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(ENV1_R, "env1_r", "Filter Env Release", K_F, 0, 1, 0.3, 0.02, NULL) \
+ X(ENV2_A, "env2_a", "Amp Env Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(ENV2_D, "env2_d", "Amp Env Decay", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(ENV2_S, "env2_s", "Amp Env Sustain", K_F, 0, 1, 1.0, 0.02, NULL) \
+ X(ENV2_R, "env2_r", "Amp Env Release", K_F, 0, 1, 0.35, 0.02, NULL) \
+ X(OSC1_FM1, "osc1_fm1", "Filter Env to Osc 1 FM", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(OSC2_FM1, "osc2_fm1", "Filter Env to Osc 2 FM", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(OSC1_FM2, "osc1_fm2", "LFO to Osc 1 FM", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(OSC2_FM2, "osc2_fm2", "LFO to Osc 2 FM", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(XMOD, "xmod_2to1", "X-Mod Osc 2 to Osc 1", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(SHAPE_MOD, "shape_mod", "LFO to Shape", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(LFO_RATE, "lfo_rate", "LFO Rate", K_F, 0, 1, 0.35, 0.02, NULL) \
  X(LFO_WAVE, "lfo_wave", "LFO Wave", K_E, 0, 4, 0, 1, LFOW) \
- X(CUTOFF, "cutoff", "Cutoff", K_F, 0, 1, 0.677, 0.01, NULL)  X(RESONANCE, "resonance", "Resonance", K_F, 0, 1, 0.3, 0.02, NULL)  X(FILTER_DRIVE, "filter_drive", "Filter Drive", K_F, 0, 1, 0.5, 0.02, NULL)  X(FILTER_MODE, "filter_mode", "Filter Mode", K_E, 0, 4, 0, 1, FMODES)  X(FLT_FM1, "flt_fm1", "Env 1 to Cutoff", K_F, -1, 1, 0.4, 0.02, NULL)  X(FLT_FM2, "flt_fm2", "LFO to Cutoff", K_F, 0, 1, 0.0, 0.02, NULL)  X(KEY_TRACK, "key_track", "Key Track", K_F, 0, 1, 0.5, 0.02, NULL)  X(DRIVE, "drive", "Drive", K_F, 0, 1, 0.2, 0.02, NULL)  X(NOISE_LEVEL, "noise_level", "Noise", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(CUTOFF, "cutoff", "Cutoff", K_F, 0, 1, 0.677, 0.01, NULL)  X(RESONANCE, "resonance", "Resonance", K_F, 0, 1, 0.3, 0.02, NULL)  X(FILTER_DRIVE, "filter_drive", "Filter Drive", K_F, 0, 1, 0.5, 0.02, NULL)  X(FILTER_MODE, "filter_mode", "Filter Mode", K_E, 0, 4, 0, 1, FMODES)  X(FLT_FM1, "flt_fm1", "Filter Env to Cutoff", K_F, -1, 1, 0.4, 0.02, NULL)  X(FLT_FM2, "flt_fm2", "LFO to Cutoff", K_F, 0, 1, 0.0, 0.02, NULL)  X(KEY_TRACK, "key_track", "Key Track", K_F, 0, 1, 0.5, 0.02, NULL)  X(DRIVE, "drive", "Drive", K_F, 0, 1, 0.2, 0.02, NULL)  X(NOISE_LEVEL, "noise_level", "Noise", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(GLIDE, "glide", "Glide", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(VIB_DEPTH, "vibrato_depth", "Vibrato Depth", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(BEND_RANGE, "bend_range", "Bend Range", K_I, 1, 12, 2, 1, NULL) \
@@ -122,8 +128,16 @@ typedef enum { K_F, K_I, K_E } kind_t;
  X(LFO2_SYNC, "lfo2_sync", "LFO 2 Sync", K_E, 0, 7, 0, 1, LSYNC) \
  X(OSC1_COARSE, "osc1_coarse", "Osc 1 Coarse", K_I, -24, 24, 0, 1, NULL) \
  X(OSC1_FINE, "osc1_fine", "Osc 1 Fine", K_F, -50, 50, 0, 1, NULL) \
- X(TOUCH_KNOB, "touch_knob", "Touch Knob", K_E, 0, 6, 0, 1, TCHK) \
- X(TOUCH_DOES, "touch_does", "Touch Does", K_E, 0, 3, 0, 1, TCHD)
+ X(FX1_TYPE, "fx1_type", "FX 1 Effect", K_E, 0, 14, 0, 1, FXT) \
+ X(FX2_TYPE, "fx2_type", "FX 2 Effect", K_E, 0, 14, 0, 1, FXT) \
+ X(FX3_TYPE, "fx3_type", "FX 3 Effect", K_E, 0, 14, 0, 1, FXT) \
+ X(FX4_TYPE, "fx4_type", "FX 4 Effect", K_E, 0, 14, 0, 1, FXT) \
+ X(FX1_LVL, "fx1_lvl", "FX 1 Level", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(FX2_LVL, "fx2_lvl", "FX 2 Level", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(FX3_LVL, "fx3_lvl", "FX 3 Level", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(FX4_LVL, "fx4_lvl", "FX 4 Level", K_F, 0, 1, 0.5, 0.02, NULL) \
+ X(NOISE_COLOR, "noise_color", "Noise Color", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(PRESET_CAT, "preset_cat", "Preset Category", K_E, 0, 14, 0, 1, PCATS)
 
 typedef struct { const char *key, *label; kind_t kind; float min, max, def, step; const char *opts; } pdef_t;
 enum {
@@ -139,38 +153,93 @@ static const pdef_t PD[P_COUNT] = {
 };
 
 static const char *const SHORT_NAME[P_COUNT] = {
-    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_TOUCH_KNOB]="TchK", [P_TOUCH_DOES]="Does",
+    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_PRESET_CAT]="Cat",
     [P_OSC1_LEVEL]="Lvl1", [P_OSC2_LEVEL]="Lvl2",
     [P_ENV1_A]="Atk", [P_ENV1_D]="Dec", [P_ENV1_S]="Sus", [P_ENV1_R]="Rel", [P_ENV2_A]="Atk", [P_ENV2_D]="Dec", [P_ENV2_S]="Sus", [P_ENV2_R]="Rel",
-    [P_OSC1_FM1]="EFM 1", [P_OSC2_FM1]="EFM 2", [P_OSC1_FM2]="LFM 1", [P_OSC2_FM2]="LFM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
+    [P_OSC1_FM1]="EFM1", [P_OSC2_FM1]="EFM2", [P_OSC1_FM2]="FM 1", [P_OSC2_FM2]="FM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
     [P_LFO_RATE]="Rate", [P_LFO_WAVE]="Wave",
-    [P_CUTOFF]="Cutoff", [P_RESONANCE]="Res", [P_FILTER_DRIVE]="Input", [P_FILTER_MODE]="Mode", [P_FLT_FM1]="Env", [P_FLT_FM2]="LFO",
+    [P_CUTOFF]="Cutoff", [P_RESONANCE]="Res", [P_FILTER_DRIVE]="Input", [P_FILTER_MODE]="Mode", [P_FLT_FM1]="FEnv", [P_FLT_FM2]="Cutoff",
     [P_KEY_TRACK]="Key", [P_DRIVE]="Drive",
     [P_NOISE_LEVEL]="Noise", [P_GLIDE]="Glide", [P_VIB_DEPTH]="Vib", [P_BEND_RANGE]="Bend", [P_DRIFT]="Drift", [P_LEGATO]="Legato",
     [P_DRONE]="Drone", [P_VOLUME]="Vol",
     [P_VEL_CUTOFF]="VCut", [P_VEL_AMP]="VAmp", [P_AT_DEST]="AT", [P_AT_AMOUNT]="Amt", [P_PRIORITY]="Prio", [P_OCTAVE]="Oct",
     [P_VIB_RATE]="VibRt", [P_TUNE]="Tune", [P_GRIT]="Grit",
     [P_STICK_X]="StkX", [P_STICK_Y]="StkY", [P_STICK_X_TO]="X To", [P_STICK_Y_TO]="Y To", [P_HOLD]="Hold",
-    [P_ARP_MODE]="Arp", [P_ARP_RATE]="Rate", [P_ARP_OCT]="Oct", [P_ARP_GATE]="Gate", [P_M1_SRC]="Src1", [P_M1_DST]="Dst1", [P_M1_AMT]="Amt1", [P_M2_SRC]="Src2", [P_M2_DST]="Dst2", [P_M2_AMT]="Amt2", [P_M3_SRC]="Src3", [P_M3_DST]="Dst3", [P_M3_AMT]="Amt3", [P_M4_SRC]="Src4", [P_M4_DST]="Dst4", [P_M4_AMT]="Amt4", [P_M5_SRC]="Src5", [P_M5_DST]="Dst5", [P_M5_AMT]="Amt5", [P_M6_SRC]="Src6", [P_M6_DST]="Dst6", [P_M6_AMT]="Amt6", [P_LFO2_RATE]="Rt2", [P_LFO2_WAVE]="Wv2", [P_LFO_SYNC]="Sync", [P_LFO2_SYNC]="Syn2",
+    [P_ARP_MODE]="Arp", [P_ARP_RATE]="Rate", [P_ARP_OCT]="ArpOc", [P_ARP_GATE]="Gate", [P_M1_SRC]="Src1", [P_M1_DST]="Dst1", [P_M1_AMT]="Amt1", [P_M2_SRC]="Src2", [P_M2_DST]="Dst2", [P_M2_AMT]="Amt2", [P_M3_SRC]="Src3", [P_M3_DST]="Dst3", [P_M3_AMT]="Amt3", [P_M4_SRC]="Src4", [P_M4_DST]="Dst4", [P_M4_AMT]="Amt4", [P_M5_SRC]="Src5", [P_M5_DST]="Dst5", [P_M5_AMT]="Amt5", [P_M6_SRC]="Src6", [P_M6_DST]="Dst6", [P_M6_AMT]="Amt6", [P_LFO2_RATE]="Rt2", [P_LFO2_WAVE]="Wv2", [P_LFO_SYNC]="Sync", [P_LFO2_SYNC]="Syn2",
 };
 /* Graphics: envelopes draw as ADSR curves, cutoff+resonance as a filter response, volume as a fader. A group only draws when its
  * params sit contiguously on one row of a page: Env 1 / Env 2 have their four knobs first, Filter and root have cutoff, resonance first. */
 static const char *const VIZ_GROUP[P_COUNT] = {
     [P_ENV1_A]="fenv", [P_ENV1_D]="fenv", [P_ENV1_S]="fenv", [P_ENV1_R]="fenv",
     [P_ENV2_A]="amp",  [P_ENV2_D]="amp",  [P_ENV2_S]="amp",  [P_ENV2_R]="amp",
-    [P_CUTOFF]="filter", [P_RESONANCE]="filter",
+    [P_CUTOFF]="filter", [P_RESONANCE]="filter", [P_FILTER_MODE]="filter",
+    [P_LFO_WAVE]="lfo1", [P_LFO_RATE]="lfo1", [P_FLT_FM2]="lfo1",
 };
 static const char *const VIZ_ROLE[P_COUNT] = {
     [P_ENV1_A]="attack", [P_ENV1_D]="decay", [P_ENV1_S]="sustain", [P_ENV1_R]="release",
     [P_ENV2_A]="attack", [P_ENV2_D]="decay", [P_ENV2_S]="sustain", [P_ENV2_R]="release",
-    [P_CUTOFF]="cutoff", [P_RESONANCE]="resonance",
+    [P_CUTOFF]="cutoff", [P_RESONANCE]="resonance", [P_FILTER_MODE]="mode",
+    [P_LFO_WAVE]="shape", [P_LFO_RATE]="rate", [P_FLT_FM2]="depth",
 };
-static const char *const VIZ_KIND[P_COUNT] = { [P_VOLUME]="fader" };
+static const char *const VIZ_KIND[P_COUNT] = { [P_VOLUME]="fader", [P_OSC1_LEVEL]="fader", [P_OSC2_LEVEL]="fader", [P_NOISE_LEVEL]="fader",
+                                                [P_FX1_LVL]="fader", [P_FX2_LVL]="fader", [P_FX3_LVL]="fader", [P_FX4_LVL]="fader" };
+/* Units: how the host prints a held knob's value (percent for 0..1 amounts, semitones, cents). */
+static const char *const UNIT[P_COUNT] = {
+    [P_OSC1_SHAPE]="%",
+    [P_OSC2_SHAPE]="%",
+    [P_OSC1_LEVEL]="%",
+    [P_OSC2_LEVEL]="%",
+    [P_ENV1_S]="%",
+    [P_ENV2_S]="%",
+    [P_OSC1_FM1]="%",
+    [P_OSC2_FM1]="%",
+    [P_OSC1_FM2]="%",
+    [P_OSC2_FM2]="%",
+    [P_XMOD]="%",
+    [P_SHAPE_MOD]="%",
+    [P_RESONANCE]="%",
+    [P_FILTER_DRIVE]="%",
+    [P_FLT_FM1]="%",
+    [P_FLT_FM2]="%",
+    [P_KEY_TRACK]="%",
+    [P_DRIVE]="%",
+    [P_NOISE_LEVEL]="%",
+    [P_NOISE_COLOR]="%",
+    [P_GLIDE]="%",
+    [P_VIB_DEPTH]="%",
+    [P_DRIFT]="%",
+    [P_VOLUME]="%",
+    [P_VEL_CUTOFF]="%",
+    [P_VEL_AMP]="%",
+    [P_AT_AMOUNT]="%",
+    [P_GRIT]="%",
+    [P_STICK_X]="%",
+    [P_STICK_Y]="%",
+    [P_ARP_GATE]="%",
+    [P_FX1_LVL]="%",
+    [P_FX2_LVL]="%",
+    [P_FX3_LVL]="%",
+    [P_FX4_LVL]="%",
+    [P_M1_AMT]="%",
+    [P_M2_AMT]="%",
+    [P_M3_AMT]="%",
+    [P_M4_AMT]="%",
+    [P_M5_AMT]="%",
+    [P_M6_AMT]="%",
+    [P_OSC1_COARSE]="st",
+    [P_OSC2_COARSE]="st",
+    [P_BEND_RANGE]="st",
+    [P_OCTAVE]="oct",
+    [P_ARP_OCT]="oct",
+    [P_OSC1_FINE]="cents",
+    [P_OSC2_FINE]="cents",
+    [P_TUNE]="cents",
+};
 static const char *const SHORT_OPTS[P_COUNT] = {
     [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR,SAW,RMP,RND", [P_LFO2_WAVE]="TRI,SQR,SAW,RMP,RND",
     [P_LFO_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32", [P_LFO2_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32",
     [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
-    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_TOUCH_KNOB]="OFF,K3,K4,K5,K6,K7,K8", [P_TOUCH_DOES]="HLD,FST,GRT,OPN", [P_HOLD]="OFF,ON",
+    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,SUB,LED,PLK,KEY,STB,BRS,ARP,SEQ,PAD,TXT,VOX,DRN,FX", [P_HOLD]="OFF,ON",
     [P_ARP_MODE]="OFF,UP,DWN,U+D,RND,ASP", [P_ARP_RATE]="1/4,1/8,8T,16,16T,32",
     [P_M1_SRC]=MXSRC_S, [P_M1_DST]=MXDST_S, [P_M2_SRC]=MXSRC_S, [P_M2_DST]=MXDST_S, [P_M3_SRC]=MXSRC_S, [P_M3_DST]=MXDST_S, [P_M4_SRC]=MXSRC_S, [P_M4_DST]=MXDST_S, [P_M5_SRC]=MXSRC_S, [P_M5_DST]=MXDST_S, [P_M6_SRC]=MXSRC_S, [P_M6_DST]=MXDST_S,
 };
@@ -179,6 +248,7 @@ static const char *const SHORT_OPTS[P_COUNT] = {
 enum { ENV_IDLE, ENV_ATK, ENV_DEC, ENV_SUS, ENV_REL };
 typedef struct { int stage; float level; } env_t;
 typedef struct { float phase; float drift; } osc_t;
+typedef struct { float fdrive, drive, res, noise, drift; } gbase_t;   /* knob values the Grit macro starts from */
 
 typedef struct {
     float p[P_COUNT];
@@ -199,7 +269,14 @@ typedef struct {
     float lfo_ph, vib_ph;
     float lfo2_ph, lfo_rv[2], mx_lr2;   /* LFO 2 phase, random-wave values, previous LFO 2 rate mod */
     float blk_bpm; double blk_beat;     /* tempo and transport beat at the start of this block (beat < 0: transport stopped) */
-    uint8_t touch_mask; int touch_act, touch_hold_saved;   /* knob-touch gestures: which knobs are touched, active action (-1 none) */
+    uint8_t touch_mask;                    /* knobs 1-8 currently touched (notes 0-7) */
+    uint32_t clk;                          /* render_block counter */
+    uint32_t tap_t[4], touch_t[4];         /* FX bank: block of the last tap start / of the current touch start */
+    uint8_t tap_ok, tap_short, fx_sup;     /* bit k: a first tap is waiting for its partner / it was short / this touch was a double tap (silent until release) */
+    float fxa[N_FXT], fx_tgt[N_FXT];       /* effect amounts by type: slewed (heard) and target (touch state) */
+    int fx_hold_on, fx_hold_saved;         /* the Hold effect forced Hold on; the value to put back */
+    float chop_ph, wob_ph, chop_g;         /* Gate Chop / Wobble phases (tempo locked) and the smoothed chop gain */
+    gbase_t sm_gb; float sm_grit, sm_cut, sm_vol; int sm_init;   /* knob values smoothed per sample (cutoff, resonance, drives, grit, volume): no zipper from stepped knobs */
     int stk_lock[2];                                       /* stick flick-to-step latch per axis */
     float expr;                 /* CC11 expression, scales the output (1 = full) */
     int cc_bank, rpn_msb, rpn_lsb;   /* CC0 bank for Program Change; selected RPN */
@@ -308,6 +385,7 @@ static void gate_on(mm_t *m, int retrigger) {
     if (retrigger) {
         m->rnd = frand(&m->rng);
         m->age = 0.0f;
+        if (m->e2.level < 0.01f) m->sm_init = 0;   /* a note starting from (near) silence takes the knobs as they are now: no glide from stale values */
         m->e1.stage = ENV_ATK; m->e2.stage = ENV_ATK;  /* retrigger from current level */
     }
 }
@@ -476,7 +554,7 @@ static void sync_modes(mm_t *m) {
     }
 }
 static void panic(mm_t *m) {
-    m->touch_mask = 0;
+    m->touch_mask = 0; m->tap_ok = 0; m->fx_sup = 0;
     memset(m->pend_off, 0, sizeof m->pend_off); memset(m->phys, 0, sizeof m->phys);
     m->phys_n = 0; m->held_n = 0; m->sustain = 0; m->n_notes = 0; m->latched = 0;
     m->arp_running = 0; m->arp_note = -1;
@@ -1002,14 +1080,29 @@ static const preset_t PRESETS[] = {
 };
 #define N_PRESETS ((int)(sizeof PRESETS / sizeof PRESETS[0]))
 
+static const char *const PCAT[15] = {"Init", "Bass", "Sub", "Lead", "Pluck", "Keys", "Stab", "Brass", "Arp", "Seq", "Pad", "Texture", "Vox", "Drone", "FX"};
+static int preset_cat_of(int idx) {
+    const char *nm = PRESETS[idx].name;
+    for (int c = 0; c < 15; c++) { size_t L = strlen(PCAT[c]); if (!strncmp(nm, PCAT[c], L) && (nm[L] == ' ' || nm[L] == 0)) return c; }
+    return 0;
+}
+static int preset_cat_first(int cat) {
+    for (int i = 0; i < N_PRESETS; i++) if (preset_cat_of(i) == cat) return i;
+    return -1;
+}
+
 static void apply_preset(mm_t *m, int idx) {
     if (idx < 0 || idx >= N_PRESETS) return;
+    float keep[8];                                      /* the FX bank is a performance setup: presets leave it alone */
+    for (int k = 0; k < 4; k++) { keep[k] = m->p[P_FX1_TYPE + k]; keep[4 + k] = m->p[P_FX1_LVL + k]; }
     for (int i = 0; i < P_COUNT; i++) m->p[i] = PD[i].def;
+    for (int k = 0; k < 4; k++) { m->p[P_FX1_TYPE + k] = keep[k]; m->p[P_FX1_LVL + k] = keep[4 + k]; }
     for (int i = 0; i < PRESETS[idx].n; i++) {
         int id = PRESETS[idx].v[i].id;
         m->p[id] = clampf(PRESETS[idx].v[i].v, PD[id].min, PD[id].max);
     }
     m->preset = idx;
+    m->p[P_PRESET_CAT] = (float)preset_cat_of(idx);
     unlatch(m);
     sync_modes(m);
 }
@@ -1039,6 +1132,7 @@ static void state_read(mm_t *m, const char *js) {
     sync_modes(m);
     const char *q = strstr(js, "\"preset\":");
     if (q) { int pi = atoi(q + 9); if (pi >= 0 && pi < N_PRESETS) m->preset = pi; }
+    m->p[P_PRESET_CAT] = (float)preset_cat_of(m->preset);
 }
 
 /* ---------------------------------------------------------------- JSON (built once in create_instance) */
@@ -1070,6 +1164,7 @@ static int emit_param(char *b, int n, int w, int i) {
     if (d->kind == K_F) w = app(b, n, w, ",\"step\":%g", (double)d->step);
     if (d->opts) { w = app(b, n, w, ",\"options\":"); w = app_list(b, n, w, d->opts); }
     if (SHORT_OPTS[i]) { w = app(b, n, w, ",\"short_options\":"); w = app_list(b, n, w, SHORT_OPTS[i]); }
+    if (UNIT[i]) w = app(b, n, w, ",\"unit\":\"%s\"", UNIT[i]);
     if (VIZ_GROUP[i]) w = app(b, n, w, ",\"viz\":{\"group\":\"%s\",\"role\":\"%s\"}", VIZ_GROUP[i], VIZ_ROLE[i]);
     else if (VIZ_KIND[i]) w = app(b, n, w, ",\"viz\":{\"kind\":\"%s\"}", VIZ_KIND[i]);
     return app(b, n, w, "}");
@@ -1077,47 +1172,50 @@ static int emit_param(char *b, int n, int w, int i) {
 
 /* Pages (levels): each is a named grid page of up to 8 knobs. Root holds the performance macros and the preset browser.
  * Keys only here; metadata, full names and short cell names come from chain_params. Enforced by tests/host_test.c. */
-#define K_ROOT  "\"cutoff\",\"resonance\",\"filter_drive\",\"grit\",\"env2_a\",\"env2_r\",\"drive\",\"volume\""
-#define K_OSC   "\"osc1_wave\",\"osc1_shape\",\"osc2_wave\",\"osc2_shape\",\"osc2_coarse\",\"osc2_fine\",\"osc1_level\",\"osc2_level\""
-#define K_FILT  "\"cutoff\",\"resonance\",\"filter_drive\",\"filter_mode\",\"flt_fm1\",\"flt_fm2\",\"key_track\",\"drive\""
+#define K_ROOT  "\"cutoff\",\"resonance\",\"filter_mode\",\"grit\",\"env2_a\",\"env2_r\",\"preset_cat\",\"volume\""
+#define K_PERF  "\"hold\",\"drone\",\"octave\",\"glide\",\"arp_mode\",\"arp_rate\",\"arp_octaves\",\"arp_gate\""
+#define K_FXB   "\"fx1_lvl\",\"fx2_lvl\",\"fx3_lvl\",\"fx4_lvl\",\"fx1_type\",\"fx2_type\",\"fx3_type\",\"fx4_type\""
+#define K_STICK "\"stick_x\",\"stick_y\",\"stick_x_to\",\"stick_y_to\",\"bend_range\",\"vibrato_depth\",\"vib_rate\",\"hold\""
+#define K_OSC   "\"osc1_wave\",\"osc1_shape\",\"osc2_wave\",\"osc2_shape\",\"osc1_level\",\"osc2_level\",\"noise_level\",\"noise_color\""
+#define K_FILT  "\"cutoff\",\"resonance\",\"filter_mode\",\"filter_drive\",\"flt_fm1\",\"key_track\",\"drive\""
+#define K_ENV1  "\"env1_a\",\"env1_d\",\"env1_s\",\"env1_r\",\"flt_fm1\",\"osc1_fm1\",\"osc2_fm1\",\"vel_cutoff\""
+#define K_ENV2  "\"env2_a\",\"env2_d\",\"env2_s\",\"env2_r\",\"vel_amp\",\"drone\""
+#define K_LFO1  "\"lfo_wave\",\"lfo_rate\",\"flt_fm2\",\"lfo_sync\",\"osc1_fm2\",\"osc2_fm2\",\"shape_mod\""
+#define K_LFO2  "\"lfo2_wave\",\"lfo2_rate\",\"lfo2_sync\""
+#define K_OMOD  "\"xmod_2to1\",\"osc1_fm1\",\"osc2_fm1\""
 #define K_TUNE  "\"osc1_coarse\",\"osc1_fine\",\"osc2_coarse\",\"osc2_fine\",\"octave\",\"tune\",\"drift\",\"bend_range\""
-#define K_LIVE  "\"hold\",\"drone\",\"arp_mode\",\"arp_rate\",\"octave\",\"glide\",\"touch_knob\",\"touch_does\""
-#define K_ENV1  "\"env1_a\",\"env1_d\",\"env1_s\",\"env1_r\""
-#define K_ENV2  "\"env2_a\",\"env2_d\",\"env2_s\",\"env2_r\""
-#define K_MOD   "\"osc1_fm1\",\"osc2_fm1\",\"osc1_fm2\",\"osc2_fm2\",\"xmod_2to1\",\"shape_mod\",\"lfo_rate\",\"lfo_wave\""
-#define K_PLAY  "\"noise_level\",\"glide\",\"vibrato_depth\",\"bend_range\",\"drift\",\"legato\",\"drone\",\"volume\""
-#define K_PERF  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\",\"priority\",\"octave\",\"vib_rate\",\"tune\""
-#define K_STICK "\"stick_x\",\"stick_y\",\"stick_x_to\",\"stick_y_to\",\"hold\",\"bend_range\",\"vibrato_depth\",\"glide\""
+#define K_VOICE "\"glide\",\"legato\",\"priority\",\"drift\",\"vibrato_depth\",\"vib_rate\",\"bend_range\""
+#define K_RESP  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\""
 #define K_MX1   "\"m1_src\",\"m1_dst\",\"m1_amt\",\"m2_src\",\"m2_dst\",\"m2_amt\""
-#define K_LFO   "\"lfo_rate\",\"lfo_wave\",\"lfo_sync\",\"lfo2_rate\",\"lfo2_wave\",\"lfo2_sync\""
 #define K_MX2   "\"m3_src\",\"m3_dst\",\"m3_amt\",\"m4_src\",\"m4_dst\",\"m4_amt\""
 #define K_MX3   "\"m5_src\",\"m5_dst\",\"m5_amt\",\"m6_src\",\"m6_dst\",\"m6_amt\""
-#define K_ARP   "\"arp_mode\",\"arp_rate\",\"arp_octaves\",\"arp_gate\",\"hold\""
 #define LEVEL(id, title, keys) "\"" id "\":{\"name\":\"" title "\",\"children\":null,\"knobs\":[" keys "],\"params\":[" keys "]}"
 static const char HIERARCHY[] =
     "{\"modes\":null,\"levels\":{"
     "\"root\":{\"name\":\"Mean Mod\",\"list_param\":\"preset\",\"count_param\":\"preset_count\",\"name_param\":\"preset_name\",\"children\":null,"
         "\"knobs\":[" K_ROOT "],"
-        "\"params\":[{\"level\":\"live\",\"label\":\"Live\"},{\"level\":\"play\",\"label\":\"Play\"},{\"level\":\"stick\",\"label\":\"Stick\"},{\"level\":\"arp\",\"label\":\"Arp\"},"
-        "{\"level\":\"osc\",\"label\":\"Oscillators\"},{\"level\":\"tune\",\"label\":\"Tuning\"},{\"level\":\"filter\",\"label\":\"Filter\"},{\"level\":\"env1\",\"label\":\"Env 1\"},"
-        "{\"level\":\"env2\",\"label\":\"Env 2\"},{\"level\":\"mod\",\"label\":\"Modulation\"},{\"level\":\"lfo\",\"label\":\"LFOs\"},{\"level\":\"mx1\",\"label\":\"Matrix 1-2\"},"
-        "{\"level\":\"mx2\",\"label\":\"Matrix 3-4\"},{\"level\":\"mx3\",\"label\":\"Matrix 5-6\"},{\"level\":\"perform\",\"label\":\"Perform\"},"
+        "\"params\":[{\"level\":\"perform\",\"label\":\"Perform\"},{\"level\":\"fxbank\",\"label\":\"FX Bank\"},{\"level\":\"stick\",\"label\":\"Stick\"},"
+        "{\"level\":\"osc\",\"label\":\"Oscillators\"},{\"level\":\"filter\",\"label\":\"Filter\"},{\"level\":\"env2\",\"label\":\"Amp Env\"},{\"level\":\"env1\",\"label\":\"Filter Env\"},"
+        "{\"level\":\"lfo\",\"label\":\"LFO 1\"},{\"level\":\"lfo2\",\"label\":\"LFO 2\"},{\"level\":\"omod\",\"label\":\"FM and X-Mod\"},{\"level\":\"tune\",\"label\":\"Tuning\"},"
+        "{\"level\":\"voice\",\"label\":\"Voice\"},{\"level\":\"resp\",\"label\":\"Response\"},"
+        "{\"level\":\"mx1\",\"label\":\"Matrix 1-2\"},{\"level\":\"mx2\",\"label\":\"Matrix 3-4\"},{\"level\":\"mx3\",\"label\":\"Matrix 5-6\"},"
         "{\"key\":\"env2_a\",\"short_name\":\"AmpA\"},{\"key\":\"env2_r\",\"short_name\":\"AmpR\"}]},"
+    LEVEL("perform", "Perform", K_PERF) ","
+    LEVEL("fxbank", "FX Bank", K_FXB) ","
+    LEVEL("stick", "Stick", K_STICK) ","
     LEVEL("osc", "Oscillators", K_OSC) ","
-    LEVEL("tune", "Tuning", K_TUNE) ","
     LEVEL("filter", "Filter", K_FILT) ","
-    LEVEL("env1", "Env 1", K_ENV1) ","
-    LEVEL("env2", "Env 2", K_ENV2) ","
-    LEVEL("mod", "Modulation", K_MOD) ","
-    LEVEL("lfo", "LFOs", K_LFO) ","
+    LEVEL("env2", "Amp Env", K_ENV2) ","
+    LEVEL("env1", "Filter Env", K_ENV1) ","
+    LEVEL("lfo", "LFO 1", K_LFO1) ","
+    LEVEL("lfo2", "LFO 2", K_LFO2) ","
+    LEVEL("omod", "FM and X-Mod", K_OMOD) ","
+    LEVEL("tune", "Tuning", K_TUNE) ","
+    LEVEL("voice", "Voice", K_VOICE) ","
+    LEVEL("resp", "Response", K_RESP) ","
     LEVEL("mx1", "Matrix 1-2", K_MX1) ","
     LEVEL("mx2", "Matrix 3-4", K_MX2) ","
-    LEVEL("mx3", "Matrix 5-6", K_MX3) ","
-    LEVEL("live", "Live", K_LIVE) ","
-    LEVEL("play", "Play", K_PLAY) ","
-    LEVEL("perform", "Perform", K_PERF) ","
-    LEVEL("stick", "Stick", K_STICK) ","
-    LEVEL("arp", "Arp", K_ARP)
+    LEVEL("mx3", "Matrix 5-6", K_MX3)
     "}}";
 
 static void build_json(mm_t *m) {
@@ -1138,7 +1236,8 @@ static const host_api_v1_t *g_host;
 static void reset_state(mm_t *m) {
     m->n_notes = 0; m->gate = 0; m->cur_note = -1; m->arp_note = -1; m->cur_semi = m->tgt_semi = 48.0f; m->vel = 0.8f;
     m->bend = m->at = m->modwheel = 0.0f; m->bend_n = m->arp_ramp = m->age = m->srnd = m->srnd1 = m->srnd_tgt = m->ped = m->o1_prev = 0.0f; m->srnd_cnt = 0; m->mx_ld[0] = m->mx_ld[1] = 0.0f;
-    m->touch_act = -1; m->touch_mask = 0;
+    m->touch_mask = 0; m->tap_ok = m->tap_short = m->fx_sup = 0; m->fx_hold_on = 0; m->chop_g = 1.0f; m->sm_init = 0;
+    memset(m->fxa, 0, sizeof m->fxa); memset(m->fx_tgt, 0, sizeof m->fx_tgt);
     m->expr = 1.0f; m->rpn_msb = m->rpn_lsb = 127;
     memset(&m->e1, 0, sizeof m->e1); memset(&m->e2, 0, sizeof m->e2);
 }
@@ -1219,13 +1318,33 @@ static void destroy_instance(void *inst) {
     __atomic_store_n(&g_used[m - g_pool], 0, __ATOMIC_RELEASE);
 }
 
+/* FX bank: knobs 1-4. A double tap (a short first touch, then a second touch within ~0.43 s) steps that knob's effect to the next type
+ * and keeps the second touch silent; any other touch applies the assigned effect once it has lasted FX_DELAY_BLK blocks. */
+static void fx_touch_on(mm_t *m, int k) {
+    const uint32_t now = m->clk, bit = 1u << k;
+    if ((m->tap_ok & bit) && (m->tap_short & bit) && now - m->tap_t[k] < FX_DTAP_BLK) {
+        m->p[P_FX1_TYPE + k] = (float)(((int)m->p[P_FX1_TYPE + k] + 1) % N_FXT);
+        m->tap_ok &= (uint8_t)~bit; m->fx_sup |= (uint8_t)bit;
+    } else {
+        m->tap_ok |= (uint8_t)bit; m->tap_short &= (uint8_t)~bit; m->tap_t[k] = now; m->fx_sup &= (uint8_t)~bit;
+    }
+    m->touch_t[k] = now;
+}
+static void fx_touch_off(mm_t *m, int k) {
+    const uint32_t bit = 1u << k;
+    if (m->fx_sup & bit) { m->fx_sup &= (uint8_t)~bit; return; }
+    if (m->clk - m->touch_t[k] < FX_SHORT_BLK) m->tap_short |= (uint8_t)bit; else m->tap_ok &= (uint8_t)~bit;
+}
+
 static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
     mm_t *m = inst;
     if (!m || !msg || len < 1) return;
     int st = msg[0] & 0xF0, d1 = len > 1 ? msg[1] & 0x7F : 0, d2 = len > 2 ? msg[2] & 0x7F : 0;
     if (src == MOVE_MIDI_SOURCE_TOUCH) {   /* capacitive touch of Knobs 1-8 (notes 0-7): never a played note */
         if ((st == 0x90 || st == 0x80) && d1 < 8) {
-            int down = (st == 0x90 && d2 > 0);
+            int down = (st == 0x90 && d2 > 0), was = (m->touch_mask >> d1) & 1;
+            if (down && !was && d1 < 4) fx_touch_on(m, d1);
+            if (!down && was && d1 < 4) fx_touch_off(m, d1);
             if (down) m->touch_mask |= (uint8_t)(1u << d1); else m->touch_mask &= (uint8_t)~(1u << d1);
         }
         if ((st == 0x90 || st == 0x80) && d1 < 2) {
@@ -1282,6 +1401,7 @@ static void set_param(void *inst, const char *key, const char *val) {
             v = clampf(v, PD[k].min, PD[k].max);
             if (PD[k].kind != K_F) v = floorf(v + 0.5f);
             m->p[k] = v;
+            if (k == P_PRESET_CAT) { int f = preset_cat_first((int)v); if (f >= 0) apply_preset(m, f); return; }   /* jump to the first preset of that category */
             if (k == P_DRONE && (int)v != 2) unlatch(m);
             if (k == P_STICK_X) m->stick_age[0] = 0;
             if (k == P_STICK_Y) {
@@ -1315,14 +1435,14 @@ static int get_error(void *i, char *buf, int n) { (void)i; (void)buf; (void)n; r
 
 /* Grit / Dark macro maths, shared by the block-rate value and the per-sample Grit matrix target. */
 typedef struct { float fdrive, drive, res, noise, drift, cut_oct, makeup; } grit_t;
-static grit_t grit_calc(const float *p, float gi) {
+static grit_t grit_calc(const gbase_t *b, float gi) {
     const float gp = gi > 0.0f ? gi : 0.0f, gn = gi < 0.0f ? -gi : 0.0f;
     grit_t g;
-    g.fdrive  = clampf(p[P_FILTER_DRIVE] + 0.9f * gp - 0.4f * gn, 0.0f, 2.0f);   /* beyond 1: extra saturation only Grit can reach */
-    g.drive   = clampf(p[P_DRIVE] + 0.9f * gp - 0.3f * gn, 0.0f, 1.6f);
-    g.res     = clampf(p[P_RESONANCE] + 0.2f * gp - 0.1f * gn, 0.0f, 1.0f);
-    g.noise   = clampf(p[P_NOISE_LEVEL] + 0.12f * gp, 0.0f, 1.0f);
-    g.drift   = clampf(p[P_DRIFT] + 0.5f * gp - 0.2f * gn, 0.0f, 1.0f);
+    g.fdrive  = clampf(b->fdrive + 0.9f * gp - 0.4f * gn, 0.0f, 2.0f);   /* beyond 1: extra saturation only Grit can reach */
+    g.drive   = clampf(b->drive + 0.9f * gp - 0.3f * gn, 0.0f, 1.6f);
+    g.res     = clampf(b->res + 0.2f * gp - 0.1f * gn, 0.0f, 1.0f);
+    g.noise   = clampf(b->noise + 0.12f * gp, 0.0f, 1.0f);
+    g.drift   = clampf(b->drift + 0.5f * gp - 0.2f * gn, 0.0f, 1.0f);
     g.cut_oct = -2.0f * gp + 1.0f * gn;
     g.makeup  = 1.0f + 0.8f * gn + 0.5f * gp;     /* clean end loses filter-input gain: keep the level */
     return g;
@@ -1336,7 +1456,7 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     const float xv = p[P_STICK_X], yv = p[P_STICK_Y], yu = yv > 0.0f ? yv : 0.0f;
     const float stick_bend = xt == 0 ? xv * fmaxf(7.0f, 2.0f * p[P_BEND_RANGE]) : 0.0f;   /* a fifth at least, like a real stick throw */
     const float stick_cut_oct = (xt == 2 ? xv * 4.0f : 0.0f) + (yt == 2 ? yu * 4.0f : 0.0f);
-    const float grit_in = clampf(p[P_GRIT] + (xt == 3 ? xv : 0.0f) + (yt == 3 ? yu : 0.0f) + (m->touch_act == 2 ? 0.7f : 0.0f), -1.0f, 1.0f);
+    const float grit_in = clampf(p[P_GRIT] + (xt == 3 ? xv : 0.0f) + (yt == 3 ? yu : 0.0f), -1.0f, 1.0f);
     const float g_glide = clampf(p[P_GLIDE] + (yt == 0 ? sqrtf(yu) : 0.0f), 0.0f, 1.0f);   /* sqrt: a small push is already audible */
 
     /* block-rate constants */
@@ -1356,7 +1476,8 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     const float vel_scale = 1.0f - p[P_VEL_AMP] * (1.0f - m->vel);
     const float pitch_off = 12.0f * p[P_OCTAVE] + p[P_TUNE] / 100.0f;
     /* Grit / Dark macro, applied on top of the patch (the stored params are untouched). + = grittier and darker, - = cleaner and brighter. */
-    const grit_t G0 = grit_calc(p, grit_in);
+    const gbase_t gb_t = {p[P_FILTER_DRIVE], p[P_DRIVE], p[P_RESONANCE], p[P_NOISE_LEVEL], p[P_DRIFT]};
+    const grit_t G0 = grit_calc(&gb_t, grit_in);
     const float g_fdrive = G0.fdrive, g_drive = G0.drive, g_res = G0.res, g_noise = G0.noise, g_drift = G0.drift;
     const float drift_amt = g_drift * 0.03f;  /* semitones (3 cents) */
     const float drift_c = 1.0f - expf(-6.2831853f * 0.4f / SR);
@@ -1385,6 +1506,15 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         if (s > 0 && s < N_MXSRC && d > 0 && d < N_MXDST && a != 0.0f) { mx_s[mx_n] = s; mx_d[mx_n] = d; mx_a[mx_n] = a; mx_n++; has_d[d] = 1; }
     }
     const float lfo_base = p[P_LFO_RATE];
+    const float fx_att = 1.0f - expf(-1.0f / (0.015f * SR)), fx_rel = 1.0f - expf(-1.0f / (0.05f * SR));
+    const float chop_inc = m->blk_bpm / 60.0f * 4.0f / SR, wob_inc = m->blk_bpm / 60.0f * 2.0f / SR;
+    int fx_any = 0; for (int i = 1; i < N_FXT; i++) if (m->fx_tgt[i] != 0.0f || m->fxa[i] != 0.0f) fx_any = 1;
+    const float *fa = m->fxa;
+    const float ncol_a = 1.0f - 0.93f * p[P_NOISE_COLOR], ncol_g = powf((2.0f - ncol_a) / ncol_a, 0.25f);   /* half the level compensation: perceived loudness stays within ~2 dB */
+    const float sm_c = 1.0f - expf(-1.0f / (0.012f * SR));            /* ~12 ms: smooths a knob stepping at the UI rate, not the modulation */
+    const float cut_tgt = p[P_CUTOFF] * 9.8138f + stick_cut_oct + at_cut_oct;
+    if (!m->sm_init) { m->sm_gb = gb_t; m->sm_grit = grit_in; m->sm_cut = cut_tgt; m->sm_vol = vol; m->sm_init = 1; }
+    m->sm_gb.noise = gb_t.noise; m->sm_gb.drift = gb_t.drift;
     const float age_inc = 1.0f / (5.0f * SR), srnd_c = 1.0f - expf(-6.2831853f * 1.0f / SR), ped_c = 1.0f - expf(-1.0f / (0.005f * SR));
 
     for (int i = 0; i < frames; i++) {
@@ -1403,6 +1533,16 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         float e2 = env_step(&m->e2, a2, d2, s2, r2);
 
         m->age += age_inc; if (m->age > 1.0f) m->age = 1.0f;
+        if (fx_any) for (int i = 1; i < N_FXT; i++) {            /* FX bank amounts slew toward the touch targets */
+            float tg = m->fx_tgt[i], cur = m->fxa[i];
+            if (tg != cur) { cur += (tg - cur) * (tg > cur ? fx_att : fx_rel); if (fabsf(tg - cur) < 1e-4f) cur = tg; m->fxa[i] = cur; }
+        }
+        m->sm_cut += (cut_tgt - m->sm_cut) * sm_c; m->sm_vol += (vol - m->sm_vol) * sm_c; m->sm_grit += (grit_in - m->sm_grit) * sm_c;
+        m->sm_gb.fdrive += (gb_t.fdrive - m->sm_gb.fdrive) * sm_c; m->sm_gb.drive += (gb_t.drive - m->sm_gb.drive) * sm_c; m->sm_gb.res += (gb_t.res - m->sm_gb.res) * sm_c;
+        const int moving = fabsf(grit_in - m->sm_grit) > 1e-4f || fabsf(gb_t.fdrive - m->sm_gb.fdrive) > 1e-4f || fabsf(gb_t.drive - m->sm_gb.drive) > 1e-4f || fabsf(gb_t.res - m->sm_gb.res) > 1e-4f;
+        m->chop_ph += chop_inc; if (m->chop_ph >= 1.0f) m->chop_ph -= 1.0f;
+        m->wob_ph += wob_inc; if (m->wob_ph >= 1.0f) m->wob_ph -= 1.0f;
+        const float wob_tri = m->wob_ph < 0.5f ? 4.0f * m->wob_ph - 1.0f : 3.0f - 4.0f * m->wob_ph;
         float mod[N_MXDST] = {0};
         if (mx_n) {
             float sv[N_MXSRC];
@@ -1416,47 +1556,45 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
             for (int k = 0; k < mx_n; k++) mod[mx_d[k]] += sv[mx_s[k]] * mx_a[k];
             m->mx_lfr = mod[14]; m->mx_lr2 = mod[15]; m->mx_ld[0] = mod[21]; m->mx_ld[1] = mod[22];
         }
-        const int gm = has_d[18];                                    /* Grit target: the macro is recomputed per sample */
+        const int gm = has_d[18] || fa[FXT_GRIT] != 0.0f || moving;                                    /* Grit target: the macro is recomputed per sample */
         grit_t gs = G0; float drv_i = drv;
-        if (gm) { gs = grit_calc(p, clampf(grit_in + mod[18], -1.0f, 1.0f)); drv_i = clampf(gs.drive + (at_dest == 3 ? at * 0.6f : 0.0f), 0.0f, 1.6f); }
+        if (gm) { gs = grit_calc(&m->sm_gb, clampf(m->sm_grit + mod[18] + fa[FXT_GRIT], -1.0f, 1.0f)); drv_i = clampf(gs.drive + (at_dest == 3 ? at * 0.6f : 0.0f), 0.0f, 1.6f); }
         const float drift_i = (gm || has_d[24]) ? clampf(gs.drift + mod[24], 0.0f, 1.0f) * 0.03f : drift_amt;
         float gc = glide_c;
         if (has_d[19]) { float gg = clampf(g_glide + mod[19], 0.0f, 1.0f), gsec = 2.0f * gg * gg; gc = gsec > 0.0005f ? 1.0f - expf(-1.0f / (gsec * SR * 0.25f)) : 1.0f; }
         m->cur_semi += (m->tgt_semi - m->cur_semi) * gc;
-        const float vib = vib_tri * (has_d[20] ? fmaxf(vib_depth + 1.5f * mod[20], 0.0f) : vib_depth);
+        const float vib = vib_tri * fmaxf(vib_depth + 1.5f * mod[20] + 2.0f * fa[FXT_VIB], 0.0f);
         m->o1.drift += (frand(&m->rng) - m->o1.drift) * drift_c * 0.02f;  /* slow wander */
         m->o2.drift += (frand(&m->rng) - m->o2.drift) * drift_c * 0.02f;
-        float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib + 12.0f * mod[1];
+        float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib + 12.0f * mod[1] + 12.0f * (fa[FXT_RISE] - fa[FXT_DIVE]);
 
-        float cut_oct = p[P_CUTOFF] * 9.8138f + gs.cut_oct + p[P_FLT_FM1] * e1 * 5.0f + p[P_FLT_FM2] * lfo * 3.0f
-                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + at_cut_oct + stick_cut_oct + 5.0f * mod[8] + 5.0f * e1 * mod[23] + (m->touch_act == 3 ? 3.0f : 0.0f);
+        float cut_oct = m->sm_cut + gs.cut_oct + p[P_FLT_FM1] * e1 * 5.0f + p[P_FLT_FM2] * lfo * 3.0f
+                      + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + 5.0f * mod[8] + 5.0f * e1 * mod[23]
+                      + 4.0f * fa[FXT_OPEN] - 5.0f * fa[FXT_CLOSE] + 3.0f * fa[FXT_WOB] * wob_tri;
         float fc = clampf(20.0f * exp2f(cut_oct), 15.0f, 19000.0f);
         float g = tanf(3.14159265f * fc / (SR * OS)), G = g / (1.0f + g);
 
         /* oscillator core at OS x the sample rate; halfband-decimated afterwards */
         float amp = e2 * vel_scale;
         float amp_mx = has_d[12] ? clampf(1.0f + mod[12], 0.0f, 2.0f) : 1.0f; amp *= amp_mx;
+        if (fa[FXT_CHOP] != 0.0f || m->chop_g != 1.0f) {            /* Gate Chop: tempo-locked 1/16 gate, depth = level, smoothed so it never clicks */
+            float tgc = m->chop_ph < 0.5f ? 1.0f : 1.0f - fa[FXT_CHOP];
+            m->chop_g += (tgc - m->chop_g) * 0.03f; if (fabsf(1.0f - m->chop_g) < 1e-4f && fa[FXT_CHOP] == 0.0f) m->chop_g = 1.0f;
+            amp *= m->chop_g;
+        }
         const float lv1e = has_d[5] ? clampf(lv1 + mod[5], 0.0f, 1.5f) : lv1, lv2e = has_d[6] ? clampf(lv2 + mod[6], 0.0f, 1.5f) : lv2;
-        const float nle = (has_d[7] || gm) ? clampf(gs.noise + mod[7], 0.0f, 1.0f) * 0.5f * 1.4142f : noise_lvl;
+        const float nle = (has_d[7] || gm || fa[FXT_NOISE] != 0.0f) ? clampf(gs.noise + mod[7] + 0.6f * fa[FXT_NOISE], 0.0f, 1.0f) * 0.5f * 1.4142f : noise_lvl;
         const float xme = has_d[13] ? clampf(xmod_eff + mod[13], 0.0f, 1.0f) : xmod_eff;
-        const float resK = (has_d[9] || gm) ? clampf(gs.res + mod[9], 0.0f, 1.0f) * 3.6f : res_K;
+        const float resK = (has_d[9] || gm || fa[FXT_RES] != 0.0f) ? clampf(gs.res + mod[9] + 0.8f * fa[FXT_RES], 0.0f, 1.0f) * 3.6f : res_K;
         float igi = ig, isqi = inv_sqrt_ig;
         if (has_d[10] || gm) { igi = 0.25f * exp2f(4.0f * clampf(gs.fdrive + mod[10], 0.0f, 2.0f)); isqi = 1.0f / sqrtf(igi); }
         float dg = drv_g, db = drv_b, dbo = drv_bias_out, dn = drv_norm;
-        if (has_d[11] || gm) {
-            float dv = clampf(drv_i + mod[11], 0.0f, 1.6f);
+        if (has_d[11] || gm || fa[FXT_CRUNCH] != 0.0f) {
+            float dv = clampf(drv_i + mod[11] + fa[FXT_CRUNCH], 0.0f, 1.6f);
             dg = 1.0f + 5.0f * dv + 6.0f * dv * dv; db = 0.15f * dv; dbo = tanhf(db); dn = 1.0f / sqrtf(dg);
         }
-        const float o2o = o2_off + 12.0f * mod[2];
+        const float o2o = o2_off + 12.0f * mod[2] + fa[FXT_DETUNE];
         for (int sub = 0; sub < OS; sub++) {
-            float fm1_oct = p[P_OSC1_FM1] * e1 * 3.0f + p[P_OSC1_FM2] * lfo * 1.0f + xme * m->o2_prev * 2.0f + 2.0f * mod[16];
-            float f1 = 440.0f * exp2f((semi + o1_off + m->o1.drift * drift_i * 8.0f - 69.0f) / 12.0f + fm1_oct);
-            float dt1 = clampf(f1 / (SR * OS), 0.0f, 0.45f);
-            float sh1 = clampf(p[P_OSC1_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f + 0.5f * mod[3], 0.0f, 1.0f);
-            float y1 = osc_wave(m->o1.phase, dt1, w1, sh1, k1);
-            m->o1.phase += dt1; if (m->o1.phase >= 1.0f) m->o1.phase -= 1.0f;
-            m->o1_prev = y1;
-
             float fm2_oct = p[P_OSC2_FM1] * e1 * 3.0f + p[P_OSC2_FM2] * lfo * 1.0f + 2.0f * mod[17];
             float f2 = 440.0f * exp2f((semi + o2o + m->o2.drift * drift_i * 8.0f - 69.0f) / 12.0f + fm2_oct);
             float dt2 = clampf(f2 / (SR * OS), 0.0f, 0.45f);
@@ -1465,12 +1603,23 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
             m->o2.phase += dt2; if (m->o2.phase >= 1.0f) m->o2.phase -= 1.0f;
             m->o2_prev = y2;
 
-            float noise = frand(&m->rng);
+            float fm1_oct = p[P_OSC1_FM1] * e1 * 3.0f + p[P_OSC1_FM2] * lfo * 1.0f + xme * y2 * 2.0f + 2.0f * mod[16];
+            float f1 = 440.0f * exp2f((semi + o1_off + m->o1.drift * drift_i * 8.0f - 69.0f) / 12.0f + fm1_oct);
+            float dt1 = clampf(f1 / (SR * OS), 0.0f, 0.45f);
+            float sh1 = clampf(p[P_OSC1_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f + 0.5f * mod[3], 0.0f, 1.0f);
+            float y1 = osc_wave(m->o1.phase, dt1, w1, sh1, k1);
+            m->o1.phase += dt1; if (m->o1.phase >= 1.0f) m->o1.phase -= 1.0f;
+            m->o1_prev = y1;
+
+
+            float white = frand(&m->rng);
+            m->noise_lp1 += ncol_a * (white - m->noise_lp1);                 /* Noise Color: one-pole low-pass, level-compensated (0 = white, exact) */
+            float noise = ncol_a >= 0.999f ? white : m->noise_lp1 * ncol_g;
             float mix = y1 * lv1e + y2 * lv2e + noise * nle;
-            float fl = flt_tick(m, mix, G, resK, igi, isqi, fmode, noise * 1e-4f);
+            float fl = flt_tick(m, mix, G, resK, igi, isqi, fmode, (resK > 1.8f ? white * 1e-4f * (resK - 1.8f) : 0.0f));   /* a kick only where resonance can sustain self-oscillation */
             float va = fl * amp;                                       /* VCA */
             va = (tanhf(dg * va + db) - dbo) * dn; /* transistor-ish asymmetric drive */
-            m->hb[m->hb_pos] = va * vol * gs.makeup;
+            m->hb[m->hb_pos] = va * m->sm_vol * gs.makeup;
             m->hb_pos = (m->hb_pos + 1) % HB_N;
         }
         float y = 0.0f;  /* decimate: newest sample is at hb_pos-1 */
@@ -1502,6 +1651,7 @@ static void render_seg(mm_t *m, int16_t *out, int frames) {
             m->f_s1 = m->f_s2 = m->f_s3 = 0.0f; m->dc_x = m->dc_y = 0.0f;
             memset(m->hb, 0, sizeof m->hb);
             m->e1.stage = ENV_IDLE; m->e1.level = 0.0f;
+            m->sm_init = 0;
             m->was_idle = 1;
         }
         memset(out, 0, (size_t)frames * 2 * sizeof(int16_t));
@@ -1536,15 +1686,21 @@ static void render_block(void *inst, int16_t *out, int frames) {
             sync_modes(m);
         }
     }
-    /* Knob-touch gesture: while the chosen knob (3-8) is touched, apply the chosen action; restore on release. */
+    /* FX bank: each of knobs 1-4 applies its effect at its level while it is touched (after the tap delay, never for a double tap). */
+    m->clk++;
+    int hold_act = 0;
     {
-        int tk = (int)m->p[P_TOUCH_KNOB], want = -1;
-        if (tk > 0 && ((m->touch_mask >> (tk + 1)) & 1)) want = (int)m->p[P_TOUCH_DOES];
-        if (want != m->touch_act) {
-            if (m->touch_act == 0) { m->p[P_HOLD] = (float)m->touch_hold_saved; sync_modes(m); }
-            if (want == 0) { m->touch_hold_saved = (int)m->p[P_HOLD]; m->p[P_HOLD] = 1.0f; sync_modes(m); }
-            m->touch_act = want;
+        float tg[N_FXT] = {0};
+        for (int k = 0; k < 4; k++) {
+            int ty = (int)m->p[P_FX1_TYPE + k];
+            if (ty > 0 && ty < N_FXT && ((m->touch_mask >> k) & 1) && !((m->fx_sup >> k) & 1) && m->clk - m->touch_t[k] >= FX_DELAY_BLK) {
+                tg[ty] += m->p[P_FX1_LVL + k];
+                if (ty == FXT_HOLD) hold_act = 1;
+            }
         }
+        for (int i = 1; i < N_FXT; i++) m->fx_tgt[i] = tg[i] > 1.0f ? 1.0f : tg[i];
+        if (hold_act && !m->fx_hold_on) { m->fx_hold_saved = (int)m->p[P_HOLD]; m->p[P_HOLD] = 1.0f; m->fx_hold_on = 1; sync_modes(m); }
+        else if (!hold_act && m->fx_hold_on) { m->p[P_HOLD] = (float)m->fx_hold_saved; m->fx_hold_on = 0; sync_modes(m); }
     }
     /* With Y assigned to "Hold Toggle", stick down toggles Hold, but only when Y is pushed all the way down and kept there (~0.23 s):
      * sweeping the knob through the lower half, or a quick wiggle, must never flip Hold. */
@@ -1559,7 +1715,7 @@ static void render_block(void *inst, int16_t *out, int frames) {
     static const float STEPS_PER_BEAT[6] = {1.0f, 2.0f, 3.0f, 4.0f, 6.0f, 8.0f};
     float bpm = (g_host && g_host->get_bpm) ? g_host->get_bpm() : 120.0f;
     if (!(bpm >= 30.0f && bpm <= 300.0f)) bpm = 120.0f;
-    const int arp_ri = ((int)m->p[P_ARP_RATE] + (m->touch_act == 1 ? 1 : 0)) > 5 ? 5 : ((int)m->p[P_ARP_RATE] + (m->touch_act == 1 ? 1 : 0));
+    const int arp_ri = ((int)m->p[P_ARP_RATE] + (int)(m->fx_tgt[FXT_ARP] * 3.0f + 0.5f)) > 5 ? 5 : ((int)m->p[P_ARP_RATE] + (int)(m->fx_tgt[FXT_ARP] * 3.0f + 0.5f));
     const float step_len = SR * 60.0f / bpm / STEPS_PER_BEAT[arp_ri % 6];
     const float gate_len = step_len * m->p[P_ARP_GATE];
     const int tie = m->p[P_ARP_GATE] >= 0.999f;
@@ -1573,6 +1729,7 @@ static void render_block(void *inst, int16_t *out, int frames) {
         int s1 = (int)m->p[P_LFO_SYNC] & 7, s2 = (int)m->p[P_LFO2_SYNC] & 7;
         if (s1) { double c = beat / (double)SYNC_BEATS[s1]; m->lfo_ph = (float)(c - floor(c)); }
         if (s2) { double c = beat / (double)SYNC_BEATS[s2]; m->lfo2_ph = (float)(c - floor(c)); }
+        { double c4 = beat * 4.0, c2 = beat * 2.0; m->chop_ph = (float)(c4 - floor(c4)); m->wob_ph = (float)(c2 - floor(c2)); }   /* Gate Chop 1/16, Wobble 1/8 */
         double s = beat * (double)STEPS_PER_BEAT[arp_ri % 6];
         grid_pos = (float)((s - floor(s)) * (double)step_len);
     }

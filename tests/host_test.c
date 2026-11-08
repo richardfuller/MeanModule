@@ -350,35 +350,139 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 5, "Arp Rate must clamp at the fastest value (%s)", v);
         setp(inst, "stick_y", "0"); setp(inst, "stick_x", "0"); render(inst, out, 4);
         setp(inst, "stick_x_to", "0"); setp(inst, "stick_y_to", "1"); setp(inst, "arp_mode", "0"); setp(inst, "arp_rate", "3");
-        /* touch gestures: knob 3 = notes index 2 */
-        setp(inst, "touch_knob", "1"); setp(inst, "touch_does", "0");
-        midi(inst, 0x90, 48, 100); render(inst, out, 40);
-        midi_src(inst, 0x90, 2, 127, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 4);
-        rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 1, "touching the chosen knob should switch Hold on (%s)", v);
-        midi(inst, 0x80, 48, 0); render(inst, out, 200);
-        CHECK(rms_win(out, 150 * FRAMES, 40 * FRAMES) > 0.05, "the note should keep sounding while the knob is touched");
-        midi_src(inst, 0x80, 2, 0, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 600);
-        rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 0, "releasing the knob should restore Hold (%s)", v);
-        CHECK(rms_win(out, 550 * FRAMES, 40 * FRAMES) < 0.001, "the held note should release with the knob");
-        midi_src(inst, 0x90, 3, 127, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 4);   /* a different knob does nothing */
-        rt_enter(); api->get_param(inst, "hold", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 0, "touching another knob must not act (%s)", v);
-        midi_src(inst, 0x80, 3, 0, MOVE_MIDI_SOURCE_TOUCH);
-        for (int a = 1; a <= 3; a++) {   /* grit push / faster arp / filter open: audible, finite, and gone on release */
-            char av[8]; snprintf(av, sizeof av, "%d", a); setp(inst, "touch_does", av);
-            midi(inst, 0x90, 48, 100); render(inst, out, 40);
-            double before = rms_win(out, 20 * FRAMES, 20 * FRAMES);
-            midi_src(inst, 0x90, 2, 127, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 60);
-            metrics_t mm = measure(out, 60 * FRAMES);
-            CHECK(isfinite(mm.rms) && mm.peak <= 1.0 && mm.peak > 0.005, "touch action %d should stay finite and audible", a);
-            midi_src(inst, 0x80, 2, 0, MOVE_MIDI_SOURCE_TOUCH); render(inst, out, 60);
-            double after = rms_win(out, 20 * FRAMES, 20 * FRAMES);
-            CHECK(fabs(after - before) < before * 0.35, "touch action %d should restore the sound on release (%.3f vs %.3f)", a, before, after);
-            midi(inst, 0x80, 48, 0); drain(inst, out);
+        setp(inst, "preset", "0");
+    }
+    /* 2n. FX bank: knobs 1-4 (touch notes 0-3). Touch applies the assigned effect at its level; a double tap steps the effect type */
+    {
+        char v[32];
+        #define TOUCH_ON(k) midi_src(inst, 0x90, (k), 127, MOVE_MIDI_SOURCE_TOUCH)
+        #define TOUCH_OFF(k) midi_src(inst, 0x80, (k), 0, MOVE_MIDI_SOURCE_TOUCH)
+        #define GETP(key) (rt_enter(), api->get_param(inst, (key), v, sizeof v), rt_leave(), atoi(v))
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "drift", "0");
+        for (int k = 1; k <= 4; k++) { char kk[32]; snprintf(kk, sizeof kk, "fx%d_type", k); setp(inst, kk, "0"); snprintf(kk, sizeof kk, "fx%d_lvl", k); setp(inst, kk, "0.5"); }
+        render(inst, out, 200);
+        CHECK(GETP("fx1_type") == 0, "FX slots start Off");
+        TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 10);       /* one short tap: nothing happens */
+        CHECK(GETP("fx1_type") == 0, "a single tap must not change the effect");
+        render(inst, out, 200);                                                         /* partner tap too late: still just a tap */
+        TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 4);
+        CHECK(GETP("fx1_type") == 0, "two taps far apart are not a double tap");
+        render(inst, out, 200);
+        TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 25); TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 5);
+        CHECK(GETP("fx1_type") == 1, "a double tap steps the effect type (%s)", v);
+        TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 25); TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 5);
+        CHECK(GETP("fx1_type") == 2, "the next double tap steps again (%s)", v);
+        render(inst, out, 200);
+        TOUCH_ON(0); render(inst, out, 80); TOUCH_OFF(0); render(inst, out, 10); TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 5);
+        CHECK(GETP("fx1_type") == 2, "a long hold followed by a tap is not a double tap");
+        render(inst, out, 200);
+        TOUCH_ON(1); render(inst, out, 4); TOUCH_OFF(1); render(inst, out, 25); TOUCH_ON(1); render(inst, out, 4); TOUCH_OFF(1); render(inst, out, 5);
+        CHECK(GETP("fx1_type") == 2 && GETP("fx2_type") == 1, "each knob has its own effect (%d %d)", GETP("fx1_type"), GETP("fx2_type"));
+        TOUCH_ON(5); render(inst, out, 4); TOUCH_OFF(5); render(inst, out, 25); TOUCH_ON(5); render(inst, out, 4); TOUCH_OFF(5); render(inst, out, 5);
+        CHECK(GETP("fx1_type") == 2, "knobs outside the bank do nothing");
+        render(inst, out, 200);
+        /* the second tap of a double tap is silent even if held; the level persists across presets */
+        setp(inst, "fx1_type", "2"); setp(inst, "fx1_lvl", "1"); setp(inst, "fx2_type", "0"); setp(inst, "cutoff", "0.3"); setp(inst, "resonance", "0"); setp(inst, "flt_fm1", "0");
+        midi(inst, 0x90, 48, 100); render(inst, out, 60);
+        double base = rms_win(out, 30 * FRAMES, 20 * FRAMES);
+        TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 25); TOUCH_ON(0); render(inst, out, 80);   /* double tap, second touch held */
+        double sup = rms_win(out, 50 * FRAMES, 20 * FRAMES);
+        TOUCH_OFF(0); render(inst, out, 20);
+        CHECK(fabs(sup / base - 1.0) < 0.1, "the held second tap of a double tap must stay silent (%.4f vs %.4f)", sup, base);
+        CHECK(GETP("fx1_type") == 3, "that double tap moved Filter Open to the next type (%s)", v);
+        setp(inst, "fx1_type", "2");
+        TOUCH_ON(0); render(inst, out, 10); double early = rms_win(out, 2 * FRAMES, 4 * FRAMES);
+        render(inst, out, 80); double open = rms_win(out, 50 * FRAMES, 20 * FRAMES);
+        printf("fx bank filter open: untouched %.4f, early %.4f, held %.4f\n", base, early, open);
+        CHECK(fabs(early / base - 1.0) < 0.15, "the effect waits for the tap delay (%.4f vs %.4f)", early, base);
+        CHECK(open > 1.3 * base, "Filter Open at full level should brighten the sound (%.4f vs %.4f)", open, base);
+        TOUCH_OFF(0); render(inst, out, 100); double back = rms_win(out, 60 * FRAMES, 20 * FRAMES);
+        CHECK(fabs(back / base - 1.0) < 0.1, "releasing the knob must restore the sound (%.4f vs %.4f)", back, base);
+        setp(inst, "fx1_lvl", "0.3"); TOUCH_ON(0); render(inst, out, 80); double part = rms_win(out, 50 * FRAMES, 20 * FRAMES); TOUCH_OFF(0); render(inst, out, 100);
+        CHECK(part > base * 1.02 && part < open * 0.98, "a lower level gives a smaller effect (%.4f < %.4f < %.4f)", base, part, open);
+        setp(inst, "preset", "8");
+        CHECK(GETP("fx1_type") == 2, "presets must not touch the FX bank (type)");
+        CHECK(fabs(atof(v) - 2.0) < 0.5, "type readback");
+        rt_enter(); api->get_param(inst, "fx1_lvl", v, sizeof v); rt_leave();
+        CHECK(fabs(atof(v) - 0.3) < 0.01, "presets must not touch the FX bank (level %s)", v);
+        setp(inst, "preset", "0");
+        midi(inst, 0x80, 48, 0); drain(inst, out);
+        /* every effect type: finite, audible while touched, back to normal on release; Hold switches Hold on and restores it */
+        for (int ty = 1; ty < 15; ty++) {
+            char tv[8]; snprintf(tv, sizeof tv, "%d", ty);
+            setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "fx1_type", tv); setp(inst, "fx1_lvl", "0.8");
+            if (ty == 13) { setp(inst, "arp_mode", "1"); setp(inst, "arp_gate", "1"); }
+            midi(inst, 0x90, 48, 100); if (ty == 13) midi(inst, 0x90, 52, 100); render(inst, out, 60);
+            double b0 = rms_win(out, 40 * FRAMES, 20 * FRAMES);
+            TOUCH_ON(0); render(inst, out, 80);
+            metrics_t mm = measure(out, 80 * FRAMES);
+            if (ty == 14) CHECK(GETP("hold") == 1, "the Hold effect should switch Hold on while touched");
+            CHECK(isfinite(mm.rms) && mm.peak <= 1.0 && mm.peak > 0.005, "FX type %d must stay finite and audible (rms %.3f peak %.3f)", ty, mm.rms, mm.peak);
+            TOUCH_OFF(0); render(inst, out, 120);
+            if (ty == 14) CHECK(GETP("hold") == 0, "releasing should restore Hold");
+            double b1 = rms_win(out, 80 * FRAMES, 20 * FRAMES);
+            if (ty != 13) CHECK(fabs(b1 / b0 - 1.0) < 0.2 || ty == 7 || ty == 8, "FX type %d should restore the sound on release (%.4f vs %.4f)", ty, b0, b1);
+            midi(inst, 0x80, 48, 0); midi(inst, 0x80, 52, 0); setp(inst, "arp_mode", "0"); drain(inst, out);
         }
-        setp(inst, "touch_knob", "0"); setp(inst, "preset", "0");
+        /* Gate Chop modulates the level; Pitch Rise raises pitch */
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "osc1_wave", "2"); setp(inst, "cutoff", "0.8"); setp(inst, "drift", "0"); setp(inst, "vibrato_depth", "0");
+        setp(inst, "fx1_type", "11"); setp(inst, "fx1_lvl", "1");
+        midi(inst, 0x90, 48, 100); render(inst, out, 40); TOUCH_ON(0); render(inst, out, 100);
+        double lo = 1e9, hi = 0; for (int w = 0; w < 40; w++) { double r = rms_win(out, 20 * FRAMES + w * 512, 512); if (r < lo) lo = r; if (r > hi) hi = r; }
+        printf("gate chop: window rms %.4f .. %.4f\n", lo, hi);
+        CHECK(hi > 0.05 && lo < 0.3 * hi, "Gate Chop should gate the level (%.4f..%.4f)", lo, hi);
+        TOUCH_OFF(0); render(inst, out, 60);
+        setp(inst, "fx1_type", "7"); setp(inst, "fx1_lvl", "1");
+        double p0 = pitch_hz(out, 20 * FRAMES, 30 * FRAMES);
+        TOUCH_ON(0); render(inst, out, 120); double p1 = pitch_hz(out, 90 * FRAMES, 30 * FRAMES);
+        printf("pitch rise: %.1f -> %.1f Hz\n", p0, p1);
+        CHECK(p1 / p0 > 1.85 && p1 / p0 < 2.15, "Pitch Rise at full level is an octave (%.1f -> %.1f)", p0, p1);
+        TOUCH_OFF(0); midi(inst, 0x80, 48, 0); drain(inst, out);
+        setp(inst, "fx1_type", "0"); setp(inst, "preset", "0");
+        #undef TOUCH_ON
+        #undef TOUCH_OFF
+        #undef GETP
+    }
+    /* 2o. audio path: knob smoothing, idle snap, noise colour, preset category jump */
+    {
+        char v[32];
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "drift", "0"); setp(inst, "resonance", "0"); setp(inst, "flt_fm1", "0");
+        setp(inst, "cutoff", "0.15"); midi(inst, 0x90, 60, 100); render(inst, out, 60);
+        double lo = rms_win(out, 30 * FRAMES, 20 * FRAMES);
+        setp(inst, "cutoff", "0.9"); render(inst, out, 60);
+        double first = rms_win(out, 0, FRAMES), later = rms_win(out, 50 * FRAMES, 10 * FRAMES);
+        printf("cutoff jump: before %.4f, first block %.4f, settled %.4f\n", lo, first, later);
+        CHECK(later > 1.5 * lo, "opening the cutoff should brighten the sound (%.4f -> %.4f)", lo, later);
+        CHECK(first < lo + 0.6 * (later - lo), "a stepped knob must glide, not jump (first block %.4f, from %.4f to %.4f)", first, lo, later);
+        midi(inst, 0x80, 60, 0); drain(inst, out);
+        setp(inst, "cutoff", "0.15"); midi(inst, 0x90, 60, 100); render(inst, out, 40); midi(inst, 0x80, 60, 0); drain(inst, out);   /* last heard dark */
+        setp(inst, "cutoff", "0.9"); midi(inst, 0x90, 60, 100); render(inst, out, 60);                                              /* knob moved while silent */
+        double f2 = rms_win(out, 0, FRAMES), s2 = rms_win(out, 50 * FRAMES, 10 * FRAMES);
+        CHECK(f2 > 0.6 * s2, "a note after an idle knob move must start at the new value, not glide from the old one (%.4f vs %.4f)", f2, s2);
+        midi(inst, 0x80, 60, 0); drain(inst, out);
+        /* Noise Color: white by default, darker (less high-frequency energy) as it rises */
+        double hf[2];
+        for (int c = 0; c < 2; c++) {
+            setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "osc1_level", "0"); setp(inst, "osc2_level", "0"); setp(inst, "noise_level", "1");
+            setp(inst, "cutoff", "1"); setp(inst, "drive", "0"); setp(inst, "noise_color", c ? "1" : "0");
+            midi(inst, 0x90, 48, 100); render(inst, out, 80);
+            double da = 0, ra = 0; for (int i = 20 * FRAMES + 1; i < 80 * FRAMES; i++) { double d = (out[2 * i] - out[2 * (i - 1)]) / 32768.0, r = out[2 * i] / 32768.0; da += d * d; ra += r * r; }
+            hf[c] = sqrt(da / ra); midi(inst, 0x80, 48, 0); drain(inst, out);
+        }
+        printf("noise colour: first-difference ratio %.2f (white) -> %.2f (dark)\n", hf[0], hf[1]);
+        CHECK(hf[1] < 0.5 * hf[0], "Noise Color should darken the noise (%.2f vs %.2f)", hf[1], hf[0]);
+        /* Preset Category jumps to the first preset of that type, and follows the current preset */
+        setp(inst, "preset_cat", "3");
+        rt_enter(); api->get_param(inst, "preset_name", v, sizeof v); rt_leave();
+        CHECK(strncmp(v, "Lead", 4) == 0, "Preset Category 3 should land on the first Lead preset (%s)", v);
+        setp(inst, "preset", "0");
+        rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "Preset Category should follow the preset (%s)", v);
+        setp(inst, "preset", "40");
+        rt_enter(); api->get_param(inst, "preset_name", v, sizeof v); char nm[32]; snprintf(nm, sizeof nm, "%s", v); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
+        const char *cats[15] = {"Init", "Bass", "Sub", "Lead", "Pluck", "Keys", "Stab", "Brass", "Arp", "Seq", "Pad", "Texture", "Vox", "Drone", "FX"};
+        CHECK(atoi(v) >= 0 && atoi(v) < 15 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Category matches the preset name (%s -> %s)", nm, v);
+        setp(inst, "preset", "0");
     }
     /* 2l. Osc 1 tuning, noise / osc 2 as matrix sources into FM, controller CCs, Program Change, RPN bend range */
     {
@@ -540,7 +644,8 @@ int main(int argc, char **argv) {
         double hmn = 1e9, hmx = 0, hjump = 1.0, hprev = 0;
         for (int w = 0; w < 28; w++) {
             double h = pitch_hz(out, 2000 + w * 2400, 2400);
-            if (h < hmn) hmn = h; if (h > hmx) hmx = h;
+            if (h < hmn) hmn = h;
+            if (h > hmx) hmx = h;
             if (hprev > 0) { double r = h > hprev ? h / hprev : hprev / h; if (r > hjump) hjump = r; }
             hprev = h;
         }

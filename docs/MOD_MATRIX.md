@@ -4,14 +4,14 @@
 
 ```
  Osc 1 ──┐ (level 1)
- Osc 2 ──┼─ sum ─► Filter Input drive ─► Sallen-Key filter ─► VCA (Env 2) ─► Drive ─► Volume ─► DC block ─► limiter
+ Osc 2 ──┼─ sum ─► Filter Input drive ─► Sallen-Key filter ─► VCA (Amp Env) ─► Drive ─► Volume ─► DC block ─► limiter
  Noise ──┘ (level 2, noise)   (tanh)      (LP/BP/HP/combos)
    ▲  ▲
    │  └── X-Mod: Osc 2 output frequency-modulates Osc 1
    └───── Oscillators, filter, drive run 2x oversampled, halfband-decimated to 44.1 kHz
 ```
 
-Fixed routings (the front-panel knobs): Env 1 and the LFO to Cutoff, to each oscillator's FM and to Shape; velocity to
+Fixed routings (the front-panel knobs): Filter Env and the LFO to Cutoff, to each oscillator's FM and to Shape; velocity to
 cutoff / amp; aftertouch to one destination; Key Track; the Stick; the Grit/Dark macro, which sits on top of the patch.
 
 ## Mod matrix
@@ -23,10 +23,10 @@ and to the stored knob values; it never changes the stored values.
 | Source | Range | Notes |
 | --- | --- | --- |
 | LFO, LFO 2 | -1..+1 | the two LFOs (LFOs page: rate, wave, sync) |
-| Env 1, Env 2 | 0..1 | Env 2 is also the VCA |
+| Filter Env, Amp Env | 0..1 | the two envelopes; Amp Env is also the VCA (these were called Env 1 and Env 2) |
 | Velocity | 0..1 | of the sounding note |
 | Mod Wheel | 0..1 | CC1 |
-| Aftertouch | 0..1 | raw pressure (not scaled by the Perform page's AT Amount) |
+| Aftertouch | 0..1 | raw pressure (not scaled by the Response page's AT Amount) |
 | Stick X, Stick Y | -1..+1 | the two stick knobs; they spring back when released |
 | Key | -1..+1 | pitch of the note: C4 = 0, two octaves each way = +-1 |
 | Random | -1..+1 | sample and hold, a new value for each note (each arp step) |
@@ -57,15 +57,15 @@ and to the stored knob values; it never changes the stored values.
 | Grit | +1.0 on the Grit/Dark macro | added to the Grit knob and the Stick, clamped -1..+1 (see below) |
 | Glide Time | +1.0 on the Glide knob | clamped 0..1; slides notes even with Glide at 0 |
 | Vibrato Depth | +1.5 semitones | added to the Vibrato knob, wheel and aftertouch, never below 0 |
-| LFO Depth, LFO 2 Depth | gain = the slot total | scales that LFO everywhere it is used (knob routings and as a matrix source), clamped 0..2. **0 means silent**: use it with a source that starts at 0 (Mod Wheel, Note Age, Env 1) to fade the LFO in. Applied one sample late |
-| Env Amount | +1.0 | added to the filter envelope depth (the Env 1 -> Cutoff knob, 5 octaves at full), so Velocity or Key can scale the envelope |
+| LFO Depth, LFO 2 Depth | gain = the slot total | scales that LFO everywhere it is used (knob routings and as a matrix source), clamped 0..2. **0 means silent**: use it with a source that starts at 0 (Mod Wheel, Note Age, Filter Env) to fade the LFO in. Applied one sample late |
+| Env Amount | +1.0 | added to the filter envelope depth (the Filter Env -> Cutoff knob, 5 octaves at full), so Velocity or Key can scale the envelope |
 | Drift Amount | +1.0 on the Drift knob | clamped 0..1 |
 
 Grit as a target moves the whole macro at once (filter drive, drive, resonance, noise, drift, cutoff, makeup gain), per sample. Key -> Grit at a
 negative amount makes low notes grittier; Pitch Bend -> Grit makes a push into the wheel dirtier.
 
 Examples: LFO -> Cutoff 0.4 (wobble); Velocity -> Drive 0.4 (harder = dirtier); Stick Y -> Filter Input 0.7 (push into
-saturation); Random -> Cutoff 0.35 (each note a different brightness); Env 2 -> Osc 2 Pitch (pitch drop); Note Age -> LFO Depth + LFO -> Cutoff (a wobble that fades in);
+saturation); Random -> Cutoff 0.35 (each note a different brightness); Amp Env -> Osc 2 Pitch (pitch drop); Note Age -> LFO Depth + LFO -> Cutoff (a wobble that fades in);
 Arp Step -> Cutoff (each arp pass climbs); Smooth Random -> Drift Amount (a loose, wandering tuning).
 
 ## UI
@@ -96,7 +96,7 @@ and fine (+-50 cents) now, as on the hardware.
 | --- | --- |
 | CC 1, 64 | mod wheel, sustain pedal |
 | CC 5, 7, 11 | glide time, volume, expression (output level) |
-| CC 71, 72, 73, 74 | resonance, Env 2 release, Env 2 attack, cutoff |
+| CC 71, 72, 73, 74 | resonance, Amp Env release, Amp Env attack, cutoff |
 | CC 0 + Program Change | selects a preset: bank * 128 + program |
 | RPN 0 (CC 101, 100, 6) | pitch bend range |
 | CC 120, 121, 123 | sound off, reset controllers, all notes off |

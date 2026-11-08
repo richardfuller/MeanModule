@@ -2,6 +2,23 @@
   "title": "Mean Module",
   "children": [
     {
+      "title": "Start here",
+      "lines": [
+        "1. Play a note.",
+        "2. Main page: turn Grit.",
+        "Right = dirtier and",
+        "darker, left = cleaner.",
+        "3. Cat jumps between",
+        "preset types. Jog",
+        "browses all of them.",
+        "4. Jog turns pages.",
+        "Perform, FX Bank and",
+        "Stick come first.",
+        "5. Touch a knob to see",
+        "its name and value."
+      ]
+    },
+    {
       "title": "Overview",
       "lines": [
         "Mean Module: a gritty",
@@ -10,8 +27,9 @@
         "2 oscillators + noise,",
         "a saturating 2-pole",
         "Sallen-Key filter,",
-        "2 ADSRs, LFO and a",
-        "post-filter drive.",
+        "2 ADSRs, 2 LFOs, a",
+        "6-slot mod matrix and",
+        "a post-filter drive.",
         "",
         "Mono: last, low or",
         "high note priority.",
@@ -19,244 +37,296 @@
       ]
     },
     {
-      "title": "Pages",
-      "children": [
-        {
-          "title": "Main (root)",
-          "lines": [
-            "Cutoff, Res, Input,",
-            "Grit, AmpA, AmpR,",
-            "Drive, Vol.",
-            "",
-            "Grit: one knob for",
-            "grit and darkness.",
-            "Up = more drive and",
-            "filter saturation,",
-            "darker, a little",
-            "noise and drift.",
-            "Down = cleaner and",
-            "brighter. Centre =",
-            "the preset as saved."
-          ]
-        },
-        {
-          "title": "Oscillators",
-          "lines": [
-            "Wave1/2: Saw, Tri,",
-            "Pulse or any mix.",
-            "Shp1/2: pulse width,",
-            "triangle skew or",
-            "saw bow.",
-            "Semi/Fine: osc 2",
-            "tuning. Lvl1/2."
-          ]
-        },
-        {
-          "title": "Tuning",
-          "lines": [
-            "Semi1 Fine1 Semi2 Fine2:",
-            "coarse and fine tune",
-            "for both oscillators.",
-            "Oct, Tune, Drift,",
-            "Bend range."
-          ]
-        },
-        {
-          "title": "Filter",
-          "lines": [
-            "Cutoff, Res.",
-            "Input = drive into",
-            "the filter. Hot input",
-            "saturates and squeezes",
-            "resonance; it",
-            "self-oscillates.",
-            "Mode: LP BP HP L+H B+L.",
-            "Env/LFO to cutoff,",
-            "Key tracking, Drive."
-          ]
-        },
-        {
-          "title": "Env 1",
-          "lines": [
-            "Filter and pitch FM",
-            "envelope.",
-            "Exponential ADSR,",
-            "0.5 ms to 10 s."
-          ]
-        },
-        {
-          "title": "Env 2",
-          "lines": [
-            "Amplifier envelope.",
-            "Exponential ADSR,",
-            "0.5 ms to 10 s."
-          ]
-        },
-        {
-          "title": "Modulation",
-          "lines": [
-            "EFM 1/2: Env 1 pitch FM.",
-            "LFM 1/2: LFO pitch FM.",
-            "XMod: osc 2 FMs osc 1.",
-            "Shape: LFO moves the",
-            "shape of both oscs.",
-            "Rate and wave of LFO."
-          ]
-        },
-        {
-          "title": "LFOs",
-          "lines": [
-            "Two LFOs: Rate, Wave,",
-            "Sync each.",
-            "Waves: Tri, Square,",
-            "Saw Down, Saw Up,",
-            "Random (S&H).",
-            "Sync: 1/2 1/4 1/8 1/8T",
-            "1/16 1/16T 1/32,",
-            "locked to the beat",
-            "while Move plays.",
-            "LFO 2 is used through",
-            "the Matrix."
-          ]
-        },
-        {
-          "title": "Matrix",
-          "lines": [
-            "Six slots: Src, Dst, Amt",
-            "(-1..+1), Matrix 1-2,",
-            "3-4 and 5-6 pages.",
-            "Src: LFO Env1 Env2 Vel",
-            "Wheel AfterT StkX StkY",
-            "Key Random LFO2 Noise",
-            "Osc2 Bend ArpStep Age",
-            "SmRand Osc1 Pedal.",
-            "Slots add up; Off or",
-            "0 amount does nothing."
-          ]
-        },
-        {
-          "title": "Matrix targets",
-          "lines": [
-            "Dst: Pitch Pitch2",
-            "Shape1/2 Lvl1/2 Noise",
-            "Cutoff Res Input Drive",
-            "Amp XMod LFO Rates",
-            "Osc1/2 FM Grit Glide",
-            "VibDepth LFO1/2 Depth",
-            "EnvAmt Drift.",
-            "LFO Depth is a gain:",
-            "0 = LFO silent, so",
-            "Wheel or Age fades",
-            "the LFO in."
-          ]
-        },
-        {
-          "title": "Signal path",
-          "lines": [
-            "Osc1 + Osc2 + Noise",
-            "-> Input drive",
-            "-> Sallen-Key filter",
-            "-> VCA (Env 2)",
-            "-> Drive -> Volume.",
-            "Osc2 can FM Osc1",
-            "(XMod). Env 1 and LFO",
-            "feed cutoff, FM, shape.",
-            "Matrix adds more.",
-            "Grit sits on top."
-          ]
-        },
-        {
-          "title": "Live",
-          "lines": [
-            "Performance page.",
-            "Hold, Drone, Arp mode,",
-            "Arp rate, Octave, Glide.",
-            "Touch Knob 3-8 plus",
-            "Touch Does: while you",
-            "touch that knob, Hold On,",
-            "Arp Faster, Grit Push",
-            "or Filter Open applies",
-            "and lets go on release."
-          ]
-        },
-        {
-          "title": "Play",
-          "lines": [
-            "Noise, Glide, Vib,",
-            "Bend range, Drift,",
-            "Legato, Volume.",
-            "Drone: Off / Hold /",
-            "Latch. Hold keeps amp",
-            "open while a key is",
-            "down. Latch keeps",
-            "sounding after release",
-            "until all-notes-off,",
-            "a preset change or",
-            "Drone Off."
-          ]
-        },
-        {
-          "title": "Perform",
-          "lines": [
-            "VCut, VAmp: velocity",
-            "to cutoff and amp.",
-            "AT: aftertouch target",
-            "(Off Cut Vib Drv FM),",
-            "Amt: amount.",
-            "Prio: last/low/high.",
-            "Oct, VibRt, Tune."
-          ]
-        },
-        {
-          "title": "Stick",
-          "lines": [
-            "Joystick emulation.",
-            "StkX (knob 1), StkY",
-            "(knob 2) spring back",
-            "when you let go.",
-            "X To: Bend, Vib Speed,",
-            "Cutoff, Grit, Arp Rate,",
-            "Arp Mode.",
-            "Y To: Glide, Vib Depth,",
-            "Cutoff, Grit, Hold",
-            "Toggle, Arp Rate, Arp Mode.",
-            "Arp Rate/Mode step once",
-            "per flick past 80%.",
-            "Hold Toggle: hold Y fully",
-            "down to flip Hold."
-          ]
-        },
-        {
-          "title": "Arp",
-          "lines": [
-            "Arp: Off, Up, Down,",
-            "Up+Down, Random,",
-            "As Played.",
-            "Rate: 1/4 to 1/32",
-            "(synced to Move).",
-            "Oct: 1-3 octaves.",
-            "Gate: note length;",
-            "100% ties notes.",
-            "Turn Hold on to",
-            "latch a chord, then",
-            "move the Stick."
-          ]
-        }
+      "title": "Main (root)",
+      "lines": [
+        "Cutoff, Res, Mode:",
+        "the filter graphic.",
+        "Grit: one knob for",
+        "grit and darkness.",
+        "Right = more drive and",
+        "filter saturation,",
+        "darker, a little",
+        "noise and drift.",
+        "Left = cleaner and",
+        "brighter. Centre =",
+        "the preset as saved.",
+        "AmpA, AmpR: amp attack",
+        "and release.",
+        "Cat: jump to a preset",
+        "type. Vol: level."
+      ]
+    },
+    {
+      "title": "Perform",
+      "lines": [
+        "Hold: keep notes down.",
+        "Drone: Off / Hold /",
+        "Latch. Hold keeps amp",
+        "open while a key is",
+        "down. Latch keeps",
+        "sounding after release",
+        "until all-notes-off,",
+        "a preset change or",
+        "Drone Off.",
+        "Oct: transpose.",
+        "Glide: slide time.",
+        "Arp, Rate, ArpOc, Gate:",
+        "arpeggiator, synced to",
+        "Move. Gate 100% ties.",
+        "Hold + Arp latches a",
+        "chord."
+      ]
+    },
+    {
+      "title": "FX Bank",
+      "lines": [
+        "Knobs 1-4 are touch",
+        "effects. Any page.",
+        "HOLD a knob: its",
+        "effect is on.",
+        "TURN it: sets how",
+        "much. The level is",
+        "remembered.",
+        "DOUBLE-TAP it: next",
+        "effect. The Type row",
+        "shows what each knob",
+        "does (OFF = nothing).",
+        "Effects start after a",
+        "short touch, so a tap",
+        "stays silent."
+      ]
+    },
+    {
+      "title": "FX Bank effects",
+      "lines": [
+        "GRT Grit: dirtier",
+        "OPN Filter Open",
+        "CLS Filter Close",
+        "CRN Crunch: more drive",
+        "RES Resonance",
+        "NSE Noise",
+        "RIS Pitch Rise: up to",
+        "    an octave",
+        "DIV Pitch Dive: down",
+        "VIB Vibrato",
+        "WOB Wobble: 1/8 cutoff",
+        "    sweep, tempo-synced",
+        "CHP Gate Chop: 1/16",
+        "DTN Detune osc 2",
+        "ARP Arp Faster",
+        "HLD Hold"
+      ]
+    },
+    {
+      "title": "Stick",
+      "lines": [
+        "Joystick emulation.",
+        "StkX (knob 1), StkY",
+        "(knob 2) spring back",
+        "when you let go.",
+        "X To: Bend, Vib Speed,",
+        "Cutoff, Grit, Arp Rate,",
+        "Arp Mode.",
+        "Y To: Glide, Vib Depth,",
+        "Cutoff, Grit, Hold",
+        "Toggle, Arp Rate,",
+        "Arp Mode.",
+        "Arp Rate/Mode step once",
+        "per flick past 80%.",
+        "Hold Toggle: hold Y",
+        "fully down to flip Hold."
+      ]
+    },
+    {
+      "title": "Oscillators",
+      "lines": [
+        "Wave1/2: Saw, Tri,",
+        "Pulse or any mix.",
+        "Shp1/2: pulse width,",
+        "triangle skew or",
+        "saw bow.",
+        "Lvl1/2 and Noise: the",
+        "mixer. Color: noise",
+        "from white to dark.",
+        "Tuning page: Semi/Fine",
+        "for both oscillators."
+      ]
+    },
+    {
+      "title": "Filter",
+      "lines": [
+        "Cutoff, Res, Mode: the",
+        "graphic shows the",
+        "response (LP BP HP",
+        "L+H B+L). Input drives",
+        "the filter: hot input",
+        "saturates and squeezes",
+        "resonance; it",
+        "self-oscillates.",
+        "FEnv: filter envelope",
+        "to cutoff. Key: key",
+        "tracking. Drive: after",
+        "the VCA."
+      ]
+    },
+    {
+      "title": "Amp Env",
+      "lines": [
+        "Amplifier envelope.",
+        "Exponential ADSR,",
+        "0.5 ms to 10 s.",
+        "VAmp: velocity to",
+        "level. Drone: Off,",
+        "Hold or Latch."
+      ]
+    },
+    {
+      "title": "Filter Env",
+      "lines": [
+        "Filter envelope.",
+        "Exponential ADSR,",
+        "0.5 ms to 10 s.",
+        "FEnv: to cutoff.",
+        "EFM1/2: to osc 1/2",
+        "pitch FM. VCut:",
+        "velocity to cutoff."
+      ]
+    },
+    {
+      "title": "LFO 1",
+      "lines": [
+        "Wave, Rate and Cutoff",
+        "(the depth) draw as a",
+        "wave. Sync locks the",
+        "LFO to Move's beat.",
+        "FM 1/2: LFO pitch FM",
+        "of osc 1/2. Shape: LFO",
+        "moves the pulse shape."
+      ]
+    },
+    {
+      "title": "LFO 2",
+      "lines": [
+        "Rate, Wave, Sync.",
+        "LFO 2 is used through",
+        "the Matrix: LFO 2 as a",
+        "source; targets are",
+        "LFO 2 Rate and Depth."
+      ]
+    },
+    {
+      "title": "FM and X-Mod",
+      "lines": [
+        "XMod: osc 2 FMs osc 1.",
+        "EFM1/2: filter",
+        "envelope FMs osc 1/2."
+      ]
+    },
+    {
+      "title": "Tuning",
+      "lines": [
+        "Semi1 Fine1 Semi2",
+        "Fine2: coarse and fine",
+        "tune for both",
+        "oscillators.",
+        "Oct, Tune, Drift,",
+        "Bend range."
+      ]
+    },
+    {
+      "title": "Voice",
+      "lines": [
+        "Glide, Legato, Prio",
+        "(last/low/high), Drift",
+        "(analog wander).",
+        "Vib, VibRt: vibrato",
+        "depth and speed.",
+        "Bend: pitch bend range."
+      ]
+    },
+    {
+      "title": "Response",
+      "lines": [
+        "VCut, VAmp: velocity",
+        "to cutoff and level.",
+        "AT: aftertouch target",
+        "(Off Cut Vib Drv FM),",
+        "Amt: amount."
+      ]
+    },
+    {
+      "title": "LFO and sync",
+      "lines": [
+        "Waves: Tri, Square,",
+        "Saw Down, Saw Up,",
+        "Random (S&H).",
+        "Sync: 1/2 1/4 1/8 1/8T",
+        "1/16 1/16T 1/32,",
+        "locked to the beat",
+        "while Move plays."
+      ]
+    },
+    {
+      "title": "Matrix",
+      "lines": [
+        "Six slots: Src, Dst, Amt",
+        "(-1..+1), Matrix 1-2,",
+        "3-4 and 5-6 pages.",
+        "Src: LFO FEn AEn Vel",
+        "Wheel AfterT StkX StkY",
+        "Key Random LFO2 Noise",
+        "Osc2 Bend ArpStep Age",
+        "SmRand Osc1 Pedal.",
+        "Slots add up; Off or",
+        "0 amount does nothing."
+      ]
+    },
+    {
+      "title": "Matrix targets",
+      "lines": [
+        "Dst: Pitch Pitch2",
+        "Shape1/2 Lvl1/2 Noise",
+        "Cutoff Res Input Drive",
+        "Amp XMod LFO Rates",
+        "Osc1/2 FM Grit Glide",
+        "VibDepth LFO1/2 Depth",
+        "EnvAmt Drift.",
+        "LFO Depth is a gain:",
+        "0 = LFO silent, so",
+        "Wheel or Age fades",
+        "the LFO in."
+      ]
+    },
+    {
+      "title": "Signal path",
+      "lines": [
+        "Osc1 + Osc2 + Noise",
+        "-> Input drive",
+        "-> Sallen-Key filter",
+        "-> VCA (Amp Env)",
+        "-> Drive -> Volume.",
+        "Osc2 can FM Osc1",
+        "(XMod). Filter Env and",
+        "LFO feed cutoff, FM,",
+        "shape. Matrix adds",
+        "more. Grit sits on top."
       ]
     },
     {
       "title": "Presets & State",
       "lines": [
-        "Browse factory",
-        "presets from the",
-        "slot preset row.",
+        "Cat jumps between",
+        "preset types; the jog",
+        "browses all of them.",
         "All parameters are",
         "saved with the set",
         "and in My Presets.",
         "A * at the end of a",
         "name means the preset",
         "uses the Stick through",
-        "the Matrix."
+        "the Matrix. Presets",
+        "leave the FX Bank",
+        "alone."
       ]
     },
     {
@@ -268,7 +338,10 @@
         "poly aftertouch (any",
         "key), sustain pedal",
         "(CC64), CC121 reset,",
-        "CC123 all notes off."
+        "CC123 all notes off.",
+        "External MIDI also:",
+        "CC5/7/11/71-74, bank",
+        "and program change."
       ]
     }
   ]
