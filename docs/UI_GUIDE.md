@@ -64,7 +64,7 @@ Two effects on the same type add (clamped), and every effect fades in over about
 | I want to... | Before | Now |
 | --- | --- | --- |
 | Hear something and make it dirtier | Grit was there but the screen gave no hint what it did | Main page: filter picture, Grit, Cat, all on the first screen; the help's first page says what to try |
-| Find a sound among 273 presets | One long list | **Bank** picks Bass, Lead, Pad, Horror, Sets ... and the jog browses only that bank (`docs/PRESET_BANKS.md`) |
+| Find a sound among 274 presets | One long list | **Bank** picks Bass, Lead, Pad, Horror, Sets ... and the jog browses only that bank (`docs/PRESET_BANKS.md`) |
 | Shape the amp or filter envelope | Pages called Env 1 and Env 2, with the envelope amounts on other pages | Amp Env and Filter Env pages, each with its graphic and its related controls |
 | Play it live | Hold, Arp and Play on three pages, and a single touch effect | Perform page (Hold, Drone, arp) and the FX Bank |
 | Understand a knob | Short names such as EFM 1 and LFM 2 | Plain names (EFM1, FM 1), values with units (%, st, cents, oct) |

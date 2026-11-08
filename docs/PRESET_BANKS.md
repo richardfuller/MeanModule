@@ -1,6 +1,6 @@
 # Preset banks
 
-The 273 factory presets are grouped into 17 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob (Main page, knob 7) picks a bank and jumps to its first preset; the jog
+The 274 factory presets are grouped into 17 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob (Main page, knob 7) picks a bank and jumps to its first preset; the jog
 wheel browses inside that bank only, and the browser shows names without the bank word ("Acid Line", not "Bass Acid Line").
 
 | Bank | Presets | What is in it |
@@ -20,7 +20,7 @@ wheel browses inside that bank only, and the browser shows names without the ban
 | Vox | 7 | Formant and vowel sounds |
 | Drone | 11 | Held and latched drones |
 | FX | 15 | Sirens, risers, falls, glitches |
-| Horror | 18 | Haunted amusement park, crypt and creature sounds (below) |
+| Horror | 19 | Haunted amusement park, crypt and creature sounds (below) |
 | Sets | 24 | Eight themes of three presets that belong together (below) |
 
 Program Change from an external controller: bank select (CC 0) of 0 keeps the old flat numbering (program = preset number); bank select 1..25
@@ -28,7 +28,7 @@ picks program N inside that bank (1 = Init, 2 = Bass, 3 = Sub ... 16 = Horror, 1
 
 ## Horror
 
-Calliope (out of tune, with a Mod Wheel that detunes it further), Carousel (arpeggiated calliope), Crypt Organ, Music Box (flat and wandering),
+Calliope (out of tune, with a Mod Wheel that detunes it further; hold a chord and the pipes are cycled quickly, a tied 1/32 arp, for a false-polyphonic chord, and a single note stays steady), Calliope Solo (the same sound without the chord cycling), Carousel (arpeggiated calliope), Crypt Organ, Music Box (flat and wandering),
 Cellar Door (creaking glide), Slasher Stab, Dread Drone (latch), Whispers, Heartbeat (tempo-locked throb), Theremin Ghost (use aftertouch),
 Fly Swarm, Toll (church bell), Rotting Pipes, Insect Nest (random arp), Possessed Choir, Grave Rumble, Shriek, Hive Mind.
 Pitch clashes (minor second, tritone), heavy drive, resonance and random movement are on purpose: this bank is meant to unsettle.
