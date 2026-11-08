@@ -1,5 +1,25 @@
 # Changelog
 
+## 0.9.2
+
+Preset banks, Sets, a Horror bank, and a review of the whole library. Details and the method: `docs/PRESET_BANKS.md`.
+
+### Banks
+* The presets are in 17 banks: Init, Bass, Sub, Lead, Pluck, Keys, Stab, Brass, Arp, Seq, Pad, Texture, Vox, Drone, FX, Horror, Sets. The Main page **Cat** knob is now **Bank**; the jog wheel browses only the current bank, and names no longer repeat the bank word.
+* External Program Change: bank select 0 keeps the flat numbering; bank select 1..17 picks a program inside that bank.
+* Presets saved in a set before this version keep their sound (all parameters are stored), but the preset number they remember may now point at a different name.
+
+### Sets (24 presets)
+Eight themes of three presets meant to be played together on three Move tracks: Gritty Punk, Acid Rain, Black Mass, Iron Works, Cold Wave, Dub Cellar, Doom and Neon Static (the bright one). Named like "Gritty Punk 1 - Bass".
+
+### Horror (16 presets)
+Haunted-park and crypt sounds, including an out-of-tune **Calliope** (Mod Wheel detunes it further) and an arpeggiated **Carousel**, plus Crypt Organ, Music Box, Cellar Door, Slasher Stab, Dread Drone, Whispers, Heartbeat, Theremin Ghost, Fly Swarm, Toll, Rotting Pipes, Insect Nest, Possessed Choir and Grave Rumble.
+
+### Library review
+* Measured every preset (new `tests/preset_audit.c`). The library skewed dark and narrow; 25 new presets add clean, bright and open sounds across the banks (Init Saw/Square/Detuned/Sub Octave/Noise, clean pulse bass, PWM, glass sync and highpass leads, tines, electric piano, clean organ, bright chord, clean brass swell, bright and latched arps, strings, PWM choir, shimmer). The dark core is untouched.
+* Removed eight near-duplicates (Bass Overdriven, Bass Octave Stack, Brass Stab, Lead Grit Fifth, Pluck Slag, Keys Pluck, Keys Gritty Clav, Keys Grit Bell); fixed a duplicate name (the Note Age pad is now Pad Age Swell); moved five presets to the bank they belong in.
+* 271 presets in total. New presets are measured (level, brightness, duplicates), not yet tuned by ear.
+
 ## 0.9.1
 
 ### FX Bank acts only on its own page

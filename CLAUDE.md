@@ -35,7 +35,7 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   edges (source 5, notes 0/1) and release springs the value to 0. With no touch events a timer recentres (120-150 blocks).
   with Y assigned to Hold Toggle, Y held fully down ~0.23 s toggles Hold (a sweep never does); stick bend is >= 7 semitones (2x Bend Range). Targets: X = Bend / Vibrato Speed / Cutoff / Grit; Y = Glide / Vibrato Depth / Cutoff / Grit.
 - The 4-slot screen shows `get_param("name")` ("Mean Mod"); the Remote UI header also uses it.
-- Presets are named "<Category> <Name>" and kept in category order: Init, Bass, Sub, Lead, Pluck, Keys, Stab, Brass, Arp, Seq, Pad, Texture, Vox, Drone, FX (no percussion; dark/industrial theme). Matrix slots in presets use the `MX(slot, S_*, D_*, amt)` helper.
+- Presets are named "<Bank> <Name>"; the first word is the bank (Init, Bass, Sub, Lead, Pluck, Keys, Stab, Brass, Arp, Seq, Pad, Texture, Vox, Drone, FX, Horror, and Set = the Sets bank, named "Set <Theme> <n> - <Role>"). Banks are built at load from the names (`banks_init`), array order is kept inside a bank, the host browser lists only the current bank (`bank_preset` / `bank_count`) and shows names without the bank word (`preset_name`; `preset_full` has the whole name). No percussion; dark/industrial theme with bright and clean sounds across the banks. See `docs/PRESET_BANKS.md`; `tests/preset_audit.c` renders every preset for duplicate and gap checks. A preset must stay audible after 1.2 s held (host test), so plucks keep a little amp sustain. Matrix slots in presets use the `MX(slot, S_*, D_*, amt)` helper.
 
 - LFOs: two (`lfo_*`, `lfo2_*`), waves Tri/Sq/SawDn/SawUp/Random, Sync = 1/2..1/32 locked to `get_beat_position` (free-run at bpm when stopped).
 - Mod matrix: 6 slots (`m1_src/dst/amt`..), 20 sources x 25 targets (Env 1/2 are named Filter Env / Amp Env in the UI; Noise, Osc 1/2, Pitch Bend, Arp Step, Note Age, Smooth Random, Sustain Pedal are sources; Osc 1/2 FM, Grit, Glide, Vib Depth, LFO 1/2 Depth, Env Amount, Drift are targets; LFO Depth is a gain with 0 = silent), summed per sample in render_active; design and ranges in
@@ -54,7 +54,7 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   Stick X/Y can also flick Arp Rate / Arp Mode. Root page order: Perform, FX Bank, Stick first.
 - Knob smoothing: cutoff (+stick/aftertouch cutoff), resonance, filter drive, drive, grit and volume follow their knobs through ~12 ms one-poles
   (`sm_*`), so a stepped knob never zippers; modulation is not smoothed. A note starting from (near) silence snaps to the knobs.
-- Preset Category (`preset_cat`) jumps to the first preset of that category and follows the current preset. Noise Color is a level-compensated one-pole (0 = exact white).
+- Preset Bank (`preset_cat`, knob "Bank") jumps to the first preset of that bank and follows the current preset. External Program Change: CC0 = 0 flat, CC0 = n picks program inside bank n-1. Noise Color is a level-compensated one-pole (0 = exact white).
 - Audio-path changes are measured, not guessed: `tests/audio_eval.c` (alias share, noise floor, self-oscillation, zipper, cross-mod, noise tilt, cost).
   Measured and rejected: soft limiter inside the 2x loop (no aliasing change, +6% CPU), IIR halfband (the FIR is ~3 us/block of ~35), 4x oversampling
   (-3..-7 dB aliasing at ~1.9x CPU; revisit only with device CPU numbers).

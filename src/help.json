@@ -8,9 +8,10 @@
         "2. Main page: turn Grit.",
         "Right = dirtier and",
         "darker, left = cleaner.",
-        "3. Cat jumps between",
-        "preset types. Jog",
-        "browses all of them.",
+        "3. Bank picks a group",
+        "of sounds (Bass, Lead,",
+        "Horror, Sets...). Jog",
+        "browses that bank.",
         "4. Jog turns pages.",
         "Perform, FX Bank and",
         "Stick come first.",
@@ -52,8 +53,8 @@
         "the preset as saved.",
         "AmpA, AmpR: amp attack",
         "and release.",
-        "Cat: jump to a preset",
-        "type. Vol: level."
+        "Bank: pick a preset",
+        "bank. Vol: level."
       ]
     },
     {
@@ -317,9 +318,12 @@
     {
       "title": "Presets & State",
       "lines": [
-        "Cat jumps between",
-        "preset types; the jog",
-        "browses all of them.",
+        "Bank picks a group of",
+        "presets; the jog",
+        "browses inside it.",
+        "Sets = 3 presets that",
+        "belong together: put",
+        "each on its own track.",
         "All parameters are",
         "saved with the set",
         "and in My Presets.",

@@ -7,7 +7,7 @@ name and value. Pages are in this order, with the things you reach for most firs
 
 | # | Page | What is on it |
 | --- | --- | --- |
-| 1 | **Main** | Filter graphic (Cutoff, Res, Mode), **Grit**, amp attack and release, **Cat** (preset category), Volume |
+| 1 | **Main** | Filter graphic (Cutoff, Res, Mode), **Grit**, amp attack and release, **Bank** (preset bank), Volume |
 | 2 | **Perform** | Hold, Drone, Octave, Glide, and the whole arpeggiator (Arp, Rate, Arp Octaves, Gate) |
 | 3 | **FX Bank** | Four touch effects: levels on top, effect types below |
 | 4 | **Stick** | Stick X and Y, what each steers, bend range, vibrato, Hold |
@@ -63,7 +63,7 @@ Two effects on the same type add (clamped), and every effect fades in over about
 | I want to... | Before | Now |
 | --- | --- | --- |
 | Hear something and make it dirtier | Grit was there but the screen gave no hint what it did | Main page: filter picture, Grit, Cat, all on the first screen; the help's first page says what to try |
-| Find a sound among 214 presets | One long list | **Cat** jumps to Bass, Lead, Pad ... and the jog browses within |
+| Find a sound among 271 presets | One long list | **Bank** picks Bass, Lead, Pad, Horror, Sets ... and the jog browses only that bank (`docs/PRESET_BANKS.md`) |
 | Shape the amp or filter envelope | Pages called Env 1 and Env 2, with the envelope amounts on other pages | Amp Env and Filter Env pages, each with its graphic and its related controls |
 | Play it live | Hold, Arp and Play on three pages, and a single touch effect | Perform page (Hold, Drone, arp) and the FX Bank |
 | Understand a knob | Short names such as EFM 1 and LFM 2 | Plain names (EFM1, FM 1), values with units (%, st, cents, oct) |

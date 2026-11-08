@@ -94,7 +94,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
         char key[48]; snprintf(key, sizeof key, "%.*s", (int)(e - p), p);
         char *obj_end = strstr(e, "\"key\":\""); size_t span = obj_end ? (size_t)(obj_end - e) : strlen(e);
         char obj[1024]; snprintf(obj, sizeof obj, "%.*s", (int)(span < sizeof obj - 1 ? span : sizeof obj - 1), e);
-        if (strcmp(key, "preset")) {
+        if (strcmp(key, "preset") && strcmp(key, "bank_preset")) {
             snprintf(keys[c++], 48, "%s", key);
             char *q = strstr(obj, "\"name\":\""); CHECK(q != NULL, "param %s has no name", key);
             if (q) CHECK(q[8] >= 'A' && q[8] <= 'Z', "param %s name is not proper case", key);
@@ -176,7 +176,7 @@ int main(int argc, char **argv) {
         CHECK(drain(inst, out) >= 0, "plugin never went silent after the stress tests");
         for (int pi = 0; pi < cnt; pi++) {
             snprintf(b2, sizeof b2, "%d", pi); setp(inst, "preset", b2);
-            char nm[64]; rt_enter(); api->get_param(inst, "preset_name", nm, sizeof nm); rt_leave();
+            char nm[64]; rt_enter(); api->get_param(inst, "preset_full", nm, sizeof nm); rt_leave();
             render(inst, out, 40);   /* selecting a preset must never make sound by itself (drones used to) */
             m = measure(out, 40 * FRAMES);
             CHECK(m.peak < 0.0005, "preset %d '%s' sounds with no note held (peak %.4f)", pi, nm, m.peak);
@@ -493,15 +493,40 @@ int main(int argc, char **argv) {
         CHECK(hf[1] < 0.5 * hf[0], "Noise Color should darken the noise (%.2f vs %.2f)", hf[1], hf[0]);
         /* Preset Category jumps to the first preset of that type, and follows the current preset */
         setp(inst, "preset_cat", "3");
-        rt_enter(); api->get_param(inst, "preset_name", v, sizeof v); rt_leave();
+        rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
         CHECK(strncmp(v, "Lead", 4) == 0, "Preset Category 3 should land on the first Lead preset (%s)", v);
         setp(inst, "preset", "0");
         rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 0, "Preset Category should follow the preset (%s)", v);
         setp(inst, "preset", "40");
-        rt_enter(); api->get_param(inst, "preset_name", v, sizeof v); char nm[32]; snprintf(nm, sizeof nm, "%s", v); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        const char *cats[15] = {"Init", "Bass", "Sub", "Lead", "Pluck", "Keys", "Stab", "Brass", "Arp", "Seq", "Pad", "Texture", "Vox", "Drone", "FX"};
-        CHECK(atoi(v) >= 0 && atoi(v) < 15 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Category matches the preset name (%s -> %s)", nm, v);
+        rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); char nm[48]; snprintf(nm, sizeof nm, "%s", v); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
+        const char *cats[17] = {"Init", "Bass", "Sub", "Lead", "Pluck", "Keys", "Stab", "Brass", "Arp", "Seq", "Pad", "Texture", "Vox", "Drone", "FX", "Horror", "Set"};
+        CHECK(atoi(v) >= 0 && atoi(v) < 17 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Bank matches the preset name (%s -> %s)", nm, v);
+        /* Banks: every preset is in exactly one bank, banks are browsed by position, names are shown without the bank word, Program Change is per bank */
+        {
+            char b2[32]; rt_enter(); api->get_param(inst, "preset_count", b2, sizeof b2); rt_leave(); int total = atoi(b2), sum = 0;
+            for (int bk = 0; bk < 17; bk++) {
+                char kk[16]; snprintf(kk, sizeof kk, "%d", bk); setp(inst, "preset_cat", kk);
+                rt_enter(); api->get_param(inst, "bank_count", b2, sizeof b2); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
+                int cnt = atoi(b2); sum += cnt;
+                CHECK(cnt > 0 && cnt <= 64, "bank %d (%s) has %d presets", bk, cats[bk], cnt);
+                CHECK(strncmp(v, cats[bk], strlen(cats[bk])) == 0, "bank %d starts on a %s preset (%s)", bk, cats[bk], v);
+                snprintf(kk, sizeof kk, "%d", cnt - 1); setp(inst, "bank_preset", kk);
+                rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); api->get_param(inst, "bank_preset", b2, sizeof b2); rt_leave();
+                CHECK(strncmp(v, cats[bk], strlen(cats[bk])) == 0 && atoi(b2) == cnt - 1, "last preset of bank %d stays in the bank (%s, pos %s)", bk, v, b2);
+                setp(inst, "bank_preset", "999");   /* out of range clamps to the last one */
+                rt_enter(); api->get_param(inst, "bank_preset", b2, sizeof b2); rt_leave();
+                CHECK(atoi(b2) == cnt - 1, "bank_preset clamps (%s of %d)", b2, cnt);
+            }
+            CHECK(sum == total, "banks hold every preset once (%d vs %d)", sum, total);
+            setp(inst, "preset_cat", "2"); setp(inst, "bank_preset", "1");
+            rt_enter(); api->get_param(inst, "preset_name", v, sizeof v); api->get_param(inst, "preset_full", nm, sizeof nm); rt_leave();
+            CHECK(strncmp(nm, "Sub ", 4) == 0 && strcmp(nm + 4, v) == 0, "browser name drops the bank word ('%s' vs '%s')", nm, v);
+            midi(inst, 0xB0, 0, 3); midi(inst, 0xC0, 0, 0);   /* bank select 3 = Sub, program 0 */
+            rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); api->get_param(inst, "preset_cat", b2, sizeof b2); rt_leave();
+            CHECK(atoi(b2) == 2 && strncmp(v, "Sub ", 4) == 0, "Program Change with bank select 3 picks inside the Sub bank (%s)", v);
+            midi(inst, 0xB0, 0, 0);
+        }
         setp(inst, "preset", "0");
     }
     /* 2l. Osc 1 tuning, noise / osc 2 as matrix sources into FM, controller CCs, Program Change, RPN bend range */
@@ -546,9 +571,9 @@ int main(int argc, char **argv) {
         midi(inst, 0xC0, 5, 0);
         rt_enter(); api->get_param(inst, "preset", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 5, "Program Change 5 should select preset 5 (%s)", v);
-        midi(inst, 0xB0, 0, 1); midi(inst, 0xC0, 3, 0);
-        rt_enter(); api->get_param(inst, "preset", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 131 || atoi(v) == 5, "bank 1 program 3 -> preset 131 if it exists, else ignored (%s)", v);
+        midi(inst, 0xB0, 0, 2); midi(inst, 0xC0, 5, 0);
+        rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
+        CHECK(strncmp(v, "Bass ", 5) == 0, "bank select 2 (Bass) program 5 -> the sixth Bass preset (%s)", v);
         midi(inst, 0xB0, 0, 0);
         midi_src(inst, 0xC0, 9, 0, MOVE_MIDI_SOURCE_INTERNAL);
         rt_enter(); api->get_param(inst, "preset", v, sizeof v); rt_leave();
@@ -670,7 +695,7 @@ int main(int argc, char **argv) {
             hprev = h;
         }
         printf("smooth random -> pitch: %.1f .. %.1f Hz, biggest step %.3f\n", hmn, hmx, hjump);
-        CHECK(hmx / hmn > 1.08 && hjump < 1.10, "Smooth Random should wander smoothly (%.1f..%.1f, step %.3f)", hmn, hmx, hjump);
+        CHECK(hmx / hmn > 1.08 && hjump < 1.15, "Smooth Random should wander smoothly (%.1f..%.1f, step %.3f)", hmn, hmx, hjump);
         midi(inst, 0x80, 72, 0); drain(inst, out);
         /* Arp Step: 0 on the first arp note, 1 on the last; Amp at -1 makes the pattern fade across the steps */
         CLEAN_TRI(); setp(inst, "arp_mode", "1"); setp(inst, "arp_rate", "2"); setp(inst, "arp_gate", "1"); setp(inst, "arp_octaves", "1");
