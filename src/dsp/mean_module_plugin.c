@@ -32,6 +32,8 @@ __asm__(".symver dlopen,dlopen@GLIBC_2.17");
 __asm__(".symver dladdr,dladdr@GLIBC_2.17");
 #endif
 
+#define MM_VERSION "0.10.0"   /* keep in step with src/module.json and release.json (the host test checks) */
+#define MM_VERSION_S "0.10"
 #define SR 44100.0f
 #define MAX_NOTES 16
 #define MAX_INSTANCES 16     /* static pool; create_instance returns NULL when exhausted */
@@ -169,7 +171,8 @@ enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, F
  X(PRESET_CAT, "preset_cat", "Preset Bank", K_E, 0, 24, 0, 1, PCATS) \
  X(BANK_IO, "bank_io", "Bank Files", K_E, 0, 2, 0, 1, "Idle,Export Bank,Reload Folder") \
  X(BANK_STATUS, "bank_status", "Bank File Status", K_E, 0, 4, 0, 1, "Ready,Working,Exported,Loaded,Error") \
- X(USER_BANKS, "user_banks", "User Banks Loaded", K_I, 0, 8, 0, 1, NULL)
+ X(USER_BANKS, "user_banks", "User Banks Loaded", K_I, 0, 8, 0, 1, NULL) \
+ X(VERSION, "version", "Version", K_E, 0, 0, 0, 1, MM_VERSION)
 
 typedef struct { const char *key, *label; kind_t kind; float min, max, def, step; const char *opts; } pdef_t;
 enum {
@@ -185,7 +188,7 @@ static const pdef_t PD[P_COUNT] = {
 };
 
 static const char *const SHORT_NAME[P_COUNT] = {
-    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Bank", [P_BANK_IO]="Files", [P_BANK_STATUS]="State", [P_USER_BANKS]="User",
+    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Bank", [P_BANK_IO]="Files", [P_BANK_STATUS]="State", [P_USER_BANKS]="User", [P_VERSION]="Ver",
     [P_OSC1_LEVEL]="Lvl1", [P_OSC2_LEVEL]="Lvl2",
     [P_ENV1_A]="Atk", [P_ENV1_D]="Dec", [P_ENV1_S]="Sus", [P_ENV1_R]="Rel", [P_ENV2_A]="Atk", [P_ENV2_D]="Dec", [P_ENV2_S]="Sus", [P_ENV2_R]="Rel",
     [P_OSC1_FM1]="EFM1", [P_OSC2_FM1]="EFM2", [P_OSC1_FM2]="FM 1", [P_OSC2_FM2]="FM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
@@ -271,7 +274,7 @@ static const char *const SHORT_OPTS[P_COUNT] = {
     [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR,SAW,RMP,RND", [P_LFO2_WAVE]="TRI,SQR,SAW,RMP,RND",
     [P_LFO_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32", [P_LFO2_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32",
     [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
-    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,SUB,LED,PLK,KEY,STB,BRS,ARP,SEQ,PAD,TXT,VOX,DRN,FX,HOR,SET,U1,U2,U3,U4,U5,U6,U7,U8", [P_BANK_IO]="IDL,EXP,RLD", [P_BANK_STATUS]="RDY,WRK,EXP,LOD,ERR",[P_HOLD]="OFF,ON", [P_FX_SCOPE]="PAG,ANY",
+    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,SUB,LED,PLK,KEY,STB,BRS,ARP,SEQ,PAD,TXT,VOX,DRN,FX,HOR,SET,U1,U2,U3,U4,U5,U6,U7,U8", [P_BANK_IO]="IDL,EXP,RLD", [P_BANK_STATUS]="RDY,WRK,EXP,LOD,ERR", [P_VERSION]=MM_VERSION_S,[P_HOLD]="OFF,ON", [P_FX_SCOPE]="PAG,ANY",
     [P_ARP_MODE]="OFF,UP,DWN,U+D,RND,ASP", [P_ARP_RATE]="1/4,1/8,8T,16,16T,32",
     [P_M1_SRC]=MXSRC_S, [P_M1_DST]=MXDST_S, [P_M2_SRC]=MXSRC_S, [P_M2_DST]=MXDST_S, [P_M3_SRC]=MXSRC_S, [P_M3_DST]=MXDST_S, [P_M4_SRC]=MXSRC_S, [P_M4_DST]=MXDST_S, [P_M5_SRC]=MXSRC_S, [P_M5_DST]=MXDST_S, [P_M6_SRC]=MXSRC_S, [P_M6_DST]=MXDST_S,
 };
@@ -1343,7 +1346,7 @@ static void apply_preset(mm_t *m, int idx) {
  * Only the settings that differ from the defaults need to be listed; unknown keys are ignored, values are clamped to their ranges. */
 static int key_is_forbidden(int id) {   /* performance state, never part of a sound */
     return (id >= P_FX1_TYPE && id <= P_FX4_LVL) || id == P_FX_SCOPE || id == P_PRESET_CAT || id == P_STICK_X || id == P_STICK_Y ||
-           id == P_BANK_IO || id == P_BANK_STATUS || id == P_USER_BANKS;
+           id == P_BANK_IO || id == P_BANK_STATUS || id == P_USER_BANKS || id == P_VERSION;
 }
 static void copy_name(char *dst, size_t n, const char *s) {
     size_t w = 0;
@@ -1532,7 +1535,7 @@ static int emit_param(char *b, int n, int w, int i) {
     if (d->opts) { w = app(b, n, w, ",\"options\":"); w = app_list(b, n, w, d->opts); }
     if (SHORT_OPTS[i]) { w = app(b, n, w, ",\"short_options\":"); w = app_list(b, n, w, SHORT_OPTS[i]); }
     if (UNIT[i]) w = app(b, n, w, ",\"unit\":\"%s\"", UNIT[i]);
-    if (i == P_BANK_STATUS || i == P_USER_BANKS) w = app(b, n, w, ",\"access\":\"read\"");
+    if (i == P_BANK_STATUS || i == P_USER_BANKS || i == P_VERSION) w = app(b, n, w, ",\"access\":\"read\"");
     if (VIZ_GROUP[i]) w = app(b, n, w, ",\"viz\":{\"group\":\"%s\",\"role\":\"%s\"}", VIZ_GROUP[i], VIZ_ROLE[i]);
     else if (VIZ_KIND[i]) w = app(b, n, w, ",\"viz\":{\"kind\":\"%s\"}", VIZ_KIND[i]);
     return app(b, n, w, "}");
@@ -1554,7 +1557,7 @@ static int emit_param(char *b, int n, int w, int i) {
 #define K_TUNE  "\"osc1_coarse\",\"osc1_fine\",\"osc2_coarse\",\"osc2_fine\",\"octave\",\"tune\",\"drift\",\"bend_range\""
 #define K_VOICE "\"glide\",\"legato\",\"priority\",\"drift\",\"vibrato_depth\",\"vib_rate\",\"bend_range\",\"fx_scope\""
 #define K_RESP  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\""
-#define K_BANKS "\"preset_cat\",\"bank_io\",\"bank_status\",\"user_banks\""
+#define K_BANKS "\"preset_cat\",\"bank_io\",\"bank_status\",\"user_banks\",\"version\""
 #define K_MX1   "\"m1_src\",\"m1_dst\",\"m1_amt\",\"m2_src\",\"m2_dst\",\"m2_amt\""
 #define K_MX2   "\"m3_src\",\"m3_dst\",\"m3_amt\",\"m4_src\",\"m4_dst\",\"m4_amt\""
 #define K_MX3   "\"m5_src\",\"m5_dst\",\"m5_amt\",\"m6_src\",\"m6_dst\",\"m6_amt\""
@@ -1786,7 +1789,7 @@ static void set_param(void *inst, const char *key, const char *val) {
             if (end == val || !isfinite(v)) return;  /* reject "", "nan", "inf" */
             v = clampf(v, PD[k].min, PD[k].max);
             if (PD[k].kind != K_F) v = floorf(v + 0.5f);
-            if (k == P_BANK_STATUS || k == P_USER_BANKS) return;   /* read-only: the worker owns these */
+            if (k == P_BANK_STATUS || k == P_USER_BANKS || k == P_VERSION) return;   /* read-only: the worker owns these */
             if (k == P_BANK_IO) {   /* 1 = write the current bank to the exports folder, 2 = re-read the banks folder (a worker does the file work) */
                 const int a = (int)v;
                 if (a == 1) { __atomic_store_n(&g_req_bank, preset_cat_of(m->preset), __ATOMIC_RELEASE); __atomic_store_n(&g_status, ST_WORKING, __ATOMIC_RELEASE); __atomic_fetch_or(&g_req, REQ_EXPORT, __ATOMIC_ACQ_REL); }

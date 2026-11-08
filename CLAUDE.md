@@ -64,6 +64,10 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - UI previews: `bash scripts/preview.sh` renders every page with Schwung's own renderer (needs Docker and the `ref/schwung` clone) into build/prev/png.
   Short names are <= 5 characters (6 fit but crowd); avoid the letter O next to digits (it reads as zero).
 
+## Releasing
+- Bump the version in four places: `src/module.json`, `release.json`, `MM_VERSION`/`MM_VERSION_S` in the plugin, and the first line of `src/help.json`
+  (plus `MM_VERSION_TEST` in `tests/host_test.c`); the host test fails if they disagree. Then update `CHANGELOG.md`.
+
 ## Adding a preset / parameter
 - Preset: add a `PRE("Name", {P_ID, value}, ...)` row in `PRESETS` (starts from defaults). Count is derived.
 - Parameter: add one `X(...)` row to `PARAMS` (use a proper-case label), a `SHORT_NAME` (<= 5 chars; the knob cell is

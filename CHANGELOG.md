@@ -4,6 +4,8 @@
 
 Bank files (export and import), a harsher Horror bank, and a bite review of the whole library.
 
+* The version number is now shown in the module: **Version** on the Bank Files page (read-only) and the first line of the Start here help page.
+
 ### Bank files
 * New **Bank Files** page (after Response): **Files** = *Export Bank* (writes the shown bank to `exports/<Bank>.mmbank`) or *Reload Folder* (re-reads `banks/`); **State** and **User** show progress and how many user banks are loaded.
 * Put `.mmbank` files in `/data/UserData/schwung/mean-module/banks/` (Schwung Manager's file browser can upload there). They load when the module loads and on Reload Folder, and appear after the factory banks on the Bank knob as **U1** to **U8** (alphabetical by file name, up to 8 banks of 48 presets).

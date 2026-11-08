@@ -111,6 +111,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     return c;
 }
 
+#define MM_VERSION_TEST "0.10.0"   /* bump with every release */
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s dsp.so out_dir\n", argv[0]); return 2; }
     void (*en)(void) = dlsym(RTLD_DEFAULT, "rt_guard_enter");
@@ -628,6 +629,21 @@ int main(int argc, char **argv) {
         setp(inst, "preset", "0");
         #undef BSTATUS
         #undef WAIT_STATUS
+    }
+    /* version: the number shown in the module must match module.json, release.json and the help text */
+    {
+        static char cp[65536], mj[8192], hj[65536]; rt_enter(); int cl = api->get_param(inst, "chain_params", cp, sizeof cp); rt_leave();
+        char want[64]; snprintf(want, sizeof want, "\"options\":[\"%s\"]", MM_VERSION_TEST);
+        CHECK(cl > 0 && strstr(cp, want) != NULL, "chain_params shows the version %s", MM_VERSION_TEST);
+        FILE *f = fopen("src/module.json", "r"); size_t n = f ? fread(mj, 1, sizeof mj - 1, f) : 0; if (f) fclose(f); mj[n] = 0;
+        snprintf(want, sizeof want, "\"version\": \"%s\"", MM_VERSION_TEST);
+        CHECK(n > 0 && strstr(mj, want) != NULL, "src/module.json has version %s", MM_VERSION_TEST);
+        f = fopen("release.json", "r"); n = f ? fread(mj, 1, sizeof mj - 1, f) : 0; if (f) fclose(f); mj[n] = 0;
+        CHECK(n > 0 && strstr(mj, want) != NULL, "release.json has version %s", MM_VERSION_TEST);
+        f = fopen("src/help.json", "r"); n = f ? fread(hj, 1, sizeof hj - 1, f) : 0; if (f) fclose(f); hj[n] = 0;
+        CHECK(n > 0 && strstr(hj, MM_VERSION_TEST) != NULL, "help text mentions version %s", MM_VERSION_TEST);
+        setp(inst, "version", "0"); rt_enter(); char vv[16]; api->get_param(inst, "version", vv, sizeof vv); rt_leave();
+        CHECK(atoi(vv) == 0, "version is read-only");
     }
     /* 2l. Osc 1 tuning, noise / osc 2 as matrix sources into FM, controller CCs, Program Change, RPN bend range */
     {
