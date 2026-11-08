@@ -24,6 +24,14 @@
 #include <unistd.h>
 #include "plugin_api_v1.h"
 
+#if defined(__aarch64__) && defined(__GLIBC__)
+/* The bank-file worker thread uses pthread_create, dlopen and dladdr. A build against glibc 2.34+ would otherwise bind them to GLIBC_2.34 and refuse to
+ * load on an older device; the aarch64 baseline versions are always available, so bind to those and keep the module's requirement at GLIBC_2.27. */
+__asm__(".symver pthread_create,pthread_create@GLIBC_2.17");
+__asm__(".symver dlopen,dlopen@GLIBC_2.17");
+__asm__(".symver dladdr,dladdr@GLIBC_2.17");
+#endif
+
 #define SR 44100.0f
 #define MAX_NOTES 16
 #define MAX_INSTANCES 16     /* static pool; create_instance returns NULL when exhausted */
