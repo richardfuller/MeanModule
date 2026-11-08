@@ -316,6 +316,19 @@
       ]
     },
     {
+      "title": "Bank Files",
+      "lines": [
+        "Files: Export Bank",
+        "writes the shown bank",
+        "to exports/. Reload",
+        "Folder reads banks/.",
+        "Files in banks/ show",
+        "up as U1-U8 on the",
+        "Bank knob. See",
+        "docs/BANK_FILES.md."
+      ]
+    },
+    {
       "title": "Presets & State",
       "lines": [
         "Bank picks a group of",

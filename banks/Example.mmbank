@@ -1,0 +1,30 @@
+# Example Mean Module bank. Copy it to the banks folder on the Move to load it (see docs/BANK_FILES.md).
+# Only settings that differ from the defaults need to be listed.
+mmbank 1
+bank Example
+
+preset Fat Square Lead
+osc1_wave 4
+osc1_shape 0.5
+osc2_wave 4
+osc2_shape 0.35
+osc2_fine 12
+cutoff 0.7
+resonance 0.35
+filter_drive 0.85
+drive 0.6
+glide 0.1
+legato 1
+
+preset Rusty Gate Pad
+osc2_wave 1
+osc2_fine 11
+cutoff 0.45
+resonance 0.4
+env2_a 0.6
+env2_r 0.75
+lfo_wave 1
+lfo_sync 5
+m1_src 1
+m1_dst 12
+m1_amt 0.5

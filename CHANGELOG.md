@@ -1,5 +1,24 @@
 # Changelog
 
+## 0.10.0
+
+Bank files (export and import), a harsher Horror bank, and a bite review of the whole library.
+
+### Bank files
+* New **Bank Files** page (after Response): **Files** = *Export Bank* (writes the shown bank to `exports/<Bank>.mmbank`) or *Reload Folder* (re-reads `banks/`); **State** and **User** show progress and how many user banks are loaded.
+* Put `.mmbank` files in `/data/UserData/schwung/mean-module/banks/` (Schwung Manager's file browser can upload there). They load when the module loads and on Reload Folder, and appear after the factory banks on the Bank knob as **U1** to **U8** (alphabetical by file name, up to 8 banks of 48 presets).
+* Plain-text format, only non-default settings needed, unknown keys ignored, values clamped; the FX Bank, stick position and bank controls can never be part of a sound. See `docs/BANK_FILES.md` and `banks/Example.mmbank`.
+* Done by a background thread started when the library loads; the audio path never touches files. Program Change bank select 18..25 reaches user banks.
+* New `tests/host_test.c` coverage: reload, ranges, forbidden keys, user-bank browsing, state round trip, export, an exported bank sounding like the original, and the shipped example file.
+
+### Horror
+* **Calliope** now has a fast attack, a short bright burst (filter and breath noise) at the start of each note that closes quickly, a very short release, more rasp and drive, and keeps its out-of-tune pitch wander (Mod Wheel detunes it further; held notes sag slightly).
+* The whole bank is harsher and more unsettling: minor-second and tritone clashes, heavy drive and resonance, random pitch and filter movement, noise. Two new presets: **Shriek** and **Hive Mind** (18 in the bank).
+
+### Library bite review
+* Rendered and ranked every preset by drive, resonance, noise and brightness (`tests/preset_audit.c`). 44 presets that were meant to bite but sat at default drive got more filter drive and drive (Bass, Lead, Brass, Stab, Drone, FX and a few Sets). Deliberately clean, soft or bright presets were left alone.
+* 273 presets in total. Nothing here was judged by ear; levels, peaks and audibility are checked by the test suite.
+
 ## 0.9.2
 
 Preset banks, Sets, a Horror bank, and a review of the whole library. Details and the method: `docs/PRESET_BANKS.md`.

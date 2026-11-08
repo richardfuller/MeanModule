@@ -9,6 +9,9 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   (a mismatched header has boot-looped devices).
 - Every entry point, including create_instance/set_param/get_param, runs on the audio callback: no malloc, locks, I/O,
   logging. Instances come from a static pool of 16; JSON is formatted once per instance with snprintf.
+  The one exception to "no I/O" is the bank-file worker thread (`bank_worker`, docs/BANK_FILES.md): started once at library load (`move_plugin_init_v2`),
+  demotes itself to SCHED_OTHER on cores 0-2, pins the library with `dlopen(RTLD_NODELETE)`, and talks to the audio side only through atomics and one of
+  three static buffers published with a release store. Never add I/O or locks to an entry point; post a request flag instead.
 - Own code is MIT. No third-party code is included. Do not copy GPL code.
 - `ref/` holds third-party clones for reading only; do not ship from it.
 

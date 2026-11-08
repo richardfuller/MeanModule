@@ -11,7 +11,7 @@ CROSS_PREFIX="${CROSS_PREFIX:-aarch64-linux-gnu-}"
 cd "$ROOT"
 mkdir -p build dist/meanmodule
 ${CROSS_PREFIX}gcc -O3 -fPIC -shared -std=c11 -Wall -Wextra -Isrc/host \
-  src/dsp/mean_module_plugin.c -o build/dsp.so -lm
+  src/dsp/mean_module_plugin.c -o build/dsp.so -lm -ldl -lpthread
 cat src/module.json > dist/meanmodule/module.json
 cat build/dsp.so > dist/meanmodule/dsp.so
 [ -f src/help.json ] && cat src/help.json > dist/meanmodule/help.json

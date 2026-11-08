@@ -4,6 +4,8 @@
 #include <dlfcn.h>
 #include <math.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
 #include <stdlib.h>
 #include <time.h>
 #include <string.h>
@@ -118,6 +120,10 @@ int main(int argc, char **argv) {
     if (guarded) { rt_enter = en; rt_leave = lv; }
     else printf("note: rt_guard not preloaded, skipping malloc/lock check\n");
 
+    char bankdir[600];   /* bank files: the plugin reads and writes under this folder (a background thread does the file work) */
+    snprintf(bankdir, sizeof bankdir, "%s/mmdata", argv[2]);
+    { char cmd[700]; snprintf(cmd, sizeof cmd, "rm -rf '%s'", bankdir); if (system(cmd)) {} }
+    setenv("MEANMOD_BANK_DIR", bankdir, 1);
     void *h = dlopen(argv[1], RTLD_NOW);
     if (!h) { fprintf(stderr, "dlopen: %s\n", dlerror()); return 2; }
     move_plugin_init_v2_fn init = (move_plugin_init_v2_fn)dlsym(h, MOVE_PLUGIN_INIT_V2_SYMBOL);
@@ -528,6 +534,100 @@ int main(int argc, char **argv) {
             midi(inst, 0xB0, 0, 0);
         }
         setp(inst, "preset", "0");
+    }
+    /* 2p. bank files: reload from the folder, export a bank, user banks behave like factory banks */
+    {
+        char v[64], path[700];
+        #define BSTATUS() (rt_enter(), api->get_param(inst, "bank_status", v, sizeof v), rt_leave(), atoi(v))
+        #define WAIT_STATUS(want) do { int tries_ = 0; while (BSTATUS() != (want) && tries_++ < 100) usleep(30000); } while (0)
+        for (int tries = 0; tries < 100; tries++) { struct stat st; snprintf(path, sizeof path, "%s/banks", bankdir); if (stat(path, &st) == 0) break; usleep(30000); }
+        WAIT_STATUS(3);
+        rt_enter(); api->get_param(inst, "user_banks", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "an empty folder gives no user banks (%s)", v);
+        snprintf(path, sizeof path, "%s/banks/Zed Test.mmbank", bankdir);
+        FILE *f = fopen(path, "w");
+        fprintf(f, "# comment\nmmbank 1\nbank Zed Bank\n\npreset Loud Saw\ncutoff 5\nresonance 0.5\nfx1_type 7\nstick_x 1\nnot_a_param 3\nosc2_wave 1\n\npreset Second\nosc1_wave 2\n");
+        fclose(f);
+        snprintf(path, sizeof path, "%s/banks/Alpha.mmbank", bankdir);
+        f = fopen(path, "w"); fprintf(f, "preset First\ncutoff 0.3\n"); fclose(f);   /* no bank line: the file name is the bank name */
+        snprintf(path, sizeof path, "%s/banks/notes.txt", bankdir);
+        f = fopen(path, "w"); fprintf(f, "preset Ignored\n"); fclose(f);
+        setp(inst, "bank_io", "2"); WAIT_STATUS(3);
+        rt_enter(); api->get_param(inst, "user_banks", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 2, "two .mmbank files make two user banks (%s)", v);
+        rt_enter(); api->get_param(inst, "bank_io", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "Bank Files returns to Idle (%s)", v);
+        setp(inst, "fx1_type", "0");
+        setp(inst, "preset_cat", "17");
+        rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
+        CHECK(strcmp(v, "First") == 0, "User 1 is the first file by name (%s)", v);
+        rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 17, "the Bank knob lands on User 1 (%s)", v);
+        setp(inst, "preset_cat", "18");
+        rt_enter(); api->get_param(inst, "bank_count", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 2, "User 2 holds two presets (%s)", v);
+        rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
+        CHECK(strcmp(v, "Loud Saw") == 0, "User 2 starts on its first preset (%s)", v);
+        rt_enter(); api->get_param(inst, "cutoff", v, sizeof v); rt_leave();
+        CHECK(atof(v) <= 1.0001 && atof(v) > 0.99, "values are clamped to their range (cutoff %s)", v);
+        rt_enter(); api->get_param(inst, "fx1_type", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "a bank file cannot change the FX bank (%s)", v);
+        rt_enter(); api->get_param(inst, "stick_x", v, sizeof v); rt_leave();
+        CHECK(atof(v) == 0.0, "a bank file cannot move the stick (%s)", v);
+        setp(inst, "bank_preset", "1");
+        rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
+        CHECK(strcmp(v, "Second") == 0, "bank_preset browses inside the user bank (%s)", v);
+        setp(inst, "bank_preset", "99");
+        rt_enter(); api->get_param(inst, "bank_preset", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 1, "bank_preset clamps inside a user bank (%s)", v);
+        setp(inst, "preset_cat", "24");   /* an empty slot is ignored */
+        rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 18, "an empty user bank cannot be selected (%s)", v);
+        setp(inst, "bank_preset", "0"); setp(inst, "env2_s", "1");
+        midi(inst, 0x90, 48, 100); render(inst, out, 100); metrics_t mu = measure(out, 100 * FRAMES); midi(inst, 0x80, 48, 0); drain(inst, out);
+        CHECK(mu.rms > 0.01 && mu.peak < 1.0, "a user preset plays (rms %.3f)", mu.rms);
+        /* state keeps working with a user preset code */
+        char st[8192]; rt_enter(); int sl = api->get_param(inst, "state", st, sizeof st); rt_leave();
+        CHECK(sl > 0 && strstr(st, "\"preset\":10") != NULL, "state records the user preset code");
+        setp(inst, "preset", "0");
+        rt_enter(); api->set_param(inst, "state", st); rt_leave();
+        rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
+        CHECK(strcmp(v, "Loud Saw") == 0, "state restores the user preset (%s)", v);
+        /* export a factory bank, move the file into the folder, and it plays like the original */
+        setp(inst, "preset_cat", "1");
+        rt_enter(); api->get_param(inst, "bank_count", v, sizeof v); rt_leave(); int nbass = atoi(v);
+        setp(inst, "bank_io", "1"); WAIT_STATUS(2);
+        CHECK(BSTATUS() == 2, "exporting a bank reports Exported (%d)", BSTATUS());
+        snprintf(path, sizeof path, "%s/exports/Bass.mmbank", bankdir);
+        f = fopen(path, "r"); int presets_in_file = 0; char ln[256];
+        if (f) { while (fgets(ln, sizeof ln, f)) if (!strncmp(ln, "preset ", 7)) presets_in_file++; fclose(f); }
+        CHECK(f != NULL && presets_in_file == nbass, "export wrote every preset of the bank (%d of %d)", presets_in_file, nbass);
+        { char cmd[1500]; snprintf(cmd, sizeof cmd, "cp '%s/exports/Bass.mmbank' '%s/banks/Bass Copy.mmbank'", bankdir, bankdir); if (system(cmd)) {} }
+        setp(inst, "bank_io", "2"); WAIT_STATUS(3);
+        rt_enter(); api->get_param(inst, "user_banks", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 3, "the exported file loads as a third user bank (%s)", v);
+        double rm[2];
+        for (int which = 0; which < 2; which++) {
+            setp(inst, "preset_cat", which ? "18" : "1");   /* Bass, then User 2 = Bass Copy */
+            midi(inst, 0x90, 40, 100); render(inst, out, 120); rm[which] = measure(out, 120 * FRAMES).rms; midi(inst, 0x80, 40, 0); drain(inst, out);
+        }
+        printf("bank files: Bass first preset rms %.4f, exported copy %.4f\n", rm[0], rm[1]);
+        CHECK(rm[0] > 0.005 && fabs(rm[0] - rm[1]) < 0.02 * rm[0], "an exported bank sounds like the original (%.4f vs %.4f)", rm[0], rm[1]);
+        snprintf(path, sizeof path, "%s/banks/Bass Copy.mmbank", bankdir); remove(path);
+        snprintf(path, sizeof path, "%s/banks/Zed Test.mmbank", bankdir); remove(path);
+        snprintf(path, sizeof path, "%s/banks/Alpha.mmbank", bankdir); remove(path);
+        setp(inst, "bank_io", "2"); WAIT_STATUS(3);
+        rt_enter(); api->get_param(inst, "user_banks", v, sizeof v); rt_leave();
+        CHECK(atoi(v) == 0, "removing the files empties the user banks on reload (%s)", v);
+        { char cmd[1500]; snprintf(cmd, sizeof cmd, "cp banks/Example.mmbank '%s/banks/'", bankdir); if (system(cmd)) {} }
+        setp(inst, "bank_io", "2"); WAIT_STATUS(3);
+        setp(inst, "preset_cat", "17");
+        rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); api->get_param(inst, "bank_count", path, 16); rt_leave();
+        CHECK(strcmp(v, "Fat Square Lead") == 0 && atoi(path) == 2, "the shipped Example.mmbank loads (%s, %s presets)", v, path);
+        snprintf(path, sizeof path, "%s/banks/Example.mmbank", bankdir); remove(path); setp(inst, "bank_io", "2"); WAIT_STATUS(3);
+        setp(inst, "preset", "0");
+        #undef BSTATUS
+        #undef WAIT_STATUS
     }
     /* 2l. Osc 1 tuning, noise / osc 2 as matrix sources into FM, controller CCs, Program Change, RPN bend range */
     {

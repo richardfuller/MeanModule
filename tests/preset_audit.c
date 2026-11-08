@@ -44,7 +44,7 @@ int main(int argc, char **argv) {
     api->get_param(probe, "preset_count", cnt, sizeof cnt); int np = atoi(cnt); api->destroy_instance(probe);
     const int total = 2 * SR / 128 * 128, hold = (int)(1.2 * SR) / 128;
     static int16_t buf[2 * SR * 2]; static double mono[2 * SR], re[NFFT], im[NFFT];
-    printf("idx,name,rms_db,peak_db,attack_ms,centroid_hz,flatness,b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,amp_mod,tail_db,pitch_hz\n");
+    printf("idx,name,rms_db,peak_db,attack_ms,centroid_hz,flatness,b0,b1,b2,b3,b4,b5,b6,b7,b8,b9,amp_mod,tail_db,pitch_hz,fdrive,drive,res,noise,cutoff,grit\n");
     for (int p = 0; p < np; p++) {
         void *inst = api->create_instance(".", NULL);
         char v[16], nm[64]; snprintf(v, sizeof v, "%d", p);
@@ -78,7 +78,8 @@ int main(int argc, char **argv) {
         double te = 0; for (int i = (int)(1.6 * SR); i < (int)(2.0 * SR); i++) te += mono[i] * mono[i];
         printf("%d,\"%s\",%.1f,%.1f,%.0f,%.0f,%.3f", p, nm, 20 * log10(rms + 1e-9), 20 * log10(pk + 1e-9), att * 1000.0 / SR, cs / tot, flat);
         for (int b = 0; b < 10; b++) printf(",%.1f", 10 * log10(band[b] / tot + 1e-12));
-        printf(",%.3f,%.1f,%.1f\n", amod, 10 * log10(te / (0.4 * SR) + 1e-18), pbin * (double)SR / NFFT);
+        printf(",%.3f,%.1f,%.1f", amod, 10 * log10(te / (0.4 * SR) + 1e-18), pbin * (double)SR / NFFT);
+        { const char *ks[6] = {"filter_drive", "drive", "resonance", "noise_level", "cutoff", "grit"}; char q[24]; for (int k = 0; k < 6; k++) { api->get_param(inst, ks[k], q, sizeof q); printf(",%s", q); } printf("\n"); }
         api->destroy_instance(inst);
     }
     return 0;
