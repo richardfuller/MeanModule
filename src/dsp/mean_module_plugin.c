@@ -26,6 +26,7 @@
 typedef enum { K_F, K_I, K_E } kind_t;
 #define WAVES "Off,Saw,Tri,Saw+Tri,Pulse,Saw+Pulse,Tri+Pulse,All Three"
 #define OFFON "Off,On"
+#define FXSC "FX Page Only,Any Page"
 #define LFOW "Triangle,Square,Saw Down,Saw Up,Random"
 #define LSYNC "Free,1/2,1/4,1/8,1/8 Triplet,1/16,1/16 Triplet,1/32"
 #define DRONEOPT "Off,Hold,Latch"
@@ -40,7 +41,8 @@ typedef enum { K_F, K_I, K_E } kind_t;
 #define N_FXT 15             /* FX bank effect types (0 = Off) */
 enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, FXT_RISE, FXT_DIVE, FXT_VIB, FXT_WOB, FXT_CHOP, FXT_DETUNE, FXT_ARP, FXT_HOLD };
 #define FX_DELAY_BLK 31      /* a touch must last ~90 ms before its effect starts, so a tap (half of a double tap) stays silent */
-#define FX_DTAP_BLK 150      /* second tap must start within ~0.43 s of the first */
+#define FX_PAGE_BLK 260      /* the FX Bank page counts as on screen if the host read one of its knobs within ~0.75 s (it re-reads the visible page ~5x/s) */
+#define FX_DTAP_BLK 150     /* second tap must start within ~0.43 s of the first */
 #define FX_SHORT_BLK 70      /* ... and the first tap must have been shorter than ~0.2 s */
 #define MXSRC "Off,LFO,Filter Env,Amp Env,Velocity,Mod Wheel,Aftertouch,Stick X,Stick Y,Key,Random,LFO 2,Noise,Osc 2,Pitch Bend,Arp Step,Note Age,Smooth Random,Osc 1,Sustain Pedal"
 #define MXDST "Off,Pitch,Osc 2 Pitch,Osc 1 Shape,Osc 2 Shape,Osc 1 Level,Osc 2 Level,Noise,Cutoff,Resonance,Filter Input,Drive,Amp,X-Mod,LFO Rate,LFO 2 Rate,Osc 1 FM,Osc 2 FM,Grit,Glide Time,Vibrato Depth,LFO Depth,LFO 2 Depth,Env Amount,Drift Amount"
@@ -137,6 +139,7 @@ enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, F
  X(FX3_LVL, "fx3_lvl", "FX 3 Level", K_F, 0, 1, 0.5, 0.02, NULL) \
  X(FX4_LVL, "fx4_lvl", "FX 4 Level", K_F, 0, 1, 0.5, 0.02, NULL) \
  X(NOISE_COLOR, "noise_color", "Noise Color", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(FX_SCOPE, "fx_scope", "FX Touch", K_E, 0, 1, 0, 1, FXSC) \
  X(PRESET_CAT, "preset_cat", "Preset Category", K_E, 0, 14, 0, 1, PCATS)
 
 typedef struct { const char *key, *label; kind_t kind; float min, max, def, step; const char *opts; } pdef_t;
@@ -153,7 +156,7 @@ static const pdef_t PD[P_COUNT] = {
 };
 
 static const char *const SHORT_NAME[P_COUNT] = {
-    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_PRESET_CAT]="Cat",
+    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Cat",
     [P_OSC1_LEVEL]="Lvl1", [P_OSC2_LEVEL]="Lvl2",
     [P_ENV1_A]="Atk", [P_ENV1_D]="Dec", [P_ENV1_S]="Sus", [P_ENV1_R]="Rel", [P_ENV2_A]="Atk", [P_ENV2_D]="Dec", [P_ENV2_S]="Sus", [P_ENV2_R]="Rel",
     [P_OSC1_FM1]="EFM1", [P_OSC2_FM1]="EFM2", [P_OSC1_FM2]="FM 1", [P_OSC2_FM2]="FM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
@@ -239,7 +242,7 @@ static const char *const SHORT_OPTS[P_COUNT] = {
     [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR,SAW,RMP,RND", [P_LFO2_WAVE]="TRI,SQR,SAW,RMP,RND",
     [P_LFO_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32", [P_LFO2_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32",
     [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
-    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,SUB,LED,PLK,KEY,STB,BRS,ARP,SEQ,PAD,TXT,VOX,DRN,FX", [P_HOLD]="OFF,ON",
+    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,SUB,LED,PLK,KEY,STB,BRS,ARP,SEQ,PAD,TXT,VOX,DRN,FX", [P_HOLD]="OFF,ON", [P_FX_SCOPE]="PAG,ANY",
     [P_ARP_MODE]="OFF,UP,DWN,U+D,RND,ASP", [P_ARP_RATE]="1/4,1/8,8T,16,16T,32",
     [P_M1_SRC]=MXSRC_S, [P_M1_DST]=MXDST_S, [P_M2_SRC]=MXSRC_S, [P_M2_DST]=MXDST_S, [P_M3_SRC]=MXSRC_S, [P_M3_DST]=MXDST_S, [P_M4_SRC]=MXSRC_S, [P_M4_DST]=MXDST_S, [P_M5_SRC]=MXSRC_S, [P_M5_DST]=MXDST_S, [P_M6_SRC]=MXSRC_S, [P_M6_DST]=MXDST_S,
 };
@@ -271,6 +274,8 @@ typedef struct {
     float blk_bpm; double blk_beat;     /* tempo and transport beat at the start of this block (beat < 0: transport stopped) */
     uint8_t touch_mask;                    /* knobs 1-8 currently touched (notes 0-7) */
     uint32_t clk;                          /* render_block counter */
+    uint32_t fx_page_t;                    /* clk+1 when the host last read an FX Bank key (0 = never): that page is on screen */
+    uint8_t fx_armed;                      /* touches of knobs 1-4 that began while the FX Bank was allowed to act */
     uint32_t tap_t[4], touch_t[4];         /* FX bank: block of the last tap start / of the current touch start */
     uint8_t tap_ok, tap_short, fx_sup;     /* bit k: a first tap is waiting for its partner / it was short / this touch was a double tap (silent until release) */
     float fxa[N_FXT], fx_tgt[N_FXT];       /* effect amounts by type: slewed (heard) and target (touch state) */
@@ -1093,10 +1098,12 @@ static int preset_cat_first(int cat) {
 
 static void apply_preset(mm_t *m, int idx) {
     if (idx < 0 || idx >= N_PRESETS) return;
-    float keep[8];                                      /* the FX bank is a performance setup: presets leave it alone */
+    float keep[9];                                      /* the FX bank is a performance setup: presets leave it alone */
     for (int k = 0; k < 4; k++) { keep[k] = m->p[P_FX1_TYPE + k]; keep[4 + k] = m->p[P_FX1_LVL + k]; }
+    keep[8] = m->p[P_FX_SCOPE];
     for (int i = 0; i < P_COUNT; i++) m->p[i] = PD[i].def;
     for (int k = 0; k < 4; k++) { m->p[P_FX1_TYPE + k] = keep[k]; m->p[P_FX1_LVL + k] = keep[4 + k]; }
+    m->p[P_FX_SCOPE] = keep[8];
     for (int i = 0; i < PRESETS[idx].n; i++) {
         int id = PRESETS[idx].v[i].id;
         m->p[id] = clampf(PRESETS[idx].v[i].v, PD[id].min, PD[id].max);
@@ -1184,7 +1191,7 @@ static int emit_param(char *b, int n, int w, int i) {
 #define K_LFO2  "\"lfo2_wave\",\"lfo2_rate\",\"lfo2_sync\""
 #define K_OMOD  "\"xmod_2to1\",\"osc1_fm1\",\"osc2_fm1\""
 #define K_TUNE  "\"osc1_coarse\",\"osc1_fine\",\"osc2_coarse\",\"osc2_fine\",\"octave\",\"tune\",\"drift\",\"bend_range\""
-#define K_VOICE "\"glide\",\"legato\",\"priority\",\"drift\",\"vibrato_depth\",\"vib_rate\",\"bend_range\""
+#define K_VOICE "\"glide\",\"legato\",\"priority\",\"drift\",\"vibrato_depth\",\"vib_rate\",\"bend_range\",\"fx_scope\""
 #define K_RESP  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\""
 #define K_MX1   "\"m1_src\",\"m1_dst\",\"m1_amt\",\"m2_src\",\"m2_dst\",\"m2_amt\""
 #define K_MX2   "\"m3_src\",\"m3_dst\",\"m3_amt\",\"m4_src\",\"m4_dst\",\"m4_amt\""
@@ -1236,7 +1243,7 @@ static const host_api_v1_t *g_host;
 static void reset_state(mm_t *m) {
     m->n_notes = 0; m->gate = 0; m->cur_note = -1; m->arp_note = -1; m->cur_semi = m->tgt_semi = 48.0f; m->vel = 0.8f;
     m->bend = m->at = m->modwheel = 0.0f; m->bend_n = m->arp_ramp = m->age = m->srnd = m->srnd1 = m->srnd_tgt = m->ped = m->o1_prev = 0.0f; m->srnd_cnt = 0; m->mx_ld[0] = m->mx_ld[1] = 0.0f;
-    m->touch_mask = 0; m->tap_ok = m->tap_short = m->fx_sup = 0; m->fx_hold_on = 0; m->chop_g = 1.0f; m->sm_init = 0;
+    m->touch_mask = 0; m->tap_ok = m->tap_short = m->fx_sup = 0; m->fx_armed = 0; m->fx_page_t = 0; m->fx_hold_on = 0; m->chop_g = 1.0f; m->sm_init = 0;
     memset(m->fxa, 0, sizeof m->fxa); memset(m->fx_tgt, 0, sizeof m->fx_tgt);
     m->expr = 1.0f; m->rpn_msb = m->rpn_lsb = 127;
     memset(&m->e1, 0, sizeof m->e1); memset(&m->e2, 0, sizeof m->e2);
@@ -1320,6 +1327,11 @@ static void destroy_instance(void *inst) {
 
 /* FX bank: knobs 1-4. A double tap (a short first touch, then a second touch within ~0.43 s) steps that knob's effect to the next type
  * and keeps the second touch silent; any other touch applies the assigned effect once it has lasted FX_DELAY_BLK blocks. */
+/* The host cannot say which page is showing, but it re-reads the visible page's knobs several times a second (get_param stamps fx_page_t).
+ * So the FX Bank acts only while one of its own keys was read recently, unless FX Touch is set to Any Page. */
+static int fx_here(const mm_t *m) {
+    return (int)m->p[P_FX_SCOPE] == 1 || (m->fx_page_t && m->clk + 1 - m->fx_page_t < FX_PAGE_BLK);
+}
 static void fx_touch_on(mm_t *m, int k) {
     const uint32_t now = m->clk, bit = 1u << k;
     if ((m->tap_ok & bit) && (m->tap_short & bit) && now - m->tap_t[k] < FX_DTAP_BLK) {
@@ -1343,8 +1355,8 @@ static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
     if (src == MOVE_MIDI_SOURCE_TOUCH) {   /* capacitive touch of Knobs 1-8 (notes 0-7): never a played note */
         if ((st == 0x90 || st == 0x80) && d1 < 8) {
             int down = (st == 0x90 && d2 > 0), was = (m->touch_mask >> d1) & 1;
-            if (down && !was && d1 < 4) fx_touch_on(m, d1);
-            if (!down && was && d1 < 4) fx_touch_off(m, d1);
+            if (down && !was && d1 < 4 && fx_here(m)) { m->fx_armed |= (uint8_t)(1u << d1); fx_touch_on(m, d1); }
+            if (!down && was && d1 < 4 && ((m->fx_armed >> d1) & 1)) { m->fx_armed &= (uint8_t)~(1u << d1); fx_touch_off(m, d1); }
             if (down) m->touch_mask |= (uint8_t)(1u << d1); else m->touch_mask &= (uint8_t)~(1u << d1);
         }
         if ((st == 0x90 || st == 0x80) && d1 < 2) {
@@ -1416,8 +1428,10 @@ static int get_param(void *inst, const char *key, char *buf, int n) {
     mm_t *m = inst;
     if (!m || !key || !buf || n <= 0) return -1;
     for (int k = 0; k < P_COUNT; k++)
-        if (!strcmp(key, PD[k].key))
+        if (!strcmp(key, PD[k].key)) {
+            if (k >= P_FX1_TYPE && k <= P_FX4_LVL) m->fx_page_t = m->clk + 1;
             return PD[k].kind == K_F ? snprintf(buf, n, "%.4f", m->p[k]) : snprintf(buf, n, "%d", (int)m->p[k]);
+        }
     if (!strcmp(key, "name")) return snprintf(buf, (size_t)n, "Mean Mod");
     if (!strcmp(key, "state")) return state_write(m, buf, n);
     if (!strcmp(key, "preset")) return snprintf(buf, n, "%d", m->preset);
@@ -1693,7 +1707,7 @@ static void render_block(void *inst, int16_t *out, int frames) {
         float tg[N_FXT] = {0};
         for (int k = 0; k < 4; k++) {
             int ty = (int)m->p[P_FX1_TYPE + k];
-            if (ty > 0 && ty < N_FXT && ((m->touch_mask >> k) & 1) && !((m->fx_sup >> k) & 1) && m->clk - m->touch_t[k] >= FX_DELAY_BLK) {
+            if (ty > 0 && ty < N_FXT && ((m->touch_mask >> k) & 1) && ((m->fx_armed >> k) & 1) && !((m->fx_sup >> k) & 1) && m->clk - m->touch_t[k] >= FX_DELAY_BLK) {
                 tg[ty] += m->p[P_FX1_LVL + k];
                 if (ty == FXT_HOLD) hold_act = 1;
             }

@@ -1,5 +1,14 @@
 # Changelog
 
+## 0.9.1
+
+### FX Bank acts only on its own page
+* Touching a knob on any other page no longer fires an FX Bank effect or counts toward a double tap; the effects play only while the **FX Bank** page is showing.
+* How: the host does not tell a module which page is up, but it re-reads the visible page's knobs several times a second. The FX Bank acts only within ~0.75 s of such a read, and a touch that began on another page stays inert even if you jog to the FX Bank while holding it.
+* New **FX Touch** setting (Voice page, last knob): *FX Page Only* (default) or *Any Page* for the 0.9.0 behaviour. Presets leave it alone, like the rest of the bank.
+* 93 parameters. If an effect ever fails to respond on the FX Bank page, set FX Touch to Any Page and tell me; the page detection is inferred from the host's behaviour and not yet confirmed on the device.
+
+
 ## 0.9.0
 
 A new way to perform, a re-organised and illustrated UI, and a round of audio-path measurements.

@@ -358,7 +358,7 @@ int main(int argc, char **argv) {
         #define TOUCH_ON(k) midi_src(inst, 0x90, (k), 127, MOVE_MIDI_SOURCE_TOUCH)
         #define TOUCH_OFF(k) midi_src(inst, 0x80, (k), 0, MOVE_MIDI_SOURCE_TOUCH)
         #define GETP(key) (rt_enter(), api->get_param(inst, (key), v, sizeof v), rt_leave(), atoi(v))
-        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "drift", "0");
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "drift", "0"); setp(inst, "fx_scope", "1");   /* Any Page: no screen is polled in this test */
         for (int k = 1; k <= 4; k++) { char kk[32]; snprintf(kk, sizeof kk, "fx%d_type", k); setp(inst, kk, "0"); snprintf(kk, sizeof kk, "fx%d_lvl", k); setp(inst, kk, "0.5"); }
         render(inst, out, 200);
         CHECK(GETP("fx1_type") == 0, "FX slots start Off");
@@ -439,6 +439,26 @@ int main(int argc, char **argv) {
         CHECK(p1 / p0 > 1.85 && p1 / p0 < 2.15, "Pitch Rise at full level is an octave (%.1f -> %.1f)", p0, p1);
         TOUCH_OFF(0); midi(inst, 0x80, 48, 0); drain(inst, out);
         setp(inst, "fx1_type", "0"); setp(inst, "preset", "0");
+        /* FX Touch = FX Page Only (the default): the bank acts only while the host is reading its keys, i.e. while its page is showing */
+        setp(inst, "fx_scope", "0"); setp(inst, "fx1_type", "2"); setp(inst, "fx1_lvl", "1");
+        render(inst, out, 400);                                                         /* no FX key read for a while: another page is showing */
+        #define DTAP0() do { TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 4); TOUCH_ON(0); render(inst, out, 4); TOUCH_OFF(0); render(inst, out, 10); } while (0)
+        DTAP0();
+        { char w[32]; rt_enter(); api->get_param(inst, "cutoff", w, sizeof w); rt_leave(); }   /* reading other pages' keys does not count */
+        CHECK(GETP("fx1_type") == 2, "a double tap on another page must not change the effect");
+        render(inst, out, 400);
+        TOUCH_ON(0); render(inst, out, 120); TOUCH_OFF(0);
+        CHECK(GETP("fx1_lvl") == 1 && GETP("fx1_type") == 2, "touching a knob on another page leaves the bank alone");
+        render(inst, out, 20);
+        DTAP0();                                                                        /* the FX Bank page is showing (its keys were just read) */
+        CHECK(GETP("fx1_type") == 3, "a double tap with the FX Bank page showing steps the effect (%d)", GETP("fx1_type"));
+        render(inst, out, 400);                                                         /* the page is left: reads stop */
+        DTAP0();
+        CHECK(GETP("fx1_type") == 3, "after leaving the page the double tap does nothing (%d)", GETP("fx1_type"));
+        setp(inst, "fx_scope", "1"); setp(inst, "preset", "5");
+        CHECK(GETP("fx_scope") == 1, "presets must not touch FX Touch");
+        setp(inst, "fx_scope", "0"); setp(inst, "fx1_type", "0"); setp(inst, "preset", "0");
+        #undef DTAP0
         #undef TOUCH_ON
         #undef TOUCH_OFF
         #undef GETP

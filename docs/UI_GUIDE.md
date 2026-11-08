@@ -27,7 +27,10 @@ The envelopes used to be called Env 1 and Env 2; they are now **Filter Env** and
 
 ## FX Bank
 
-Knobs 1-4 are four performance effects. They work on any page.
+Knobs 1-4 are four performance effects. They act only while the FX Bank page is showing, so touching a knob to tweak something on
+another page never fires an effect. (Voice page, **FX Touch**: *Any Page* restores the 0.9.0 behaviour of acting on every page.) The module
+cannot ask the host which page is up; it notices that the host is re-reading the FX Bank's knobs (about 5 times a second while that page is
+visible) and acts only within ~0.75 s of such a read. A touch that began elsewhere stays inert even if you jog to the FX Bank mid-touch.
 
 * **Hold** the knob: its effect is on.
 * **Turn** the knob (while holding it, or on the FX Bank page): how much. The level is remembered.

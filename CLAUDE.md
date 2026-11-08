@@ -44,7 +44,9 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - MIDI from EXTERNAL sources only: CC 5/7/11/71-74, bank CC0 + Program Change, RPN 0 bend range (see `docs/MOD_MATRIX.md`). Never map
   CCs from Move's own surface: CC 71-78 are its knobs.
 
-- FX Bank (no claimed buttons, no JS UI): knobs 1-4 are four touch effects (`fx1..4_type`, `fx1..4_lvl`; touch notes 0-3 via `touch_observe`, any page).
+- FX Bank (no claimed buttons, no JS UI): knobs 1-4 are four touch effects (`fx1..4_type`, `fx1..4_lvl`; touch notes 0-3 via `touch_observe`). Acts only while the FX Bank page is showing (`fx_scope` 0, default): the host cannot say which page is up, so
+  `get_param` stamps `fx_page_t` whenever an FX key is read (the host re-reads the visible page ~5x/s) and `fx_here()` requires a stamp within `FX_PAGE_BLK`;
+  a touch is "armed" (`fx_armed`) only if it began then. `fx_scope` 1 = any page. Inferred, not confirmed on the device; the Remote UI reading all keys would act as Any Page.
   Touch applies the assigned effect at its level once the touch has lasted `FX_DELAY_BLK` (a tap stays silent); turning sets the level (kept);
   a double tap (short first touch, second within `FX_DTAP_BLK`) steps the type and keeps the second touch silent. Effect amounts slew
   (15 ms in, 50 ms out) so nothing clicks. 14 types (`FXT_*`): Grit, Filter Open/Close, Crunch, Resonance, Noise, Pitch Rise/Dive, Vibrato, Wobble
