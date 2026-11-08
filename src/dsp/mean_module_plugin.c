@@ -172,7 +172,13 @@ enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, F
  X(BANK_IO, "bank_io", "Bank Files", K_E, 0, 2, 0, 1, "Idle,Export Bank,Reload Folder") \
  X(BANK_STATUS, "bank_status", "Bank File Status", K_E, 0, 4, 0, 1, "Ready,Working,Exported,Loaded,Error") \
  X(USER_BANKS, "user_banks", "User Banks Loaded", K_I, 0, 8, 0, 1, NULL) \
- X(VERSION, "version", "Version", K_E, 0, 0, 0, 1, MM_VERSION)
+ X(VERSION, "version", "Version", K_E, 0, 0, 0, 1, MM_VERSION) \
+ X(M1_VIA, "m1_via", "Matrix 1 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M2_VIA, "m2_via", "Matrix 2 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M3_VIA, "m3_via", "Matrix 3 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M4_VIA, "m4_via", "Matrix 4 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M5_VIA, "m5_via", "Matrix 5 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
+ X(M6_VIA, "m6_via", "Matrix 6 Scaled By", K_E, 0, 19, 0, 1, MXSRC)
 
 typedef struct { const char *key, *label; kind_t kind; float min, max, def, step; const char *opts; } pdef_t;
 enum {
@@ -188,7 +194,7 @@ static const pdef_t PD[P_COUNT] = {
 };
 
 static const char *const SHORT_NAME[P_COUNT] = {
-    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Bank", [P_BANK_IO]="Files", [P_BANK_STATUS]="State", [P_USER_BANKS]="User", [P_VERSION]="Ver",
+    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Bank", [P_BANK_IO]="Files", [P_BANK_STATUS]="State", [P_USER_BANKS]="User", [P_VERSION]="Ver", [P_M1_VIA]="VIA1", [P_M2_VIA]="VIA2", [P_M3_VIA]="VIA3", [P_M4_VIA]="VIA4", [P_M5_VIA]="VIA5", [P_M6_VIA]="VIA6",
     [P_OSC1_LEVEL]="Lvl1", [P_OSC2_LEVEL]="Lvl2",
     [P_ENV1_A]="Atk", [P_ENV1_D]="Dec", [P_ENV1_S]="Sus", [P_ENV1_R]="Rel", [P_ENV2_A]="Atk", [P_ENV2_D]="Dec", [P_ENV2_S]="Sus", [P_ENV2_R]="Rel",
     [P_OSC1_FM1]="EFM1", [P_OSC2_FM1]="EFM2", [P_OSC1_FM2]="FM 1", [P_OSC2_FM2]="FM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
@@ -274,7 +280,7 @@ static const char *const SHORT_OPTS[P_COUNT] = {
     [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR,SAW,RMP,RND", [P_LFO2_WAVE]="TRI,SQR,SAW,RMP,RND",
     [P_LFO_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32", [P_LFO2_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32",
     [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
-    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,SUB,LED,PLK,KEY,STB,BRS,ARP,SEQ,PAD,TXT,VOX,DRN,FX,HOR,SET,U1,U2,U3,U4,U5,U6,U7,U8", [P_BANK_IO]="IDL,EXP,RLD", [P_BANK_STATUS]="RDY,WRK,EXP,LOD,ERR", [P_VERSION]=MM_VERSION_S,[P_HOLD]="OFF,ON", [P_FX_SCOPE]="PAG,ANY",
+    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,SUB,LED,PLK,KEY,STB,BRS,ARP,SEQ,PAD,TXT,VOX,DRN,FX,HOR,SET,U1,U2,U3,U4,U5,U6,U7,U8", [P_BANK_IO]="IDL,EXP,RLD", [P_BANK_STATUS]="RDY,WRK,EXP,LOD,ERR", [P_VERSION]=MM_VERSION_S, [P_M1_VIA]=MXSRC_S, [P_M2_VIA]=MXSRC_S, [P_M3_VIA]=MXSRC_S, [P_M4_VIA]=MXSRC_S, [P_M5_VIA]=MXSRC_S, [P_M6_VIA]=MXSRC_S,[P_HOLD]="OFF,ON", [P_FX_SCOPE]="PAG,ANY",
     [P_ARP_MODE]="OFF,UP,DWN,U+D,RND,ASP", [P_ARP_RATE]="1/4,1/8,8T,16,16T,32",
     [P_M1_SRC]=MXSRC_S, [P_M1_DST]=MXDST_S, [P_M2_SRC]=MXSRC_S, [P_M2_DST]=MXDST_S, [P_M3_SRC]=MXSRC_S, [P_M3_DST]=MXDST_S, [P_M4_SRC]=MXSRC_S, [P_M4_DST]=MXDST_S, [P_M5_SRC]=MXSRC_S, [P_M5_DST]=MXDST_S, [P_M6_SRC]=MXSRC_S, [P_M6_DST]=MXDST_S,
 };
@@ -1566,9 +1572,9 @@ static int emit_param(char *b, int n, int w, int i) {
 #define K_VOICE "\"glide\",\"legato\",\"priority\",\"drift\",\"vibrato_depth\",\"vib_rate\",\"bend_range\",\"fx_scope\""
 #define K_RESP  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\""
 #define K_BANKS "\"preset_cat\",\"bank_io\",\"bank_status\",\"user_banks\",\"version\""
-#define K_MX1   "\"m1_src\",\"m1_dst\",\"m1_amt\",\"m2_src\",\"m2_dst\",\"m2_amt\""
-#define K_MX2   "\"m3_src\",\"m3_dst\",\"m3_amt\",\"m4_src\",\"m4_dst\",\"m4_amt\""
-#define K_MX3   "\"m5_src\",\"m5_dst\",\"m5_amt\",\"m6_src\",\"m6_dst\",\"m6_amt\""
+#define K_MX1   "\"m1_src\",\"m1_dst\",\"m1_amt\",\"m1_via\",\"m2_src\",\"m2_dst\",\"m2_amt\",\"m2_via\""
+#define K_MX2   "\"m3_src\",\"m3_dst\",\"m3_amt\",\"m3_via\",\"m4_src\",\"m4_dst\",\"m4_amt\",\"m4_via\""
+#define K_MX3   "\"m5_src\",\"m5_dst\",\"m5_amt\",\"m5_via\",\"m6_src\",\"m6_dst\",\"m6_amt\",\"m6_via\""
 #define LEVEL(id, title, keys) "\"" id "\":{\"name\":\"" title "\",\"children\":null,\"knobs\":[" keys "],\"params\":[" keys "]}"
 static const char HIERARCHY[] =
     "{\"modes\":null,\"levels\":{"
@@ -1910,11 +1916,11 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     const float drv_norm = 1.0f / sqrtf(drv_g);
 
     /* Mod matrix: active slots only (source set, target set, amount non-zero). Sources are sampled per sample, destinations summed. */
-    int mx_n = 0, mx_s[N_SLOTS], mx_d[N_SLOTS], has_d[N_MXDST] = {0};
+    int mx_n = 0, mx_s[N_SLOTS], mx_d[N_SLOTS], mx_v[N_SLOTS], has_d[N_MXDST] = {0};
     float mx_a[N_SLOTS];
     for (int k = 0; k < N_SLOTS; k++) {
         int s = (int)p[P_M1_SRC + 3 * k], d = (int)p[P_M1_DST + 3 * k]; float a = p[P_M1_AMT + 3 * k];
-        if (s > 0 && s < N_MXSRC && d > 0 && d < N_MXDST && a != 0.0f) { mx_s[mx_n] = s; mx_d[mx_n] = d; mx_a[mx_n] = a; mx_n++; has_d[d] = 1; }
+        if (s > 0 && s < N_MXSRC && d > 0 && d < N_MXDST && a != 0.0f) { const int vi = (int)p[P_M1_VIA + k]; mx_s[mx_n] = s; mx_d[mx_n] = d; mx_a[mx_n] = a; mx_v[mx_n] = (vi > 0 && vi < N_MXSRC) ? vi : 0; mx_n++; has_d[d] = 1; }
     }
     const float lfo_base = p[P_LFO_RATE];
     const float fx_att = 1.0f - expf(-1.0f / (0.015f * SR)), fx_rel = 1.0f - expf(-1.0f / (0.05f * SR));
@@ -1964,7 +1970,7 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
             m->srnd += (m->srnd1 - m->srnd) * srnd_c;
             m->ped += ((m->sustain ? 1.0f : 0.0f) - m->ped) * ped_c;
             sv[14] = m->bend_n; sv[15] = m->arp_ramp; sv[16] = m->age; sv[17] = m->srnd; sv[18] = m->o1_prev; sv[19] = m->ped;
-            for (int k = 0; k < mx_n; k++) mod[mx_d[k]] += sv[mx_s[k]] * mx_a[k];
+            for (int k = 0; k < mx_n; k++) mod[mx_d[k]] += sv[mx_s[k]] * mx_a[k] * (mx_v[k] ? sv[mx_v[k]] : 1.0f);   /* Via: a second source scales the amount */
             m->mx_lfr = mod[14]; m->mx_lr2 = mod[15]; m->mx_ld[0] = mod[21]; m->mx_ld[1] = mod[22];
         }
         const int gm = has_d[18] || fa[FXT_GRIT] != 0.0f || moving;                                    /* Grit target: the macro is recomputed per sample */

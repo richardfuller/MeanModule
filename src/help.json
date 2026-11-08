@@ -273,9 +273,11 @@
     {
       "title": "Matrix",
       "lines": [
-        "Six slots: Src, Dst, Amt",
-        "(-1..+1), Matrix 1-2,",
-        "3-4 and 5-6 pages.",
+        "Six slots, one row each:",
+        "Src, Dst, Amt (-1..+1),",
+        "Via. Via = a second",
+        "source that scales Amt",
+        "(Wheel fades it in).",
         "Src: LFO FEn AEn Vel",
         "Wheel AfterT StkX StkY",
         "Key Random LFO2 Noise",

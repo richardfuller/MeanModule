@@ -20,6 +20,11 @@ Six slots, each **Source -> Target x Amount** (Amount -1..+1). Slots add togethe
 A slot does nothing while its source is Off, its target is Off or its amount is 0. The matrix adds to the fixed routings above
 and to the stored knob values; it never changes the stored values.
 
+**Via (Scaled By)**: each slot has a fourth control, a second source that multiplies the slot's amount (default Off = no scaling). Examples: LFO -> Cutoff
+Via Mod Wheel (the wheel fades the wobble in), Noise -> Pitch Via Aftertouch, Filter Env -> Drive Via Velocity. Unipolar sources (wheel, velocity,
+envelopes) scale from 0 to full; a bipolar source (an LFO, Stick X) scales the amount up and down and flips its sign when negative. Via adds one
+multiply per active slot and is ignored while the slot itself is inactive.
+
 | Source | Range | Notes |
 | --- | --- | --- |
 | LFO, LFO 2 | -1..+1 | the two LFOs (LFOs page: rate, wave, sync) |
@@ -70,7 +75,7 @@ Arp Step -> Cutoff (each arp pass climbs); Smooth Random -> Drift Amount (a loos
 
 ## UI
 
-Root -> Matrix 1-2, Matrix 3-4, Matrix 5-6 (after LFOs). Each slot is three knobs, Src / Dst / Amt,
+Root -> Matrix 1-2, Matrix 3-4, Matrix 5-6 (after LFOs). Each slot gets its own row of four knobs, Src / Dst / Amt / Via,
 shown with three-letter options.
 
 Cost: only active slots are evaluated; sources are read per sample, targets that need extra maths (Filter Input, Drive,

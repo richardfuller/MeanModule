@@ -666,6 +666,26 @@ int main(int argc, char **argv) {
         }
         setp(inst, "preset", "0");
     }
+    /* matrix Via: a second source scales the slot amount (LFO -> Amp, scaled by the Mod Wheel) */
+    {
+        double spread[3];
+        setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "flt_fm1", "0"); setp(inst, "lfo_rate", "0.75"); setp(inst, "lfo_wave", "0");
+        setp(inst, "m1_src", "1"); setp(inst, "m1_dst", "12"); setp(inst, "m1_amt", "0.9");
+        for (int c = 0; c < 3; c++) {   /* 0: Via = Mod Wheel with the wheel at 0, 1: wheel up, 2: Via Off */
+            setp(inst, "m1_via", c == 2 ? "0" : "5"); midi(inst, 0xB0, 1, c == 1 ? 127 : 0);
+            midi(inst, 0x90, 48, 100); render(inst, out, 40);
+            double lo = 1e9, hi = 0;
+            for (int w = 0; w < 12; w++) { render(inst, out, 10); double r = measure(out, 10 * FRAMES).rms; if (r < lo) lo = r; if (r > hi) hi = r; }
+            spread[c] = lo > 1e-6 ? hi / lo : 1e6;
+            midi(inst, 0x80, 48, 0); drain(inst, out);
+        }
+        printf("matrix via: level spread wheel at 0: %.2f, wheel up: %.2f, via off: %.2f\n", spread[0], spread[1], spread[2]);
+        CHECK(spread[0] < 1.15, "Via with the source at 0 silences the slot (spread %.2f)", spread[0]);
+        CHECK(spread[1] > 1.6, "Via with the source up lets the slot work (spread %.2f)", spread[1]);
+        CHECK(spread[2] > 1.6, "Via Off leaves the slot unscaled (spread %.2f)", spread[2]);
+        midi(inst, 0xB0, 1, 0); midi(inst, 0xB0, 121, 0);
+        setp(inst, "m1_src", "0"); setp(inst, "m1_dst", "0"); setp(inst, "m1_amt", "0"); setp(inst, "m1_via", "0"); setp(inst, "preset", "0");
+    }
     /* 2l. Osc 1 tuning, noise / osc 2 as matrix sources into FM, controller CCs, Program Change, RPN bend range */
     {
         char v[32];
