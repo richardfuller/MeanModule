@@ -645,6 +645,27 @@ int main(int argc, char **argv) {
         setp(inst, "version", "0"); rt_enter(); char vv[16]; api->get_param(inst, "version", vv, sizeof vv); rt_leave();
         CHECK(atoi(vv) == 0, "version is read-only");
     }
+    /* false polyphony: a chord on Horror Calliope is cycled through quickly (tied arp), so it carries several pitches; a single note stays steady */
+    {
+        char v[64], nm[48]; int idx = -1, cnt;
+        rt_enter(); api->get_param(inst, "preset_count", v, sizeof v); rt_leave(); cnt = atoi(v);
+        for (int i = 0; i < cnt && idx < 0; i++) { snprintf(v, sizeof v, "%d", i); setp(inst, "preset", v); rt_enter(); api->get_param(inst, "preset_full", nm, sizeof nm); rt_leave(); if (!strcmp(nm, "Horror Calliope")) idx = i; }
+        CHECK(idx >= 0, "Horror Calliope exists");
+        if (idx >= 0) {
+            double lo = 1e9, hi = 0;
+            midi(inst, 0x90, 48, 100); midi(inst, 0x90, 52, 100); midi(inst, 0x90, 55, 100); render(inst, out, 120);
+            for (int w = 0; w < 5; w++) { double f = pitch_hz(out, 8000 + w * 1200, 1200); if (f > 20 && f < lo) lo = f; if (f > hi) hi = f; }
+            printf("calliope chord: pitch estimates %.1f .. %.1f Hz\n", lo, hi);
+            CHECK(hi > 1.15 * lo, "a chord on Horror Calliope cycles several pitches (%.1f..%.1f)", lo, hi);
+            midi(inst, 0x80, 48, 0); midi(inst, 0x80, 52, 0); midi(inst, 0x80, 55, 0); drain(inst, out);
+            double rmin = 1e9, rmax = 0;
+            midi(inst, 0x90, 55, 100); render(inst, out, 120);
+            for (int w = 0; w < 5; w++) { double r = measure(out + 2 * (8000 + w * 1200), 1200).rms; if (r < rmin) rmin = r; if (r > rmax) rmax = r; }
+            CHECK(rmin > 0.005 && rmax < 1.5 * rmin, "a single note on Horror Calliope stays steady (level %.3f..%.3f)", rmin, rmax);
+            midi(inst, 0x80, 55, 0); drain(inst, out);
+        }
+        setp(inst, "preset", "0");
+    }
     /* 2l. Osc 1 tuning, noise / osc 2 as matrix sources into FM, controller CCs, Program Change, RPN bend range */
     {
         char v[32];
