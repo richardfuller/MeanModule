@@ -32,7 +32,7 @@ __asm__(".symver dlopen,dlopen@GLIBC_2.17");
 __asm__(".symver dladdr,dladdr@GLIBC_2.17");
 #endif
 
-#define MM_VERSION "0.10.0"   /* keep in step with src/module.json and release.json (the host test checks) */
+#define MM_VERSION "0.10.1"   /* keep in step with src/module.json and release.json (the host test checks) */
 #define MM_VERSION_S "0.10"
 #define SR 44100.0f
 #define MAX_NOTES 16
@@ -1164,21 +1164,25 @@ static const preset_t PRESETS[] = {
         {P_ENV2_S,0.9f},MX(1,S_PED,D_GRT,1.0f),MX(2,S_PED,D_PCH,-0.2f)),
     /* ---- Horror ---- */
     PRE("Horror Calliope",{P_ARP_MODE,1},{P_ARP_RATE,5},{P_ARP_OCT,1},{P_ARP_GATE,1},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.7f},{P_OSC2_COARSE,12},{P_OSC2_FINE,-38},{P_OSC2_LEVEL,.75f},{P_NOISE_LEVEL,.05f},
-        {P_NOISE_COLOR,.2f},{P_CUTOFF,.5f},{P_RESONANCE,.35f},{P_FILTER_DRIVE,.75f},{P_DRIVE,.55f},{P_FLT_FM1,.65f},{P_ENV1_A,0},{P_ENV1_D,.5f},{P_ENV1_S,0},{P_ENV1_R,.2f},
-        {P_ENV2_A,0},{P_ENV2_D,.55f},{P_ENV2_S,.9f},{P_ENV2_R,.08f},{P_DRIFT,1},{P_VIB_DEPTH,.1f},{P_VIB_RATE,.6f},{P_AT_DEST,2},{P_AT_AMOUNT,.6f},{P_KEY_TRACK,.8f},
-        {P_LFO2_RATE,.1f},{P_LFO2_WAVE,4},MX(1,S_E1,D_NSE,.5f),MX(2,S_SMR,D_PC2,.06f),MX(3,S_WHL,D_PC2,.15f),MX(4,S_AGE,D_PCH,-.02f)),
+        {P_NOISE_COLOR,.2f},{P_CUTOFF,.55f},{P_RESONANCE,.2f},{P_FILTER_DRIVE,.3f},{P_DRIVE,.12f},{P_FLT_FM1,.6f},{P_ENV1_A,0},{P_ENV1_D,.5f},{P_ENV1_S,0},{P_ENV1_R,.2f},
+        {P_ENV2_A,0},{P_ENV2_D,.55f},{P_ENV2_S,.9f},{P_ENV2_R,.08f},{P_DRIFT,1},{P_VIB_DEPTH,0},{P_AT_DEST,2},{P_AT_AMOUNT,.6f},{P_KEY_TRACK,.8f},
+        {P_LFO2_RATE,.4f},{P_LFO2_WAVE,4},MX(1,S_RND,D_PCH,.04f),MX(2,S_SMR,D_PCH,.03f),MX(3,S_LF2,D_PC2,.035f),MX(4,S_E1,D_NSE,.5f),
+        {P_M5_SRC,S_SMR},{P_M5_DST,D_PC2},{P_M5_AMT,.2f},{P_M5_VIA,S_WHL},MX(6,S_AGE,D_PCH,-.02f)),
     PRE("Horror Calliope Solo",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.7f},{P_OSC2_COARSE,12},{P_OSC2_FINE,-38},{P_OSC2_LEVEL,.75f},{P_NOISE_LEVEL,.05f},
-        {P_NOISE_COLOR,.2f},{P_CUTOFF,.5f},{P_RESONANCE,.35f},{P_FILTER_DRIVE,.75f},{P_DRIVE,.55f},{P_FLT_FM1,.65f},{P_ENV1_A,0},{P_ENV1_D,.5f},{P_ENV1_S,0},{P_ENV1_R,.2f},
-        {P_ENV2_A,0},{P_ENV2_D,.55f},{P_ENV2_S,.9f},{P_ENV2_R,.08f},{P_DRIFT,1},{P_VIB_DEPTH,.1f},{P_VIB_RATE,.6f},{P_AT_DEST,2},{P_AT_AMOUNT,.6f},{P_KEY_TRACK,.8f},
-        {P_LFO2_RATE,.1f},{P_LFO2_WAVE,4},MX(1,S_E1,D_NSE,.5f),MX(2,S_SMR,D_PC2,.06f),MX(3,S_WHL,D_PC2,.15f),MX(4,S_AGE,D_PCH,-.02f)),
+        {P_NOISE_COLOR,.2f},{P_CUTOFF,.55f},{P_RESONANCE,.2f},{P_FILTER_DRIVE,.3f},{P_DRIVE,.12f},{P_FLT_FM1,.6f},{P_ENV1_A,0},{P_ENV1_D,.5f},{P_ENV1_S,0},{P_ENV1_R,.2f},
+        {P_ENV2_A,0},{P_ENV2_D,.55f},{P_ENV2_S,.9f},{P_ENV2_R,.08f},{P_DRIFT,1},{P_VIB_DEPTH,0},{P_AT_DEST,2},{P_AT_AMOUNT,.6f},{P_KEY_TRACK,.8f},
+        {P_LFO2_RATE,.4f},{P_LFO2_WAVE,4},MX(1,S_RND,D_PCH,.04f),MX(2,S_SMR,D_PCH,.03f),MX(3,S_LF2,D_PC2,.035f),MX(4,S_E1,D_NSE,.5f),
+        {P_M5_SRC,S_SMR},{P_M5_DST,D_PC2},{P_M5_AMT,.2f},{P_M5_VIA,S_WHL},MX(6,S_AGE,D_PCH,-.02f)),
     PRE("Horror Calliope Fifths",{P_ARP_MODE,1},{P_ARP_RATE,5},{P_ARP_OCT,1},{P_ARP_GATE,1},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.7f},{P_OSC2_COARSE,7},{P_OSC2_FINE,-30},{P_OSC2_LEVEL,.75f},{P_NOISE_LEVEL,.05f},
-        {P_NOISE_COLOR,.2f},{P_CUTOFF,.5f},{P_RESONANCE,.35f},{P_FILTER_DRIVE,.75f},{P_DRIVE,.55f},{P_FLT_FM1,.65f},{P_ENV1_A,0},{P_ENV1_D,.5f},{P_ENV1_S,0},{P_ENV1_R,.2f},
-        {P_ENV2_A,0},{P_ENV2_D,.55f},{P_ENV2_S,.9f},{P_ENV2_R,.08f},{P_DRIFT,1},{P_VIB_DEPTH,.1f},{P_VIB_RATE,.6f},{P_AT_DEST,2},{P_AT_AMOUNT,.6f},{P_KEY_TRACK,.8f},
-        {P_LFO2_RATE,.1f},{P_LFO2_WAVE,4},MX(1,S_E1,D_NSE,.5f),MX(2,S_SMR,D_PC2,.06f),MX(3,S_WHL,D_PC2,.15f),MX(4,S_AGE,D_PCH,-.02f)),
-    PRE("Horror Carousel",{P_ARP_MODE,1},{P_ARP_RATE,3},{P_ARP_OCT,2},{P_ARP_GATE,.7f},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.7f},
-        {P_OSC2_COARSE,12},{P_OSC2_FINE,-34},{P_OSC2_LEVEL,.75f},{P_NOISE_LEVEL,.05f},{P_CUTOFF,.5f},{P_RESONANCE,.35f},{P_FILTER_DRIVE,.75f},{P_DRIVE,.55f},{P_FLT_FM1,.65f},
-        {P_ENV1_D,.45f},{P_ENV1_S,0},{P_ENV2_A,0},{P_ENV2_D,.5f},{P_ENV2_S,.9f},{P_ENV2_R,.08f},{P_DRIFT,1},{P_LFO2_RATE,.12f},{P_LFO2_WAVE,4},
-        MX(1,S_E1,D_NSE,.5f),MX(2,S_SMR,D_PC2,.06f),MX(3,S_SMR,D_PCH,.03f)),
+        {P_NOISE_COLOR,.2f},{P_CUTOFF,.55f},{P_RESONANCE,.2f},{P_FILTER_DRIVE,.3f},{P_DRIVE,.12f},{P_FLT_FM1,.6f},{P_ENV1_A,0},{P_ENV1_D,.5f},{P_ENV1_S,0},{P_ENV1_R,.2f},
+        {P_ENV2_A,0},{P_ENV2_D,.55f},{P_ENV2_S,.9f},{P_ENV2_R,.08f},{P_DRIFT,1},{P_VIB_DEPTH,0},{P_AT_DEST,2},{P_AT_AMOUNT,.6f},{P_KEY_TRACK,.8f},
+        {P_LFO2_RATE,.4f},{P_LFO2_WAVE,4},MX(1,S_RND,D_PCH,.04f),MX(2,S_SMR,D_PCH,.03f),MX(3,S_LF2,D_PC2,.035f),MX(4,S_E1,D_NSE,.5f),
+        {P_M5_SRC,S_SMR},{P_M5_DST,D_PC2},{P_M5_AMT,.2f},{P_M5_VIA,S_WHL},MX(6,S_AGE,D_PCH,-.02f)),
+    PRE("Horror Carousel",{P_ARP_MODE,1},{P_ARP_RATE,3},{P_ARP_OCT,2},{P_ARP_GATE,.7f},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.7f},{P_OSC2_COARSE,12},{P_OSC2_FINE,-34},{P_OSC2_LEVEL,.75f},{P_NOISE_LEVEL,.05f},
+        {P_NOISE_COLOR,.2f},{P_CUTOFF,.55f},{P_RESONANCE,.2f},{P_FILTER_DRIVE,.3f},{P_DRIVE,.12f},{P_FLT_FM1,.6f},{P_ENV1_A,0},{P_ENV1_D,.45f},{P_ENV1_S,0},{P_ENV1_R,.2f},
+        {P_ENV2_A,0},{P_ENV2_D,.55f},{P_ENV2_S,.9f},{P_ENV2_R,.08f},{P_DRIFT,1},{P_VIB_DEPTH,0},{P_AT_DEST,2},{P_AT_AMOUNT,.6f},{P_KEY_TRACK,.8f},
+        {P_LFO2_RATE,.4f},{P_LFO2_WAVE,4},MX(1,S_RND,D_PCH,.04f),MX(2,S_SMR,D_PCH,.03f),MX(3,S_LF2,D_PC2,.035f),MX(4,S_E1,D_NSE,.5f),
+        {P_M5_SRC,S_SMR},{P_M5_DST,D_PC2},{P_M5_AMT,.2f},{P_M5_VIA,S_WHL},MX(6,S_AGE,D_PCH,-.02f)),
     PRE("Horror Crypt Organ",{P_OSC1_WAVE,6},{P_OSC2_WAVE,1},{P_OSC2_COARSE,6},{P_OSC2_FINE,8},{P_OSC2_LEVEL,.5f},{P_NOISE_LEVEL,.08f},{P_CUTOFF,.55f},{P_RESONANCE,.45f},
         {P_FILTER_DRIVE,.8f},{P_DRIVE,.6f},{P_FLT_FM1,0},{P_ENV2_A,.3f},{P_ENV2_R,.6f},{P_VIB_DEPTH,.25f},{P_DRIFT,.8f},{P_KEY_TRACK,.8f},{P_LFO_WAVE,4},{P_LFO_RATE,.35f},
         MX(1,S_LFO,D_AMP,.3f),MX(2,S_LFO,D_CUT,.25f)),

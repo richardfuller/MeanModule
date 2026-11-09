@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.10.1
+
+### Calliope
+* The four calliope presets (Calliope, Solo, Fifths, Carousel) now lean into steam-pipe instability instead of distortion: filter drive and drive are far lower, and the pitch is random in three ways. Every note starts a little off pitch (per-note random), the pitch wanders slowly like a changing steam temperature (smooth random), and the second pipe also jumps now and then (LFO 2 random). Held notes sag slightly. The Mod Wheel widens the second pipe's wander (Matrix slot 5, Via = Mod Wheel). Vibrato is off, since a calliope has none.
+
 ## 0.10.0
 
 Bank files (export and import), a harsher Horror bank, and a bite review of the whole library.
