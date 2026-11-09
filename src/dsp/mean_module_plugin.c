@@ -32,7 +32,7 @@ __asm__(".symver dlopen,dlopen@GLIBC_2.17");
 __asm__(".symver dladdr,dladdr@GLIBC_2.17");
 #endif
 
-#define MM_VERSION "0.10.1"   /* keep in step with src/module.json and release.json (the host test checks) */
+#define MM_VERSION "0.10.2"   /* keep in step with src/module.json and release.json (the host test checks) */
 #define MM_VERSION_S "0.10"
 #define SR 44100.0f
 #define MAX_NOTES 16
@@ -173,6 +173,9 @@ enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, F
  X(BANK_STATUS, "bank_status", "Bank File Status", K_E, 0, 4, 0, 1, "Ready,Working,Exported,Loaded,Error") \
  X(USER_BANKS, "user_banks", "User Banks Loaded", K_I, 0, 8, 0, 1, NULL) \
  X(VERSION, "version", "Version", K_E, 0, 0, 0, 1, MM_VERSION) \
+ X(PROG_CHG, "prog_chg", "Program Change", K_E, 0, 1, 0, 1, "Ignore,Accept") \
+ X(LAST_CHANGE, "last_change", "Last Preset Change By", K_E, 0, 5, 0, 1, "None,Preset Set,Bank Pos,Bank,Prog Chg,State Load") \
+ X(PC_SEEN, "pc_seen", "Program Changes Seen", K_I, 0, 127, 0, 1, NULL) \
  X(M1_VIA, "m1_via", "Matrix 1 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
  X(M2_VIA, "m2_via", "Matrix 2 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
  X(M3_VIA, "m3_via", "Matrix 3 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
@@ -194,7 +197,7 @@ static const pdef_t PD[P_COUNT] = {
 };
 
 static const char *const SHORT_NAME[P_COUNT] = {
-    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Bank", [P_BANK_IO]="Files", [P_BANK_STATUS]="State", [P_USER_BANKS]="User", [P_VERSION]="Ver", [P_M1_VIA]="VIA1", [P_M2_VIA]="VIA2", [P_M3_VIA]="VIA3", [P_M4_VIA]="VIA4", [P_M5_VIA]="VIA5", [P_M6_VIA]="VIA6",
+    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Bank", [P_BANK_IO]="Files", [P_BANK_STATUS]="State", [P_USER_BANKS]="User", [P_VERSION]="Ver", [P_PROG_CHG]="PgmCh", [P_LAST_CHANGE]="Last", [P_PC_SEEN]="PCs", [P_M1_VIA]="VIA1", [P_M2_VIA]="VIA2", [P_M3_VIA]="VIA3", [P_M4_VIA]="VIA4", [P_M5_VIA]="VIA5", [P_M6_VIA]="VIA6",
     [P_OSC1_LEVEL]="Lvl1", [P_OSC2_LEVEL]="Lvl2",
     [P_ENV1_A]="Atk", [P_ENV1_D]="Dec", [P_ENV1_S]="Sus", [P_ENV1_R]="Rel", [P_ENV2_A]="Atk", [P_ENV2_D]="Dec", [P_ENV2_S]="Sus", [P_ENV2_R]="Rel",
     [P_OSC1_FM1]="EFM1", [P_OSC2_FM1]="EFM2", [P_OSC1_FM2]="FM 1", [P_OSC2_FM2]="FM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
@@ -323,6 +326,7 @@ typedef struct {
     int stk_lock[2];                                       /* stick flick-to-step latch per axis */
     float expr;                 /* CC11 expression, scales the output (1 = full) */
     int cc_bank, rpn_msb, rpn_lsb;   /* CC0 bank for Program Change; selected RPN */
+    int why, pc_seen;                /* what changed the preset last (diagnostic), Program Change messages seen (any source) */
     float rnd;                  /* Random mod source: sample-and-hold, new value per note trigger */
     float mx_lfr;               /* previous sample's LFO-rate modulation (breaks the LFO feedback loop) */
     float mx_ld[2];             /* previous sample's LFO 1 / LFO 2 Depth modulation (applied one sample late: no loop) */
@@ -1343,12 +1347,12 @@ static const char *preset_label(int code, const char **full) {
 static void apply_preset(mm_t *m, int idx) {
     preset_t pr;
     if (!preset_ref(idx, &pr)) return;
-    float keep[9];                                      /* the FX bank is a performance setup: presets leave it alone */
+    float keep[10];                                      /* the FX bank is a performance setup: presets leave it alone */
     for (int k = 0; k < 4; k++) { keep[k] = m->p[P_FX1_TYPE + k]; keep[4 + k] = m->p[P_FX1_LVL + k]; }
-    keep[8] = m->p[P_FX_SCOPE];
+    keep[8] = m->p[P_FX_SCOPE]; keep[9] = m->p[P_PROG_CHG];
     for (int i = 0; i < P_COUNT; i++) m->p[i] = PD[i].def;
     for (int k = 0; k < 4; k++) { m->p[P_FX1_TYPE + k] = keep[k]; m->p[P_FX1_LVL + k] = keep[4 + k]; }
-    m->p[P_FX_SCOPE] = keep[8];
+    m->p[P_FX_SCOPE] = keep[8]; m->p[P_PROG_CHG] = keep[9];
     for (int i = 0; i < pr.n; i++) {
         int id = pr.v[i].id;
         m->p[id] = clampf(pr.v[i].v, PD[id].min, PD[id].max);
@@ -1364,7 +1368,7 @@ static void apply_preset(mm_t *m, int idx) {
  * Only the settings that differ from the defaults need to be listed; unknown keys are ignored, values are clamped to their ranges. */
 static int key_is_forbidden(int id) {   /* performance state, never part of a sound */
     return (id >= P_FX1_TYPE && id <= P_FX4_LVL) || id == P_FX_SCOPE || id == P_PRESET_CAT || id == P_STICK_X || id == P_STICK_Y ||
-           id == P_BANK_IO || id == P_BANK_STATUS || id == P_USER_BANKS || id == P_VERSION;
+           id == P_BANK_IO || id == P_BANK_STATUS || id == P_USER_BANKS || id == P_VERSION || id == P_PROG_CHG || id == P_LAST_CHANGE || id == P_PC_SEEN;
 }
 static void copy_name(char *dst, size_t n, const char *s) {
     size_t w = 0;
@@ -1521,6 +1525,7 @@ static void state_read(mm_t *m, const char *js) {
     const char *q = strstr(js, "\"preset\":");
     if (q) { int pi = atoi(q + 9); if ((pi >= 0 && pi < N_PRESETS) || pi >= USER_BASE) m->preset = pi; }
     m->p[P_PRESET_CAT] = (float)preset_cat_of(m->preset);
+    m->why = 5;
 }
 
 /* ---------------------------------------------------------------- JSON (built once in create_instance) */
@@ -1553,7 +1558,7 @@ static int emit_param(char *b, int n, int w, int i) {
     if (d->opts) { w = app(b, n, w, ",\"options\":"); w = app_list(b, n, w, d->opts); }
     if (SHORT_OPTS[i]) { w = app(b, n, w, ",\"short_options\":"); w = app_list(b, n, w, SHORT_OPTS[i]); }
     if (UNIT[i]) w = app(b, n, w, ",\"unit\":\"%s\"", UNIT[i]);
-    if (i == P_BANK_STATUS || i == P_USER_BANKS || i == P_VERSION) w = app(b, n, w, ",\"access\":\"read\"");
+    if (i == P_BANK_STATUS || i == P_USER_BANKS || i == P_VERSION || i == P_LAST_CHANGE || i == P_PC_SEEN) w = app(b, n, w, ",\"access\":\"read\"");
     if (VIZ_GROUP[i]) w = app(b, n, w, ",\"viz\":{\"group\":\"%s\",\"role\":\"%s\"}", VIZ_GROUP[i], VIZ_ROLE[i]);
     else if (VIZ_KIND[i]) w = app(b, n, w, ",\"viz\":{\"kind\":\"%s\"}", VIZ_KIND[i]);
     return app(b, n, w, "}");
@@ -1575,7 +1580,7 @@ static int emit_param(char *b, int n, int w, int i) {
 #define K_TUNE  "\"osc1_coarse\",\"osc1_fine\",\"osc2_coarse\",\"osc2_fine\",\"octave\",\"tune\",\"drift\",\"bend_range\""
 #define K_VOICE "\"glide\",\"legato\",\"priority\",\"drift\",\"vibrato_depth\",\"vib_rate\",\"bend_range\",\"fx_scope\""
 #define K_RESP  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\""
-#define K_BANKS "\"preset_cat\",\"bank_io\",\"bank_status\",\"user_banks\",\"version\""
+#define K_BANKS "\"preset_cat\",\"bank_io\",\"bank_status\",\"user_banks\",\"version\",\"prog_chg\",\"last_change\",\"pc_seen\""
 #define K_MX1   "\"m1_src\",\"m1_dst\",\"m1_amt\",\"m1_via\",\"m2_src\",\"m2_dst\",\"m2_amt\",\"m2_via\""
 #define K_MX2   "\"m3_src\",\"m3_dst\",\"m3_amt\",\"m3_via\",\"m4_src\",\"m4_dst\",\"m4_amt\",\"m4_via\""
 #define K_MX3   "\"m5_src\",\"m5_dst\",\"m5_amt\",\"m5_via\",\"m6_src\",\"m6_dst\",\"m6_amt\",\"m6_via\""
@@ -1782,9 +1787,10 @@ static void on_midi(void *inst, const uint8_t *msg, int len, int src) {
         }
         break;
     case 0xC0:   /* Program Change from outside: bank select 0 = the whole list by number, bank select n = program d1 inside bank n (1 = Init, 2 = Bass ...) */
-        if (src == MOVE_MIDI_SOURCE_EXTERNAL) {
-            if (m->cc_bank == 0) apply_preset(m, d1);
-            else { int code = bank_code(m->cc_bank - 1, d1); if (code >= 0) apply_preset(m, code); }
+        m->pc_seen = (m->pc_seen + 1) & 127;   /* counted from every source, acted on only from outside and only when Program Change = Accept */
+        if (src == MOVE_MIDI_SOURCE_EXTERNAL && (int)m->p[P_PROG_CHG] == 1) {
+            if (m->cc_bank == 0) { apply_preset(m, d1); m->why = 4; }
+            else { int code = bank_code(m->cc_bank - 1, d1); if (code >= 0) { apply_preset(m, code); m->why = 4; } }
         }
         break;
     default: break;
@@ -1795,10 +1801,10 @@ static void set_param(void *inst, const char *key, const char *val) {
     mm_t *m = inst;
     if (!m || !key || !val) return;
     if (!strcmp(key, "state")) { state_read(m, val); return; }
-    if (!strcmp(key, "preset")) { char *e; float v = strtof(val, &e); if (e != val && isfinite(v)) apply_preset(m, (int)v); return; }
+    if (!strcmp(key, "preset")) { char *e; float v = strtof(val, &e); if (e != val && isfinite(v)) { apply_preset(m, (int)v); m->why = 1; } return; }
     if (!strcmp(key, "bank_preset")) {   /* position inside the current bank (what the jog wheel browses) */
         char *e; float v = strtof(val, &e); const int b = preset_cat_of(m->preset), cnt = bank_size(b);
-        if (e != val && isfinite(v) && cnt > 0) { int k = (int)v; if (k < 0) k = 0; if (k >= cnt) k = cnt - 1; apply_preset(m, bank_code(b, k)); }
+        if (e != val && isfinite(v) && cnt > 0) { int k = (int)v; if (k < 0) k = 0; if (k >= cnt) k = cnt - 1; apply_preset(m, bank_code(b, k)); m->why = 2; }
         return;
     }
     for (int k = 0; k < P_COUNT; k++)
@@ -1807,14 +1813,14 @@ static void set_param(void *inst, const char *key, const char *val) {
             if (end == val || !isfinite(v)) return;  /* reject "", "nan", "inf" */
             v = clampf(v, PD[k].min, PD[k].max);
             if (PD[k].kind != K_F) v = floorf(v + 0.5f);
-            if (k == P_BANK_STATUS || k == P_USER_BANKS || k == P_VERSION) return;   /* read-only: the worker owns these */
+            if (k == P_BANK_STATUS || k == P_USER_BANKS || k == P_VERSION || k == P_LAST_CHANGE || k == P_PC_SEEN) return;   /* read-only: the worker owns these */
             if (k == P_BANK_IO) {   /* 1 = write the current bank to the exports folder, 2 = re-read the banks folder (a worker does the file work) */
                 const int a = (int)v;
                 if (a == 1) { __atomic_store_n(&g_req_bank, preset_cat_of(m->preset), __ATOMIC_RELEASE); __atomic_store_n(&g_status, ST_WORKING, __ATOMIC_RELEASE); __atomic_fetch_or(&g_req, REQ_EXPORT, __ATOMIC_ACQ_REL); }
                 else if (a == 2) { __atomic_store_n(&g_status, ST_WORKING, __ATOMIC_RELEASE); __atomic_fetch_or(&g_req, REQ_RELOAD, __ATOMIC_ACQ_REL); }
                 return;
             }
-            if (k == P_PRESET_CAT) { int f = preset_cat_first((int)v); if (f >= 0) apply_preset(m, f); return; }   /* jump to the first preset of that bank; an empty user bank is ignored */
+            if (k == P_PRESET_CAT) { int f = preset_cat_first((int)v); if (f >= 0) { apply_preset(m, f); m->why = 3; } return; }   /* jump to the first preset of that bank; an empty user bank is ignored */
             m->p[k] = v;
             if (k == P_DRONE && (int)v != 2) unlatch(m);
             if (k == P_STICK_X) m->stick_age[0] = 0;
@@ -1831,6 +1837,8 @@ static int get_param(void *inst, const char *key, char *buf, int n) {
     if (!m || !key || !buf || n <= 0) return -1;
     if (!strcmp(key, "bank_status")) return snprintf(buf, n, "%d", __atomic_load_n(&g_status, __ATOMIC_ACQUIRE));
     if (!strcmp(key, "user_banks")) return snprintf(buf, n, "%d", user_bank_count());
+    if (!strcmp(key, "last_change")) return snprintf(buf, n, "%d", m->why);
+    if (!strcmp(key, "pc_seen")) return snprintf(buf, n, "%d", m->pc_seen);
     for (int k = 0; k < P_COUNT; k++)
         if (!strcmp(key, PD[k].key)) {
             if (k >= P_FX1_TYPE && k <= P_FX4_LVL) m->fx_page_t = m->clk + 1;

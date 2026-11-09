@@ -111,7 +111,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     return c;
 }
 
-#define MM_VERSION_TEST "0.10.1"   /* bump with every release */
+#define MM_VERSION_TEST "0.10.2"   /* bump with every release */
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s dsp.so out_dir\n", argv[0]); return 2; }
     void (*en)(void) = dlsym(RTLD_DEFAULT, "rt_guard_enter");
@@ -529,6 +529,7 @@ int main(int argc, char **argv) {
             setp(inst, "preset_cat", "2"); setp(inst, "bank_preset", "1");
             rt_enter(); api->get_param(inst, "preset_name", v, sizeof v); api->get_param(inst, "preset_full", nm, sizeof nm); rt_leave();
             CHECK(strncmp(nm, "Sub ", 4) == 0 && strcmp(nm + 4, v) == 0, "browser name drops the bank word ('%s' vs '%s')", nm, v);
+            setp(inst, "prog_chg", "1");
             midi(inst, 0xB0, 0, 3); midi(inst, 0xC0, 0, 0);   /* bank select 3 = Sub, program 0 */
             rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); api->get_param(inst, "preset_cat", b2, sizeof b2); rt_leave();
             CHECK(atoi(b2) == 2 && strncmp(v, "Sub ", 4) == 0, "Program Change with bank select 3 picks inside the Sub bank (%s)", v);
@@ -725,9 +726,17 @@ int main(int argc, char **argv) {
         midi(inst, 0xB0, 101, 127); midi(inst, 0xB0, 100, 127); midi(inst, 0xB0, 6, 11);
         rt_enter(); api->get_param(inst, "bend_range", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 3, "CC6 without RPN 0 selected must be ignored (%s)", v);
+        char pcb[16];
+        setp(inst, "prog_chg", "0"); setp(inst, "preset", "0");
         midi(inst, 0xC0, 5, 0);
-        rt_enter(); api->get_param(inst, "preset", v, sizeof v); rt_leave();
+        rt_enter(); api->get_param(inst, "preset", v, sizeof v); api->get_param(inst, "pc_seen", pcb, sizeof pcb); rt_leave();
+        CHECK(atoi(v) == 0, "Program Change must be ignored while Program Change = Ignore (%s)", v);
+        CHECK(atoi(pcb) > 0, "ignored Program Changes are still counted (%s)", pcb);
+        setp(inst, "prog_chg", "1");
+        midi(inst, 0xC0, 5, 0);
+        rt_enter(); api->get_param(inst, "preset", v, sizeof v); api->get_param(inst, "last_change", pcb, sizeof pcb); rt_leave();
         CHECK(atoi(v) == 5, "Program Change 5 should select preset 5 (%s)", v);
+        CHECK(atoi(pcb) == 4, "last_change reports Prog Chg (%s)", pcb);
         midi(inst, 0xB0, 0, 2); midi(inst, 0xC0, 5, 0);
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
         CHECK(strncmp(v, "Bass ", 5) == 0, "bank select 2 (Bass) program 5 -> the sixth Bass preset (%s)", v);

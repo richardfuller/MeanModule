@@ -57,7 +57,7 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
   Stick X/Y can also flick Arp Rate / Arp Mode. Root page order: Perform, FX Bank, Stick first.
 - Knob smoothing: cutoff (+stick/aftertouch cutoff), resonance, filter drive, drive, grit and volume follow their knobs through ~12 ms one-poles
   (`sm_*`), so a stepped knob never zippers; modulation is not smoothed. A note starting from (near) silence snaps to the knobs.
-- Preset Bank (`preset_cat`, knob "Bank") jumps to the first preset of that bank and follows the current preset. External Program Change: CC0 = 0 flat, CC0 = n picks program inside bank n-1. Noise Color is a level-compensated one-pole (0 = exact white).
+- Preset Bank (`preset_cat`, knob "Bank") jumps to the first preset of that bank and follows the current preset. External Program Change only acts when `prog_chg` = Accept (default Ignore; `last_change`/`pc_seen` are diagnostics): CC0 = 0 flat, CC0 = n picks program inside bank n-1. Noise Color is a level-compensated one-pole (0 = exact white).
 - Audio-path changes are measured, not guessed: `tests/audio_eval.c` (alias share, noise floor, self-oscillation, zipper, cross-mod, noise tilt, cost).
   Measured and rejected: soft limiter inside the 2x loop (no aliasing change, +6% CPU), IIR halfband (the FIR is ~3 us/block of ~35), 4x oversampling
   (-3..-7 dB aliasing at ~1.9x CPU; revisit only with device CPU numbers).

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.10.2
+
+### Preset stays put
+* New setting Program Change (Bank Files page), default Ignore: outside Program Change messages no longer switch the preset unless set to Accept. Reported: a sequenced track occasionally jumped to another preset during playback.
+* Two read-only diagnostics on the Bank Files page: Last Preset Change By (None, Preset Set, Bank Pos, Bank, Prog Chg, State Load) and Program Changes Seen (count of Program Change messages received from any source, ignored or not). If a preset flips again, these show what did it.
+
 ## 0.10.1
 
 ### Calliope
