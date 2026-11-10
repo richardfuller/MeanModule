@@ -33,17 +33,19 @@ SOFT_NAMES = {'Bass Sub 1', 'Bass Sub 2', 'Bass Log Tri', 'Bass Ghost Sub', 'Set
               'Horror Crypt', 'Horror Chant', 'Set Void Walker 3 - Texture'}
 FLOORS = {}   # name -> dict of minimum values (arps.py)
 ARPS = {}   # name -> dict(arp=, arpr=, arpo=, arpg=), filled by arps.py
+KEYS = dict(drift=.4)   # the Keys bank keeps its own drive and filter values (the dynamics are the point): only a little drift and Grit
 def tier(name):
+    if name.startswith('Keys '): return 'keys'
     if name in SOFT_NAMES or name.startswith('Drone '): return 'soft'
     if name.startswith('Init') or name == 'Horror Calliope': return 'none'
     return 'full'
 def apply_character(name, kw):
     t = tier(name)
     if t == 'none': return
-    fl = FULL if t == 'full' else SOFT
+    fl = FULL if t == 'full' else (KEYS if t == 'keys' else SOFT)
     for k, v in fl.items():
         if kw.get(k, DEF[k]) < v: kw[k] = v
-    kw['grit'] = max(kw.get('grit', 0), .2 if t == 'full' else .1)
+    kw['grit'] = max(kw.get('grit', 0), {'full': .2, 'keys': .06}.get(t, .1))
 
 # ---- envelope floors: the time knobs are exponential (0.4 = 26 ms, 0.5 = 70 ms, 0.6 = 190 ms, 0.7 = 510 ms), so the first drafts had 2-16 ms releases (notes cut off almost at once) and
 # plucks and filter sweeps of 26-70 ms. These floors keep releases at 40-55 ms and plucks/sweeps at ~110-190 ms unless the preset is a deliberate short hit.
@@ -68,6 +70,7 @@ VEL_OFF_HORROR = {'Horror Calliope', 'Horror Ghost Organ', 'Horror Anxiety Pulse
                   'Horror EVP', 'Horror Banshee', 'Horror Cold Breath', 'Horror Apparition', 'Horror Crypt', 'Horror Spirit Box', 'Horror Chant', 'Horror Nerve Zap'}
 def apply_velocity(name, kw):
     bank = name.split()[0]
+    if bank == 'Keys': return   # velocity is set per preset in bank_keys.py
     played = False
     if bank in ('Bass', 'Lead', 'Arp', 'Para'): played = True
     elif bank == 'Chaos': played = name in ('Chaos Ray Gun', 'Chaos Anvil Hit', 'Chaos Teleport', 'Chaos Short Circuit', 'Chaos Plasma Beam')

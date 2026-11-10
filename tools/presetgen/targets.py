@@ -3,9 +3,9 @@ usage: python tools/presetgen/targets.py > targets.csv"""
 import sys, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dsl, arps
-for m in ('bank_bass', 'bank_lead', 'bank_drone', 'bank_arp', 'bank_para', 'bank_chaos', 'bank_horror', 'bank_sets'): __import__(m)
+for m in ('bank_bass', 'bank_lead', 'bank_drone', 'bank_arp', 'bank_para', 'bank_chaos', 'bank_horror', 'bank_sets', 'bank_keys'): __import__(m)
 # Only the dullest presets are lifted (the plain default saw patch measures 225 Hz, so ~200-380 is normal and nothing is forced wide open). Scale: the power-weighted centroid of one held MIDI 48 (C2 on Move) is dominated by the fundamental (131 Hz). The plain default saw patch ("Init") measures 225 Hz; 400+ is clearly bright, 600+ very bright.
-BANK = dict(Bass=230, Lead=330, Drone=200, Arp=380, Para=300, Chaos=300, Horror=280)
+BANK = dict(Bass=230, Lead=330, Drone=200, Arp=380, Para=300, Chaos=300, Horror=280, Keys=260)
 ROLE = dict(Bass=230, Sub=150, Lead=330, Stab=320, Arp=380, Drone=200, Pad=260, Texture=280, SFX=300, Pluck=360, Chime=360, Sweep=200)
 DARK = {  # dark on purpose
  'Bass Sub 1': 150, 'Bass Sub 2': 150, 'Bass Log Tri': 170, 'Bass Ghost Sub': 130, 'Bass Deep FM': 220, 'Bass Square Peg': 230, 'Bass Thump': 130, 'Bass Rezzy': 200,

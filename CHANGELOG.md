@@ -1,5 +1,16 @@
 # Changelog
 
+## 0.13.0
+
+### Matching the hardware's arpeggiator and octave shift
+* Arp Octaves now go up to 6 (the hardware's range), was 3.
+* A second Up/Down type: **Up and Down 1** (end notes played once, as before) and **Up and Down 2** (both end notes played twice), the two types the hardware lists. Arp Mode has 7 settings; the stick's Arp Mode flick cycles through all of them.
+* Octave now shifts +-4 octaves (the hardware's range), was +-2.
+
+### Keys bank
+* A new bank, **Keys** (20 presets, after Sets): electric pianos (Tine EP, Wurly, Suitcase, Bell EP, Dirty EP), clavs (Clav, Funk Clav, Pick Clav, Dirty Clav), organs (Combo, Drawbar, Church, Perc), and struck or plucked keys (Harpsichord, Toy Piano, Marimba, Vibes, Muted Piano, Honky Piano, FM Piano). Built for dynamics: Velocity drives the level, the filter and, through the matrix, the FM depth or the drive, and the Keys bank keeps lighter drive than the rest of the library so the dynamics are not squashed. 221 presets in all.
+* Bank numbers: Keys is bank 10 for Program Change (CC0 = 10); user banks moved to 11..18 (Bank knob 11..18).
+
 ## 0.12.1
 
 ### Note readout and Move's octave numbering

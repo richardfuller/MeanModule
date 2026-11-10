@@ -111,7 +111,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     return c;
 }
 
-#define MM_VERSION_TEST "0.12.1"   /* bump with every release */
+#define MM_VERSION_TEST "0.13.0"   /* bump with every release */
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s dsp.so out_dir\n", argv[0]); return 2; }
     void (*en)(void) = dlsym(RTLD_DEFAULT, "rt_guard_enter");
@@ -307,6 +307,40 @@ int main(int argc, char **argv) {
         CHECK(rms_win(out, 60 * FRAMES, 20 * FRAMES) < 0.001, "arp should stop when Hold is turned off");
         drain(inst, out); setp(inst, "preset", "0");
     }
+    /* arp: Up/Down 1 (end notes once) and Up/Down 2 (end notes twice), the 6-octave range, and the +-4 octave shift */
+    {
+        const double fexp[3] = {130.81, 164.81, 196.0};
+        const int ud1[8] = {0, 1, 2, 1, 0, 1, 2, 1}, ud2[12] = {0, 1, 2, 2, 1, 0, 0, 1, 2, 2, 1, 0};
+        for (int mi = 0; mi < 2; mi++) {
+            setp(inst, "preset", "0"); setp(inst, "env2_r", "0.2"); setp(inst, "arp_mode", mi ? "6" : "3"); setp(inst, "arp_rate", "3"); setp(inst, "arp_gate", "1"); setp(inst, "arp_octaves", "1");
+            midi(inst, 0x90, 55, 100); midi(inst, 0x90, 48, 100); midi(inst, 0x90, 52, 100);
+            render(inst, out, 560);
+            int bad = 0, n = mi ? 12 : 8;
+            for (int k = 0; k < n; k++) {
+                double hz = pitch_hz(out, (int)(k * 5512.5) + 882, 4410);
+                int want = mi ? ud2[k] : ud1[k], got = 0; double bd = 1e9;
+                for (int j = 0; j < 3; j++) if (fabs(hz - fexp[j]) < bd) { bd = fabs(hz - fexp[j]); got = j; }
+                if (got != want || bd > 14.0) bad++;
+            }
+            printf("arp up/down %d: pattern %s\n", mi + 1, bad ? "WRONG" : "ok");
+            CHECK(bad == 0, "arp Up/Down %d pattern wrong (%d of %d steps)", mi + 1, bad, n);
+            midi(inst, 0x80, 55, 0); midi(inst, 0x80, 48, 0); midi(inst, 0x80, 52, 0); render(inst, out, 100); drain(inst, out);
+        }
+        setp(inst, "preset", "0"); setp(inst, "cutoff", "0.95"); setp(inst, "env2_r", "0.2"); setp(inst, "arp_mode", "1"); setp(inst, "arp_rate", "3"); setp(inst, "arp_gate", "1"); setp(inst, "arp_octaves", "6");
+        midi(inst, 0x90, 36, 100); render(inst, out, 330);
+        double top = pitch_hz(out, (int)(5 * 5512.5) + 882, 4410);   /* sixth step: 36 + 60 = MIDI 96, 2093 Hz */
+        printf("arp 6 octaves: sixth step %.0f Hz (expect 2093)\n", top);
+        CHECK(fabs(top / 2093.0 - 1.0) < 0.06, "arp over 6 octaves reaches MIDI 96 (%.0f Hz)", top);
+        midi(inst, 0x80, 36, 0); render(inst, out, 100); drain(inst, out);
+        setp(inst, "preset", "0"); setp(inst, "cutoff", "0.95"); setp(inst, "octave", "4"); midi(inst, 0x90, 36, 100); render(inst, out, 80);
+        double o4 = pitch_hz(out, 30 * FRAMES, 40 * FRAMES);   /* 65.4 Hz x 16 */
+        printf("octave +4: %.0f Hz (expect 1046)\n", o4);
+        CHECK(fabs(o4 / 1046.5 - 1.0) < 0.06, "Octave +4 (%.0f Hz)", o4);
+        midi(inst, 0x80, 36, 0); drain(inst, out); setp(inst, "octave", "-4");
+        char ov[16]; rt_enter(); api->get_param(inst, "octave", ov, sizeof ov); rt_leave();
+        CHECK(atoi(ov) == -4, "Octave accepts -4 (%s)", ov);
+        setp(inst, "octave", "0"); setp(inst, "preset", "0");
+    }
     /* 2i2. arp transport sync: with a running transport, step onsets land on the beat grid (125 ms at 1/16, 120 BPM), wherever the key was pressed */
     {
         setp(inst, "preset", "0"); setp(inst, "env2_a", "0"); setp(inst, "env2_r", "0.05"); setp(inst, "arp_mode", "1"); setp(inst, "arp_rate", "3"); setp(inst, "arp_gate", "0.3");
@@ -348,7 +382,7 @@ int main(int argc, char **argv) {
         setp(inst, "stick_x", "0"); render(inst, out, 4);
         setp(inst, "arp_mode", "0"); setp(inst, "stick_x", "-1"); render(inst, out, 4);
         rt_enter(); api->get_param(inst, "arp_mode", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 5, "Arp Mode should wrap from Off to As Played (%s)", v);
+        CHECK(atoi(v) == 6, "Arp Mode should wrap from Off to Up and Down 2 (%s)", v);
         setp(inst, "stick_x", "0"); render(inst, out, 4); setp(inst, "arp_mode", "1");
         setp(inst, "stick_y", "1"); render(inst, out, 4);
         rt_enter(); api->get_param(inst, "arp_rate", v, sizeof v); rt_leave();
@@ -508,12 +542,12 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 0, "Preset Category should follow the preset (%s)", v);
         setp(inst, "preset", "40");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); char nm[48]; snprintf(nm, sizeof nm, "%s", v); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        const char *cats[9] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Set"};
-        CHECK(atoi(v) >= 0 && atoi(v) < 9 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Bank matches the preset name (%s -> %s)", nm, v);
+        const char *cats[10] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Set", "Keys"};
+        CHECK(atoi(v) >= 0 && atoi(v) < 10 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Bank matches the preset name (%s -> %s)", nm, v);
         /* Banks: every preset is in exactly one bank, banks are browsed by position, names are shown without the bank word, Program Change is per bank */
         {
             char b2[32]; rt_enter(); api->get_param(inst, "preset_count", b2, sizeof b2); rt_leave(); int total = atoi(b2), sum = 0;
-            for (int bk = 0; bk < 9; bk++) {
+            for (int bk = 0; bk < 10; bk++) {
                 char kk[16]; snprintf(kk, sizeof kk, "%d", bk); setp(inst, "preset_cat", kk);
                 rt_enter(); api->get_param(inst, "bank_count", b2, sizeof b2); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
                 int cnt = atoi(b2); sum += cnt;
@@ -561,12 +595,12 @@ int main(int argc, char **argv) {
         rt_enter(); api->get_param(inst, "bank_io", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 0, "Bank Files returns to Idle (%s)", v);
         setp(inst, "fx1_type", "0");
-        setp(inst, "preset_cat", "9");
+        setp(inst, "preset_cat", "10");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
         CHECK(strcmp(v, "First") == 0, "User 1 is the first file by name (%s)", v);
         rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 9, "the Bank knob lands on User 1 (%s)", v);
-        setp(inst, "preset_cat", "10");
+        CHECK(atoi(v) == 10, "the Bank knob lands on User 1 (%s)", v);
+        setp(inst, "preset_cat", "11");
         rt_enter(); api->get_param(inst, "bank_count", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 2, "User 2 holds two presets (%s)", v);
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
@@ -583,9 +617,9 @@ int main(int argc, char **argv) {
         setp(inst, "bank_preset", "99");
         rt_enter(); api->get_param(inst, "bank_preset", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 1, "bank_preset clamps inside a user bank (%s)", v);
-        setp(inst, "preset_cat", "16");   /* an empty slot is ignored */
+        setp(inst, "preset_cat", "17");   /* an empty slot is ignored */
         rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 10, "an empty user bank cannot be selected (%s)", v);
+        CHECK(atoi(v) == 11, "an empty user bank cannot be selected (%s)", v);
         setp(inst, "bank_preset", "0"); setp(inst, "env2_s", "1");
         midi(inst, 0x90, 48, 100); render(inst, out, 100); metrics_t mu = measure(out, 100 * FRAMES); midi(inst, 0x80, 48, 0); drain(inst, out);
         CHECK(mu.rms > 0.01 && mu.peak < 1.0, "a user preset plays (rms %.3f)", mu.rms);
@@ -611,7 +645,7 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 3, "the exported file loads as a third user bank (%s)", v);
         double rm[2];
         for (int which = 0; which < 2; which++) {
-            setp(inst, "preset_cat", which ? "10" : "1");   /* Bass, then User 2 = Bass Copy */
+            setp(inst, "preset_cat", which ? "11" : "1");   /* Bass, then User 2 = Bass Copy */
             midi(inst, 0x90, 40, 100); render(inst, out, 120); rm[which] = measure(out, 120 * FRAMES).rms; midi(inst, 0x80, 40, 0); drain(inst, out);
         }
         printf("bank files: Bass first preset rms %.4f, exported copy %.4f\n", rm[0], rm[1]);
@@ -624,7 +658,7 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 0, "removing the files empties the user banks on reload (%s)", v);
         { char cmd[1500]; snprintf(cmd, sizeof cmd, "cp banks/Example.mmbank '%s/banks/'", bankdir); if (system(cmd)) {} }
         setp(inst, "bank_io", "2"); WAIT_STATUS(3);
-        setp(inst, "preset_cat", "9");
+        setp(inst, "preset_cat", "10");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); api->get_param(inst, "bank_count", path, 16); rt_leave();
         CHECK(strcmp(v, "Fat Square Lead") == 0 && atoi(path) == 2, "the shipped Example.mmbank loads (%s, %s presets)", v, path);
         snprintf(path, sizeof path, "%s/banks/Example.mmbank", bankdir); remove(path); setp(inst, "bank_io", "2"); WAIT_STATUS(3);

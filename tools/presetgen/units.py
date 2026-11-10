@@ -2,7 +2,7 @@
 import sys, os, math
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dsl, arps
-for m in ('bank_bass', 'bank_lead', 'bank_drone', 'bank_arp', 'bank_para', 'bank_chaos', 'bank_horror', 'bank_sets'): __import__(m)
+for m in ('bank_bass', 'bank_lead', 'bank_drone', 'bank_arp', 'bank_para', 'bank_chaos', 'bank_horror', 'bank_sets', 'bank_keys'): __import__(m)
 def tms(x): return 0.0005 * 20000 ** x * 1000          # env time, ms
 def lhz(x): return 0.05 * 800 ** x                       # LFO rate, Hz
 def hz(oct_): return 20 * 2 ** oct_

@@ -1,6 +1,6 @@
 # Preset banks
 
-The 201 factory presets are grouped into 9 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob
+The 221 factory presets are grouped into 10 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob
 (Main page, knob 7) picks a bank and jumps to its first preset; the jog wheel browses inside that bank only, and the browser shows names
 without the bank word ("Acid 1", not "Bass Acid 1").
 
@@ -15,13 +15,14 @@ without the bank word ("Acid 1", not "Bass Acid 1").
 | Chaos | 25 | Modular chaos and SFX: Glitch and Malfunction, Sci-Fi and Lasers, Industrial Noise and Impacts, Audio-Rate Mayhem |
 | Horror | 25 | Haunted Keys (calliope), Cinematic Tension, Jumpscares and Stings, Ghostly Ambiences |
 | Sets | 24 | Eight themes of three presets that belong together |
+| Keys | 20 | Electric pianos, clavs, organs and struck keys, built for velocity dynamics (below) |
 
 The sub-sections are only a way to organise the list; they are not shown in the Move. No percussion, a dark and industrial lean, with clean and
 bright sounds across the banks.
 
 Program Change from an external controller (needs Program Change = Accept on the Bank Files page): bank select (CC 0) of 0 keeps the flat
 numbering (program = preset number); bank select 1..17 picks program N inside that bank (1 = Init, 2 = Bass, 3 = Lead, 4 = Drone, 5 = Arp,
-6 = Para, 7 = Chaos, 8 = Horror, 9 = Sets, 10..17 = user banks 1..8).
+6 = Para, 7 = Chaos, 8 = Horror, 9 = Sets, 10 = Keys, 11..18 = user banks 1..8).
 
 ## Horror
 
@@ -30,6 +31,14 @@ for in chat: the pitch wanders like uneven steam temperature (a random offset pe
 so it sounds like several pipes. The rest of the bank follows the brief: Music Box, Ghost Organ, Broken Toy, Dusty Piano, Cursed Bell; Anxiety Pulse,
 Saw Blade, Creeping, The Hive, Dark Water, Pendulum; Scream Hit, Door Slam, Nerve Zap, Psycho, Glass Break, Sudden Drop; EVP, Banshee, Cold Breath,
 Apparition, Crypt, Spirit Box, Chant. Pitch clashes, heavy drive, resonance and random movement are on purpose.
+
+## Keys
+
+Electric pianos (Tine EP, Wurly, Suitcase, Bell EP, Dirty EP), clavs (Clav, Funk Clav, Pick Clav, Dirty Clav), organs (Combo Organ, Drawbar Organ, Church Organ, Perc Organ) and struck or plucked keys
+(Harpsichord, Toy Piano, Marimba, Vibes, Muted Piano, Honky Piano, FM Piano). The point of the bank is dynamic range: Velocity to Amp is high and Velocity to Cutoff higher, so a hard hit is loud and bright and
+a soft one is quiet and dull, and the matrix sends Velocity to FM depth (the tines) or to Drive (the dirty ones). The organs are deliberately less velocity-sensitive. The Keys bank skips the
+heavy drive and filter-drive floor the other banks get, because drive flattens dynamics. The synth is mono, so these are single-line keyboards: a held key under a lead hand, and organs without chords.
+The Mod Wheel brings in a tremolo or vibrato on the EPs and the drawbar organ.
 
 ## Sets
 
