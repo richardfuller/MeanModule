@@ -44,8 +44,26 @@ def apply_character(name, kw):
     for k, v in fl.items():
         if kw.get(k, DEF[k]) < v: kw[k] = v
     kw['grit'] = max(kw.get('grit', 0), .2 if t == 'full' else .1)
+
+# ---- envelope floors: the time knobs are exponential (0.4 = 26 ms, 0.5 = 70 ms, 0.6 = 190 ms, 0.7 = 510 ms), so the first drafts had 2-16 ms releases (notes cut off almost at once) and
+# plucks and filter sweeps of 26-70 ms. These floors keep releases at 40-55 ms and plucks/sweeps at ~110-190 ms unless the preset is a deliberate short hit.
+SHORT_HITS = {'Bass Thump', 'Bass FM Drop', 'Bass Zap Dive', 'Arp Snap Tri', 'Arp Nail Gun', 'Arp Glass', 'Arp Ice Pick', 'Arp Rez Pop', 'Horror Glass Break', 'Horror Door Slam',
+              'Horror Scream Hit', 'Horror Psycho', 'Horror Nerve Zap', 'Chaos Anvil Hit', 'Chaos Ray Gun'}
+def apply_env_floors(name, kw):
+    g = lambda k: kw.get(k, DEF[k])
+    def floor(k, v):
+        if g(k) < v: kw[k] = v
+    sus = g('e2s')
+    floor('e2r', .48 if sus >= .5 else .44)
+    if g('lg') == 0:                                   # LFO-retriggered presets need their short decays
+        if sus <= .2: floor('e2d', .54 if name in SHORT_HITS else .6)
+        elif sus < .9: floor('e2d', .55)
+        if g('fm') >= .3: floor('e1d', .5 if name in SHORT_HITS else .55)
+_cp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cuts.json')
+CUTS = json.load(open(_cp)) if os.path.exists(_cp) else {}   # brightness calibration (tests/brightness.c): minimum Cutoff per preset
 ROWS = []
 NAMES = set()
+FINAL = {}   # name -> (final parameter dict, matrix slots), for tools/presetgen/units.py
 
 def fmt(v):
     if isinstance(v, int) or float(v) == int(v): return str(int(v))
@@ -61,7 +79,11 @@ def pre(name, mx=(), **kw):
     for _k, _v in FLOORS.get(name, {}).items():
         if kw.get(_k, DEF[_k]) < _v: kw[_k] = _v
     apply_character(name, kw)
+    apply_env_floors(name, kw)
+    # brightness fit: only static filters (little filter-envelope sweep); a swept filter is meant to start low, and opening it would flatten the envelope
+    if name in CUTS and kw.get('fm', DEF['fm']) < .25 and kw.get('cut', DEF['cut']) < CUTS[name]: kw['cut'] = min(CUTS[name], .75)
     if name in TRIMS: kw['trim'] = TRIMS[name]
+    FINAL[name] = (dict(kw), list(mx))
     items = []
     for k, v in kw.items():
         assert k in ID, (name, k)

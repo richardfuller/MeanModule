@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.11.3
+
+### Exponential knobs
+The first drafts of the new presets read several exponential knobs as if they were linear. A review of every preset in real units (`tools/presetgen/units.py`) found:
+* **Release**: nearly every preset had a 1-16 ms amp release (notes cut off at once). Releases are now at least 40-55 ms.
+* **Plucks and filter sweeps**: amp decays of 26-70 ms and filter-envelope decays of 30-70 ms (a 30 ms "squelch" is a click). Plucks now decay over about 190 ms, sweeps about 110 ms, except the deliberate short hits (Thump, Snap Tri, Nail Gun, Glass Break, Door Slam ...). LFO-retriggered presets keep their short decays.
+* **Cutoff**: many static filters sat at 100-400 Hz at C3 (the knob is 20 Hz x 2^(9.8 x)). The dullest static-filter presets were lifted until a held C3 reached a target brightness (`tests/brightness.c`, never fully open, swept filters untouched). Dark-by-design presets (subs, Crypt, Deep Void ...) keep low targets.
+* Horror The Hive's LFO was 0.7 Hz where a swarm needs about 5 Hz.
+* Levels were fitted again afterwards (all 201 within about 1 dB).
+
 ## 0.11.2
 
 * Arp bank notes are longer. The first draft used amp decays of 26-70 ms and releases of about 2 ms (the time knobs are exponential: 0.4 = 26 ms, 0.5 = 70 ms, 0.6 = 190 ms, 0.7 = 510 ms), so each note was gone almost as soon as it sounded, at any tempo. Arp presets now decay over roughly 190-310 ms with a 40-70 ms release and a little sustain (the snappy ones, Snap Tri, Nail Gun, Ice Pick, Glass and Rez Pop, are shorter). Levels were refitted afterwards.

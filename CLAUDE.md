@@ -65,6 +65,11 @@ aarch64 `dsp.so`). Module id `meanmodule`, abbrev `MEAN`. Two PolyBLEP oscillato
 - UI previews: `bash scripts/preview.sh` renders every page with Schwung's own renderer (needs Docker and the `ref/schwung` clone) into build/prev/png.
   Short names are <= 5 characters (6 fit but crowd); avoid the letter O next to digits (it reads as zero).
 
+## Exponential knobs (units to remember when writing presets)
+- Env times: 0.0005 x 20000^x s (0.4 = 26 ms, 0.5 = 70 ms, 0.6 = 190 ms, 0.7 = 510 ms, 0.8 = 1.4 s, 1.0 = 10 s). LFO rate: 0.05 x 800^x Hz (0.5 = 1.4 Hz, 0.7 = 5.4 Hz, 0.9 = 20 Hz); Audio sync: 20 Hz x 100^x.
+- Cutoff: 20 Hz x 2^(9.81 x) (0.5 = 600 Hz, 0.68 = 1.9 kHz, 0.8 = 5 kHz) before Key Track, envelope (Filter Env to Cutoff x 5 octaves) and the Grit macro. Glide: 2 x x^2 s. Filter Drive gain 0.25 x 2^(4x); Drive gain 1 + 5d + 6d^2.
+- `tools/presetgen/units.py` prints every preset in these units; `tests/brightness.c` and `tests/loudness.c` fit cutoff and level by measurement.
+
 ## Releasing
 - Bump the version in four places: `src/module.json`, `release.json`, `MM_VERSION`/`MM_VERSION_S` in the plugin, and the first line of `src/help.json`
   (plus `MM_VERSION_TEST` in `tests/host_test.c`); the host test fails if they disagree. Then update `CHANGELOG.md`.

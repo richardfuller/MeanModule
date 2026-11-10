@@ -14,7 +14,7 @@ pre('Horror Cursed Bell', w1=2, w2=2, c2=6, f2=0, l2=.7, xm=.2, cut=.8, res=.15,
 pre('Horror Anxiety Pulse', w1=1, cut=.4, res=.3, fd=.5, dr=.25, fm=0, lw=1, lr=.66, e2a=.02, e2r=.2, mx=[('LFO', 'AMP', .45), ('WHL', 'LFR', .5)])
 pre('Horror Saw Blade', w1=1, cut=.5, res=.8, fd=.7, dr=.5, fm=0, lfc=.35, ls=8, lw=1, lr=.45, e2a=.05, e2r=.2, mx=[('AT', 'CUT', .5)])
 pre('Horror Creeping', w1=2, w2=1, c2=1, f2=0, l2=.7, cut=.4, res=.25, fd=.5, dr=.2, fm=0, e2a=.85, e2r=.6, mx=[('SY', 'DRV', .6)])
-pre('Horror The Hive', w1=4, sh1=.03, w2=4, sh2=.04, f2=15, cut=.75, res=.3, fd=.5, dr=.25, fm=0, lr=.4, shm=.8, e2a=.2, e2r=.4, mx=[('WHL', 'LFR', .5)])
+pre('Horror The Hive', w1=4, sh1=.03, w2=4, sh2=.04, f2=15, cut=.75, res=.3, fd=.5, dr=.25, fm=0, lr=.7, shm=.8, e2a=.2, e2r=.4, mx=[('WHL', 'LFR', .5)])
 pre('Horror Dark Water', w1=2, l1=.9, cut=.3, res=.6, fd=.5, dr=.2, fm=0, lfc=.6, lr=.35, e2a=.3, e2r=.5, mx=[('KEY', 'RES', .3)])
 pre('Horror Pendulum', w1=1, fmode=1, cut=.45, res=.55, fd=.5, dr=.25, fm=0, lfc=.7, lr=.1, e2a=.3, e2r=.5, atd=3, ata=.6)
 # --- Jumpscares and stings
