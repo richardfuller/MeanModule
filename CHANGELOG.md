@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.11.1
+
+### Library review
+* Only the presets from the brief remain: the extra Init presets and the three extra calliope presets (Solo, Fifths, Carousel) are gone, and Horror Calliope was rebuilt from the brief (plus the pitch wander and chord cycling asked for earlier). 201 presets: one Init and 200 from the brief.
+* The Arp bank now arpeggiates or repeats: every Arp preset (and the two Sets arps) has an arp mode, rate, octave range and gate of its own (Up, Down, Up and Down, Random, As Played at 1/8, 1/8T, 1/16, 1/16T). The tests fail if an Arp preset does not repeat.
+* Level matching: a new Level Trim parameter (Response page, +-24 dB, 0.5 = unity) is set per preset by measurement so every preset plays at the same A-weighted loudness (within about 1 dB of -19 dB, measured over the loudest 150 ms of a held chord). Before this, presets ranged over 25 dB. `tests/loudness.c` measures and calibrates; `scripts/test.sh` fails if any preset is more than 2.5 dB off.
+* Character pass: every preset now has a floor of filter drive, drive, resonance and drift, a little hiss and some of the Grit macro, so the nonlinear filter and hard-driven VCA are heard in every bank (ambient presets get a gentler floor). The level matching was done after this pass.
+
 ## 0.11.0
 
 ### New library

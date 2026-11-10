@@ -111,7 +111,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     return c;
 }
 
-#define MM_VERSION_TEST "0.11.0"   /* bump with every release */
+#define MM_VERSION_TEST "0.11.1"   /* bump with every release */
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s dsp.so out_dir\n", argv[0]); return 2; }
     void (*en)(void) = dlsym(RTLD_DEFAULT, "rt_guard_enter");
@@ -184,6 +184,7 @@ int main(int argc, char **argv) {
         for (int pi = 0; pi < cnt; pi++) {
             snprintf(b2, sizeof b2, "%d", pi); setp(inst, "preset", b2);
             char nm[64]; rt_enter(); api->get_param(inst, "preset_full", nm, sizeof nm); rt_leave();
+            if (!strncmp(nm, "Arp ", 4)) { char am[16]; rt_enter(); api->get_param(inst, "arp_mode", am, sizeof am); rt_leave(); CHECK(atoi(am) > 0, "Arp bank preset '%s' must arpeggiate or repeat", nm); }
             render(inst, out, 40);   /* selecting a preset must never make sound by itself (drones used to) */
             m = measure(out, 40 * FRAMES);
             CHECK(m.peak < 0.0005, "preset %d '%s' sounds with no note held (peak %.4f)", pi, nm, m.peak);
@@ -974,10 +975,14 @@ int main(int argc, char **argv) {
             setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "osc1_level", "0"); setp(inst, "noise_level", "0.8"); setp(inst, "cutoff", "0.95"); setp(inst, "flt_fm1", "0");
             setp(inst, "lfo_wave", "1"); setp(inst, "lfo_rate", pass ? "0.5" : "0.2"); setp(inst, "lfo_sync", pass ? "8" : "0");
             setp(inst, "m1_src", "1"); setp(inst, "m1_dst", "12"); setp(inst, "m1_amt", "0.5");
-            midi(inst, 0x90, 48, 100); render(inst, out, 60);
-            double sum = 0, sq = 0; int n = 80;
-            for (int w = 0; w < n; w++) { double r = rms_win(out, 30 * FRAMES + w * 40, 40); sum += r; sq += r * r; }
-            double mean = sum / n, var = sq / n - mean * mean; cov_[pass] = mean > 1e-6 ? sqrt(var > 0 ? var : 0) / mean : 0;
+            midi(inst, 0x90, 48, 100); cov_[pass] = 1e9;
+            for (int rep = 0; rep < 2; rep++) {   /* two looks: a slow square LFO may flip once inside one of them */
+                render(inst, out, 60);
+                double sum = 0, sq = 0; int n = 80;
+                for (int w = 0; w < n; w++) { double r = rms_win(out, 30 * FRAMES + w * 40, 40); sum += r; sq += r * r; }
+                double mean = sum / n, var = sq / n - mean * mean, c = mean > 1e-6 ? sqrt(var > 0 ? var : 0) / mean : 0;
+                if (c < cov_[pass]) cov_[pass] = c;
+            }
             midi(inst, 0x80, 48, 0); drain(inst, out);
         }
         printf("audio-rate LFO: window level variation %.3f slow, %.3f audio\n", cov_[0], cov_[1]);

@@ -4,7 +4,7 @@
     {
       "title": "Start here",
       "lines": [
-        "Mean Module v0.11.0",
+        "Mean Module v0.11.1",
         "1. Play a note.",
         "2. Main page: turn Grit.",
         "Right = dirtier and",
@@ -258,7 +258,11 @@
         "to cutoff and level.",
         "AT: aftertouch target",
         "(Off Cut Vib Drv FM),",
-        "Amt: amount."
+        "Amt: amount.",
+        "Trim: preset level,",
+        "+-24 dB (set so all",
+        "presets play equally",
+        "loud)."
       ]
     },
     {

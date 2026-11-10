@@ -1,19 +1,19 @@
 # Preset banks
 
-The 209 factory presets are grouped into 9 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob
+The 201 factory presets are grouped into 9 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob
 (Main page, knob 7) picks a bank and jumps to its first preset; the jog wheel browses inside that bank only, and the browser shows names
 without the bank word ("Acid 1", not "Bass Acid 1").
 
 | Bank | Presets | What is in it |
 | --- | --- | --- |
-| Init | 6 | Clean starting points: Init, Init Saw, Square, Detuned, Sub Octave, Noise |
+| Init | 1 | The default patch (needed as the starting point; everything else is from the brief) |
 | Bass | 25 | Sub (triangle rumbles), Acid and Pluck, Overdriven and Industrial, Modulated and SFX bass |
 | Lead | 25 | Expressive and Glide, Hard Sync and Tearing, FM and Metallic, Distorted and Feedback |
 | Drone | 25 | Evolving drones and textures: Sub-Harmonic, Noise and Windscapes, Complex FM, Rhythmic and Pulsing |
 | Arp | 26 | Arps and sequences: Classic Plucks, Acid Sequences, FM and Metallic, Dark and Industrial |
 | Para | 25 | Paraphonic intervals: fifths and fourths, minor thirds and sixths, tritones and clusters, detuned unisons and octaves |
 | Chaos | 25 | Modular chaos and SFX: Glitch and Malfunction, Sci-Fi and Lasers, Industrial Noise and Impacts, Audio-Rate Mayhem |
-| Horror | 28 | Haunted Keys (calliope), Cinematic Tension, Jumpscares and Stings, Ghostly Ambiences |
+| Horror | 25 | Haunted Keys (calliope), Cinematic Tension, Jumpscares and Stings, Ghostly Ambiences |
 | Sets | 24 | Eight themes of three presets that belong together |
 
 The sub-sections are only a way to organise the list; they are not shown in the Move. No percussion, a dark and industrial lean, with clean and
@@ -25,9 +25,9 @@ numbering (program = preset number); bank select 1..17 picks program N inside th
 
 ## Horror
 
-The four calliope presets are the steam-pipe versions from 0.10.1: Calliope (out of tune, Mod Wheel widens the second pipe's wander; hold a chord and
-the pipes are cycled quickly, a tied 1/32 arp, for a false-polyphonic chord), Calliope Solo (no chord cycling), Calliope Fifths (second pipe a flat fifth
-above), Carousel (arpeggiated). The rest of the bank follows the brief: Music Box, Ghost Organ, Broken Toy, Dusty Piano, Cursed Bell; Anxiety Pulse,
+Calliope follows the brief (two pulses an octave apart, an LFO on both pitches, the Mod Wheel speeding the LFO like a failing motor) plus what was asked
+for in chat: the pitch wanders like uneven steam temperature (a random offset per note and a slow smooth-random drift), and a held chord is cycled quickly (a tied 1/32 arp)
+so it sounds like several pipes. The rest of the bank follows the brief: Music Box, Ghost Organ, Broken Toy, Dusty Piano, Cursed Bell; Anxiety Pulse,
 Saw Blade, Creeping, The Hive, Dark Water, Pendulum; Scream Hit, Door Slam, Nerve Zap, Psycho, Glass Break, Sudden Drop; EVP, Banshee, Cold Breath,
 Apparition, Crypt, Spirit Box, Chant. Pitch clashes, heavy drive, resonance and random movement are on purpose.
 
@@ -46,6 +46,16 @@ Put each preset of a set on its own Move track; the three are tuned to occupy di
 | Cryptic Ritual | Bass | Chime | Drone |
 | Warehouse Rave | Bass | Stab | Sweep |
 | Alien Flora | Pluck | Lead | Pad |
+
+## Levels and character (0.11.1)
+
+* **Arp bank**: every preset arpeggiates or repeats (Up, Down, Up and Down, Random or As Played; 1/8 to 1/16T; one to three octaves). Hold one key and it repeats; hold a chord and it arpeggiates.
+* **Level matching**: each preset carries a Level Trim (Response page, +-24 dB, 0.5 = unity) found by measurement so that a held chord plays at the same
+  A-weighted loudness, about -19 dB over its loudest 150 ms (within about 1 dB for the whole library). `tests/loudness.c` measures and calibrates (`calibrate` rewrites the trims, `measure` checks);
+  `scripts/test.sh` fails if any preset is more than 2.5 dB away or if an Arp preset repeats fewer than eight times in 4.5 s.
+  Presets whose sound is mostly a short transient are limited by peak level (about -3 dB) rather than by the target.
+* **Character**: the nonlinear filter and the hard-driven VCA are what make this synth sound like itself. Every preset starts from a floor of Filter Drive (0.85), Drive (0.5), Resonance (0.4),
+  Drift (0.6), a little noise and some Grit macro; ambient and soft presets (the drones, the ghostly Horror presets, the clean tri subs) use a gentler floor.
 
 ## How the brief maps onto the engine (0.11.0)
 

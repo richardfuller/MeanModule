@@ -21,3 +21,6 @@ gcc $CF -O2 tests/host_test.c -o build/test/host -ldl -lm -rdynamic
 gcc -O2 -fPIC -shared tests/rt_guard.c -o build/test/rt_guard.so -ldl
 echo "== RT guard run =="
 LD_PRELOAD=$PWD/build/test/rt_guard.so build/test/host build/test/dsp.so build/test
+echo "== library level balance (A-weighted, every preset within 2.5 dB of -19) =="
+gcc -std=gnu11 -O2 -Isrc/host tests/loudness.c -o build/test/loudness -ldl -lm
+build/test/loudness build/test/dsp.so measure -19 > build/test/loudness.csv
