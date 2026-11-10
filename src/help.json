@@ -4,7 +4,7 @@
     {
       "title": "Start here",
       "lines": [
-        "Mean Module v0.11.3",
+        "Mean Module v0.12.0",
         "1. Play a note.",
         "2. Main page: turn Grit.",
         "Right = dirtier and",
@@ -262,7 +262,10 @@
         "Trim: preset level,",
         "+-24 dB (set so all",
         "presets play equally",
-        "loud)."
+        "loud). KLvl: level",
+        "tilt per octave, so a",
+        "preset plays evenly",
+        "up the keyboard."
       ]
     },
     {

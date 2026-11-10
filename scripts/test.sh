@@ -24,3 +24,6 @@ LD_PRELOAD=$PWD/build/test/rt_guard.so build/test/host build/test/dsp.so build/t
 echo "== library level balance (A-weighted, every preset within 2.5 dB of -19) =="
 gcc -std=gnu11 -O2 -Isrc/host tests/loudness.c -o build/test/loudness -ldl -lm
 build/test/loudness build/test/dsp.so measure -19 > build/test/loudness.csv
+echo "== register balance (five notes across each preset's home register) =="
+gcc -std=gnu11 -O2 -Isrc/host tests/register.c -o build/test/register -ldl -lm
+build/test/register build/test/dsp.so measure > build/test/register.csv

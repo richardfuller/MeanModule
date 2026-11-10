@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.12.0
+
+### Register, velocity and short-note testing
+* New parameter Key Level (Response page, `key_lvl`, -1..+1 = -6..+6 dB per octave around C3). A sweep with `tests/register.c` (five notes across each preset's home register: Bass C1-C3, Lead/Arp/Para C3-C5, Drone/Chaos/Horror C2-C4, Sets by role) found the median preset got about 3 dB louder per octave and 110 of 201 moved more than 6 dB across its own register. Each preset's Key Level is now fitted so the level is even (median spread 0.6 dB for the non-bass banks). The bass register is judged by plain RMS rather than A-weighted loudness, and the fit eases back where a low note would otherwise hit the limiter.
+* The same sweep showed most presets ignored velocity (a median 0 dB between velocity 40 and 127). Played presets (bass, leads, arps, paraphonic, the plucked/struck Horror and Sets presets) now have a floor of Velocity to Amp and Velocity to Cutoff; drones and ambient presets stay flat on purpose. Heavy drive compresses level differences, so the effect is mostly brightness.
+* `scripts/test.sh` also runs `register.c`. A short 150 ms note is only much quieter than a held one on the slow-attack pads, drones and sweeps, as intended.
+
 ## 0.11.3
 
 ### Exponential knobs

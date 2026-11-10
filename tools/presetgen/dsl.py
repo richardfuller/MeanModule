@@ -8,7 +8,7 @@ ID = dict(
     o1e='OSC1_FM1', o2e='OSC2_FM1', o1l='OSC1_FM2', o2l='OSC2_FM2', xm='XMOD', shm='SHAPE_MOD',
     lr='LFO_RATE', lw='LFO_WAVE', ls='LFO_SYNC', l2r='LFO2_RATE', l2w='LFO2_WAVE', l2s='LFO2_SYNC', lg='LFO_GATE',
     gl='GLIDE', leg='LEGATO', vib='VIB_DEPTH', vibr='VIB_RATE', drift='DRIFT', drone='DRONE', vol='VOLUME', velc='VEL_CUTOFF', vela='VEL_AMP',
-    atd='AT_DEST', ata='AT_AMOUNT', oct='OCTAVE', tune='TUNE', arp='ARP_MODE', arpr='ARP_RATE', arpo='ARP_OCT', arpg='ARP_GATE', pri='PRIORITY', grit='GRIT', trim='TRIM',
+    atd='AT_DEST', ata='AT_AMOUNT', oct='OCTAVE', tune='TUNE', arp='ARP_MODE', arpr='ARP_RATE', arpo='ARP_OCT', arpg='ARP_GATE', pri='PRIORITY', grit='GRIT', trim='TRIM', kl='KEY_LVL',
 )
 SRC = dict(LFO='S_LFO', FEN='S_E1', AEN='S_E2', VEL='S_VEL', WHL='S_WHL', AT='S_AT', SX='S_SX', SY='S_SY', KEY='S_KEY', RND='S_RND', LF2='S_LF2',
            NSE='S_NSE', OS2='S_OS2', BND='S_BND', ARP='S_ARP', AGE='S_AGE', SMR='S_SMR', OS1='S_OS1', PED='S_PED')
@@ -18,7 +18,7 @@ DST = dict(PCH='D_PCH', PC2='D_PC2', SH1='D_SH1', SH2='D_SH2', LV1='D_LV1', LV2=
 # defaults of the plugin (a preset starts from these); used only to skip values that equal the default
 DEF = dict(w1=1, sh1=.5, w2=0, sh2=.5, c1=0, f1=0, c2=0, f2=7, l1=.8, l2=.6, nz=0, nc=0, cut=.677, res=.3, fd=.5, fmode=0, fm=.4, lfc=0, kt=.5, dr=.2,
            e1a=0, e1d=.45, e1s=0, e1r=.3, e2a=0, e2d=.5, e2s=1, e2r=.35, o1e=0, o2e=0, o1l=0, o2l=0, xm=0, shm=0, lr=.35, lw=0, ls=0, l2r=.3, l2w=0, l2s=0, lg=0,
-           gl=0, leg=0, vib=0, vibr=.5, drift=.3, drone=0, vol=.7, velc=0, vela=0, atd=2, ata=.5, oct=0, tune=0, arp=0, arpr=3, arpo=1, arpg=.6, pri=0, grit=0, trim=.5)
+           gl=0, leg=0, vib=0, vibr=.5, drift=.3, drone=0, vol=.7, velc=0, vela=0, atd=2, ata=.5, oct=0, tune=0, arp=0, arpr=3, arpo=1, arpg=.6, pri=0, grit=0, trim=.5, kl=0)
 
 import json, os
 _tp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trims.json')
@@ -61,6 +61,24 @@ def apply_env_floors(name, kw):
         if g('fm') >= .3: floor('e1d', .5 if name in SHORT_HITS else .55)
 _cp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'cuts.json')
 CUTS = json.load(open(_cp)) if os.path.exists(_cp) else {}   # brightness calibration (tests/brightness.c): minimum Cutoff per preset
+
+# ---- velocity: a register/velocity sweep (tests/register.c) showed most presets ignored velocity (0 dB between soft and hard). Played presets now get a floor of Velocity to Amp
+# and Velocity to Cutoff; drones and ambient presets stay flat on purpose.
+VEL_OFF_HORROR = {'Horror Calliope', 'Horror Ghost Organ', 'Horror Anxiety Pulse', 'Horror Saw Blade', 'Horror Creeping', 'Horror The Hive', 'Horror Dark Water', 'Horror Pendulum',
+                  'Horror EVP', 'Horror Banshee', 'Horror Cold Breath', 'Horror Apparition', 'Horror Crypt', 'Horror Spirit Box', 'Horror Chant', 'Horror Nerve Zap'}
+def apply_velocity(name, kw):
+    bank = name.split()[0]
+    played = False
+    if bank in ('Bass', 'Lead', 'Arp', 'Para'): played = True
+    elif bank == 'Chaos': played = name in ('Chaos Ray Gun', 'Chaos Anvil Hit', 'Chaos Teleport', 'Chaos Short Circuit', 'Chaos Plasma Beam')
+    elif bank == 'Horror': played = name not in VEL_OFF_HORROR
+    elif bank == 'Set': played = name.split(' - ')[-1] in ('Bass', 'Lead', 'Arp', 'Pluck', 'Stab', 'Chime', 'Sub')
+    if not played: return
+    plucky = name.startswith('Arp ') or kw.get('e2s', DEF['e2s']) <= .2
+    if kw.get('vela', DEF['vela']) < (.5 if plucky else .4): kw['vela'] = .5 if plucky else .4
+    if kw.get('velc', DEF['velc']) < .3: kw['velc'] = .3
+_kp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'keylvls.json')
+KEYLVLS = json.load(open(_kp)) if os.path.exists(_kp) else {}   # register fit (tests/register.c): Key Level per preset
 ROWS = []
 NAMES = set()
 FINAL = {}   # name -> (final parameter dict, matrix slots), for tools/presetgen/units.py
@@ -80,6 +98,8 @@ def pre(name, mx=(), **kw):
         if kw.get(_k, DEF[_k]) < _v: kw[_k] = _v
     apply_character(name, kw)
     apply_env_floors(name, kw)
+    apply_velocity(name, kw)
+    if name in KEYLVLS: kw['kl'] = KEYLVLS[name]
     # brightness fit: only static filters (little filter-envelope sweep); a swept filter is meant to start low, and opening it would flatten the envelope
     if name in CUTS and kw.get('fm', DEF['fm']) < .25 and kw.get('cut', DEF['cut']) < CUTS[name]: kw['cut'] = min(CUTS[name], .75)
     if name in TRIMS: kw['trim'] = TRIMS[name]

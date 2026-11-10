@@ -57,6 +57,16 @@ Put each preset of a set on its own Move track; the three are tuned to occupy di
 * **Character**: the nonlinear filter and the hard-driven VCA are what make this synth sound like itself. Every preset starts from a floor of Filter Drive (0.85), Drive (0.5), Resonance (0.4),
   Drift (0.6), a little noise and some Grit macro; ambient and soft presets (the drones, the ghostly Horror presets, the clean tri subs) use a gentler floor.
 
+## Register, velocity, short notes (0.12.0)
+
+`tests/register.c` plays each preset on five notes across its home register (Bass C1-C3, Lead/Arp/Para C3-C5, Drone/Chaos/Horror C2-C4, Sets by role, C3 = MIDI 48),
+at velocity 40 and 127 on the middle note, and as a 150 ms note.
+
+* **Key Level** (`key_lvl`, Response page) tilts the level by up to 6 dB per octave around C3 and is fitted per preset so the register is even. Before the fit, 110 of 201 presets moved more than 6 dB
+  across their register. The bass register uses plain RMS (A-weighting would ask 20-30 dB more of the lowest notes than the limiter has room for) and the fit is capped so low notes keep 3 dB of headroom.
+* **Velocity**: before this, most presets ignored it. Played presets now respond through Velocity to Amp and Cutoff; drones and ambient presets do not on purpose. Heavy Drive evens out level, so the main effect is brightness.
+* **Short notes**: only the slow-attack pads, drones, sweeps and two slow-opening filters are much quieter on a 150 ms note, as intended.
+
 ## How the brief maps onto the engine (0.11.0)
 
 The new library was written from a patch-cable description of a modular-style mono synth. Mean Module has no cables; the same ideas map like this.
