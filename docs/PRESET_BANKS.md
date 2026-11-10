@@ -59,7 +59,7 @@ Put each preset of a set on its own Move track; the three are tuned to occupy di
 
 ## Register, velocity, short notes (0.12.0)
 
-`tests/register.c` plays each preset on five notes across its home register (Bass C1-C3, Lead/Arp/Para C3-C5, Drone/Chaos/Horror C2-C4, Sets by role, C3 = MIDI 48),
+`tests/register.c` plays each preset on five notes across its home register (Bass C1-C3, Lead/Arp/Para C3-C5, Drone/Chaos/Horror C2-C4, Sets by role; note names as Move shows them, C3 = MIDI 60),
 at velocity 40 and 127 on the middle note, and as a 150 ms note.
 
 * **Key Level** (`key_lvl`, Response page) tilts the level by up to 6 dB per octave around C3 and is fitted per preset so the register is even. Before the fit, 110 of 201 presets moved more than 6 dB

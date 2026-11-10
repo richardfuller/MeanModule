@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.12.1
+
+### Note readout and Move's octave numbering
+* The Main page shows the note you last played (read-only `note_now`, with the Octave setting applied) as a note name, 36 = C1, 60 = C3, the way Move and Live name notes. It takes the place of Filter Mode on that page; Filter Mode is still on the Filter page. The small "i1" in the corner of the screen while a note is held is Schwung's own MIDI-channel indicator, drawn by the host (it can be switched off in Schwung's settings); a module cannot change it.
+* My register tests of 0.12.0 used note names one octave lower than Move's (the test called MIDI 48 "C3"). The register fit, the loudness chord and the Key Level pivot now use Move's numbering: Bass C1-C3 = MIDI 36-60, Lead/Arp/Para C3-C5 = 60-84, Drone/Chaos/Horror C2-C4 = 48-72, loudness chord C3 major (60, 64, 67), Key Level pivots on C3 (MIDI 60). Everything was fitted again.
+
 ## 0.12.0
 
 ### Register, velocity and short-note testing

@@ -3,7 +3,7 @@
  * (A-weighted level of the loudest 150 ms), then at the middle note with velocity 40 and 127, and as a short 150 ms note.
  * Usage: register dsp.so measure           CSV per preset; exits 1 if a preset is silent in its register or its level moves more than 6 dB across it
  *        register dsp.so calibrate         fits each preset's Key Level (dB per octave tilt) so the level is even across its register, CSV with the new values
- * MIDI note numbers here follow the plugin: C3 = 48. */
+ * Note names follow Move and Live: MIDI 60 = C3, so Bass C1-C3 is MIDI 36-60, Lead/Arp/Para C3-C5 is 60-84, Drone/Chaos/Horror C2-C4 is 48-72. */
 #define _GNU_SOURCE
 #include <dlfcn.h>
 #include <math.h>
@@ -26,7 +26,7 @@ static void setp(void *i, const char *k, const char *v) { api->set_param(i, k, v
 static int16_t buf[(HOLD_BLOCKS + TAIL_BLOCKS) * BLK * 2];
 
 /* home register of a preset: five notes, low to high */
-static const int REG_BASS[NNOTES] = {24, 31, 36, 43, 48}, REG_LEAD[NNOTES] = {48, 55, 60, 67, 72}, REG_MID[NNOTES] = {36, 43, 48, 55, 60};
+static const int REG_BASS[NNOTES] = {36, 43, 48, 55, 60}, REG_LEAD[NNOTES] = {60, 67, 72, 79, 84}, REG_MID[NNOTES] = {48, 55, 60, 67, 72};
 static const int *reg_of(const char *name) {
     if (!strncmp(name, "Bass ", 5)) return REG_BASS;
     if (!strncmp(name, "Lead ", 5) || !strncmp(name, "Arp ", 4) || !strncmp(name, "Para ", 5) || !strcmp(name, "Init")) return REG_LEAD;
@@ -76,36 +76,34 @@ int main(int argc, char **argv) {
     { void *t = api->create_instance(".", NULL); api->get_param(t, "preset_count", v, sizeof v); api->destroy_instance(t); }
     int cnt = atoi(v), bad = 0;
     printf("name,key_lvl,n1,n2,n3,n4,n5,spread_db,slope_db_oct,vel40_db,vel127_db,short_minus_held_db,peak_db\n");
-    for (int i = 0; i < cnt; i++) {
+    int first = argc > 3 ? atoi(argv[3]) : 0, last = argc > 4 ? atoi(argv[4]) : cnt;   /* optional preset range, so a long fit can run in resumable chunks */
+    if (last > cnt) last = cnt;
+    for (int i = first; i < last; i++) {
         { void *t = api->create_instance(".", NULL); snprintf(v, sizeof v, "%d", i); setp(t, "preset", v); api->get_param(t, "preset_full", nm, sizeof nm); api->destroy_instance(t); }
         const int *reg = reg_of(nm);
         g_flat = (reg == REG_BASS);   /* the bass register is judged by plain RMS, the rest A-weighted */
-        double L[NNOTES], pk = -99, kl = -99, pkn;
+        double L[NNOTES], PK[NNOTES], pk, pkb, kl = -99;
+        #define MEAS(klv) do { double klo_; for (int k = 0; k < NNOTES; k++) L[k] = note_level(i, klv, reg[k], 100, HOLD_BLOCKS, &PK[k], &klo_, nm, sizeof nm); kl = klo_; } while (0)
+        #define BOOSTED_PEAK() ({ double m_ = -99; for (int k = 0; k < NNOTES; k++) if (kl * (reg[k] - 60) < -0.01 && PK[k] > m_) m_ = PK[k]; m_; })   /* peak of the notes the tilt boosts */
         for (int it = 0; it < (calibrate ? 3 : 1); it++) {
-            double klo;
-            for (int k = 0; k < NNOTES; k++) { L[k] = note_level(i, kl, reg[k], 100, HOLD_BLOCKS, &pkn, &klo, nm, sizeof nm); if (pkn > pk || k == 0) pk = pkn; }
-            kl = klo;
+            MEAS(kl);
             if (!calibrate) break;
             double s = slope(reg, L);                 /* dB per semitone; Key Level 1 = 6 dB per octave = 0.5 dB per semitone */
             double nk = kl - s / 0.5; if (nk > 1) nk = 1; if (nk < -1) nk = -1;
             if (fabs(nk - kl) < 0.04) break;
             kl = nk;
         }
-        if (calibrate) { /* final measurement with the fitted value */
-            double klo; pk = -99;
-            for (int k = 0; k < NNOTES; k++) { L[k] = note_level(i, kl, reg[k], 100, HOLD_BLOCKS, &pkn, &klo, nm, sizeof nm); if (pkn > pk) pk = pkn; }
-        }
-        for (int g = 0; calibrate && g < 8 && pk > -3.0 && fabs(kl) > 0.02; g++) {   /* headroom: A-weighting asks a lot of low bass notes, and the limiter would then distort them; ease the tilt back */
-            double klo; kl *= 0.8; pk = -99;
-            for (int k = 0; k < NNOTES; k++) { L[k] = note_level(i, kl, reg[k], 100, HOLD_BLOCKS, &pkn, &klo, nm, sizeof nm); if (pkn > pk) pk = pkn; }
-        }
+        if (calibrate) MEAS(kl);   /* final measurement with the fitted value */
+        for (int g = 0; calibrate && g < 25 && fabs(kl) > 0.02 && BOOSTED_PEAK() > -3.0; g++) { kl *= 0.92; MEAS(kl); }   /* headroom: a boosted low note must not hit the limiter; ease the tilt back just enough */
+        pk = -99; for (int k = 0; k < NNOTES; k++) if (PK[k] > pk) pk = PK[k];
+        pkb = BOOSTED_PEAK();
         double lo = 1e9, hi = -1e9; for (int k = 0; k < NNOTES; k++) { if (L[k] < lo) lo = L[k]; if (L[k] > hi) hi = L[k]; }
         double d40, d127, dsh, t1, t2, klo;
         d40 = note_level(i, calibrate ? kl : -99, reg[2], 40, HOLD_BLOCKS, &t1, &klo, nm, sizeof nm);
         d127 = note_level(i, calibrate ? kl : -99, reg[2], 127, HOLD_BLOCKS, &t2, &klo, nm, sizeof nm);
         dsh = note_level(i, calibrate ? kl : -99, reg[2], 100, SHORT_BLOCKS, &t1, &klo, nm, sizeof nm) - L[2];
         if (!calibrate) kl = klo;
-        if (strcmp(nm, "Init") && ((hi - lo > 6.0 && pk < -3.5) || lo < -34.0)) bad++;   /* Init is the plain default patch, not a fitted preset */   /* a wider spread is accepted where the low notes are held back by headroom, not by the fit */
+        if (strcmp(nm, "Init") && ((hi - lo > 6.0 && pkb < -3.5) || lo < -34.0)) bad++;   /* Init is the plain default patch, not a fitted preset */   /* a wider spread is accepted where the low notes are held back by headroom, not by the fit */
         printf("\"%s\",%.3f,%.1f,%.1f,%.1f,%.1f,%.1f,%.1f,%.2f,%.1f,%.1f,%.1f,%.1f\n", nm, kl, L[0], L[1], L[2], L[3], L[4], hi - lo, slope(reg, L) * 12.0, d40, d127, dsh, pk);
         fflush(stdout);
     }

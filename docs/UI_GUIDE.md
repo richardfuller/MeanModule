@@ -7,7 +7,7 @@ name and value. Pages are in this order, with the things you reach for most firs
 
 | # | Page | What is on it |
 | --- | --- | --- |
-| 1 | **Main** | Filter graphic (Cutoff, Res, Mode), **Grit**, amp attack and release, **Bank** (preset bank), Volume |
+| 1 | **Main** | Filter graphic (Cutoff, Res), **Note** (the note you last played, with Octave, as Move names it: 60 = C3), **Grit**, amp attack and release, **Bank** (preset bank), Volume. Filter Mode is on the Filter page |
 | 2 | **Perform** | Hold, Drone, Octave, Glide, and the whole arpeggiator (Arp, Rate, Arp Octaves, Gate) |
 | 3 | **FX Bank** | Four touch effects: levels on top, effect types below |
 | 4 | **Stick** | Stick X and Y, what each steers, bend range, vibrato, Hold |

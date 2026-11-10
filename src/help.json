@@ -4,7 +4,7 @@
     {
       "title": "Start here",
       "lines": [
-        "Mean Module v0.12.0",
+        "Mean Module v0.12.1",
         "1. Play a note.",
         "2. Main page: turn Grit.",
         "Right = dirtier and",
@@ -41,8 +41,12 @@
     {
       "title": "Main (root)",
       "lines": [
-        "Cutoff, Res, Mode:",
-        "the filter graphic.",
+        "Cutoff, Res: the",
+        "filter graphic (Mode",
+        "is on the Filter page).",
+        "Note: the note you",
+        "last played, as Move",
+        "names it (60 = C3).",
         "Grit: one knob for",
         "grit and darkness.",
         "Right = more drive and",

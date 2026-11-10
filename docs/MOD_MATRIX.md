@@ -33,7 +33,7 @@ multiply per active slot and is ignored while the slot itself is inactive.
 | Mod Wheel | 0..1 | CC1 |
 | Aftertouch | 0..1 | raw pressure (not scaled by the Response page's AT Amount) |
 | Stick X, Stick Y | -1..+1 | the two stick knobs; they spring back when released |
-| Key | -1..+1 | pitch of the note: C4 = 0, two octaves each way = +-1 |
+| Key | -1..+1 | pitch of the note: MIDI 60 (C3 on Move) = 0, two octaves each way = +-1 |
 | Random | -1..+1 | sample and hold, a new value for each note (each arp step) |
 | Noise | -1..+1 | white noise, a new value every sample (FM, cutoff, anything) |
 | Osc 2 | -1..+1 | the Osc 2 audio output, whatever its Level: audio-rate modulation of anything |

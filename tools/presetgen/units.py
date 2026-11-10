@@ -15,5 +15,5 @@ for name, (kw, mx) in dsl.FINAL.items():
     lfo = 'audio' if g('ls') == 8 else ('sync' if g('ls') else '%.2fHz' % lhz(g('lr')))
     arp = ''
     if g('arp'): arp = ' arp %s/%s gate %.2f' % ('UDMRA'[g('arp') - 1] if False else g('arp'), g('arpr'), g('arpg'))
-    print('%-34s A%5.0f D%5.0f S%.2f R%5.0f | fA%5.0f fD%5.0f fS%.2f | cut@C3 %5.0f..%5.0f res%.2f | lfo %-8s | glide %.2fs%s' % (
+    print('%-34s A%5.0f D%5.0f S%.2f R%5.0f | fA%5.0f fD%5.0f fS%.2f | cut@C2 %5.0f..%5.0f res%.2f | lfo %-8s | glide %.2fs%s' % (
         name, tms(g('e2a')), tms(g('e2d')), g('e2s'), tms(g('e2r')), tms(g('e1a')), tms(g('e1d')), g('e1s'), c3, pk, g('res'), lfo, 2 * g('gl') ** 2, arp))

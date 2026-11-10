@@ -34,7 +34,7 @@ static void setp(void *i, const char *k, const char *v) { api->set_param(i, k, v
 static int16_t buf[(HOLD_BLOCKS + FLUSH_BLOCKS) * BLK * 2];
 
 static double play(void *inst, double *peak_db) {
-    int chord[3] = {48, 52, 55};
+    int chord[3] = {60, 64, 67};   /* C3 major in Move/Live numbering */
     for (int k = 0; k < 3; k++) midi(inst, 0x90, chord[k], 100);
     for (int b = 0; b < HOLD_BLOCKS; b++) api->render_block(inst, buf + b * BLK * 2, BLK);
     double l = loud_db(buf, HOLD_BLOCKS * BLK, peak_db); count_onsets(buf, HOLD_BLOCKS * BLK);
@@ -85,7 +85,7 @@ int main(int argc, char **argv) {
                 after = l2; peak = pk2;
             }
         }
-        if (fabs(after - target) > 2.5) bad++;
+        if (strcmp(nm, "Init") && fabs(after - target) > 2.5) bad++;   /* Init is the plain default patch, not a fitted preset */
         if (!strncmp(nm, "Arp ", 4) && g_onsets < 8) { bad++; fprintf(stderr, "%s repeats only %d times in 4.5 s\n", nm, g_onsets); }   /* the Arp bank must arpeggiate or repeat */
         printf("%d,\"%s\",%.4f,%.1f,%.1f,%.1f,%d\n", i, nm, trim, before, after, peak, g_onsets);
     }

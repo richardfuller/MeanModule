@@ -1,4 +1,4 @@
-/* Library brightness: plays one held note (C3) on every factory preset and measures the spectral centroid of the sound.
+/* Library brightness: plays one held note (MIDI 48, C2 on Move) on every factory preset and measures the spectral centroid of the sound.
  * Usage: brightness dsp.so measure                      CSV: name,cut,centroid_hz
  *        brightness dsp.so calibrate targets.csv        CSV: name,cut,before_hz,after_hz,target_hz  (raises Cutoff, never lowers it, until the centroid reaches the
  *                                                       preset's target; targets.csv lines are "name,target_hz")
