@@ -31,6 +31,7 @@ SOFT = dict(fd=.7, dr=.3, res=.3, drift=.5)
 SOFT_NAMES = {'Bass Sub 1', 'Bass Sub 2', 'Bass Log Tri', 'Bass Ghost Sub', 'Set Void Walker 1 - Sub', 'Lead Glide Tri', 'Lead Theremin', 'Lead Flute Mod',
               'Set Void Walker 2 - Lead', 'Horror Music Box', 'Horror Cold Breath', 'Horror Ghost Organ', 'Horror EVP', 'Horror Banshee', 'Horror Apparition',
               'Horror Crypt', 'Horror Chant', 'Set Void Walker 3 - Texture'}
+FLOORS = {}   # name -> dict of minimum values (arps.py)
 ARPS = {}   # name -> dict(arp=, arpr=, arpo=, arpg=), filled by arps.py
 def tier(name):
     if name in SOFT_NAMES or name.startswith('Drone '): return 'soft'
@@ -57,6 +58,8 @@ def pre(name, mx=(), **kw):
     assert name not in NAMES, name
     NAMES.add(name)
     if name in ARPS: kw.update(ARPS[name])
+    for _k, _v in FLOORS.get(name, {}).items():
+        if kw.get(_k, DEF[_k]) < _v: kw[_k] = _v
     apply_character(name, kw)
     if name in TRIMS: kw['trim'] = TRIMS[name]
     items = []

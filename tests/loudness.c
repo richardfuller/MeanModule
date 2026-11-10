@@ -57,12 +57,15 @@ static double loud_db(const int16_t *x, int frames, double *peak_db) {
     return 10.0 * log10(best > 1e-12 ? best : 1e-12);
 }
 
-static int g_onsets;   /* note starts heard in the last play(): rises of the 10 ms envelope after it fell below 20% of its peak */
+static int g_onsets;   /* note starts heard in the last play(): clear rises of the 10 ms envelope */
 static void count_onsets(const int16_t *x, int frames) {
     enum { H = 441 }; int n = frames / H; static double e[2000]; if (n > 2000) n = 2000; double mx = 0;
     for (int h = 0; h < n; h++) { double a = 0; for (int i = 0; i < H; i++) { double v = x[2 * (h * H + i)] / 32768.0; a += v * v; } e[h] = sqrt(a / H); if (e[h] > mx) mx = e[h]; }
-    int high = 0; g_onsets = 0;
-    for (int h = 0; h < n; h++) { if (high && e[h] < 0.2 * mx) high = 0; else if (!high && e[h] > 0.5 * mx) { high = 1; g_onsets++; } }
+    g_onsets = 0; int last = -10;
+    for (int h = 2; h < n; h++) {   /* an onset is a clear rise over the quieter of the two previous 10 ms steps, at least 30 ms after the last one */
+        double base = e[h - 1] < e[h - 2] ? e[h - 1] : e[h - 2];
+        if (e[h] > 0.1 * mx && e[h] > 1.35 * base && h - last >= 3) { g_onsets++; last = h; }
+    }
 }
 static plugin_api_v2_t *api;
 static void midi(void *i, int a, int b, int c) { uint8_t m[3] = {(uint8_t)a, (uint8_t)b, (uint8_t)c}; api->on_midi(i, m, 3, MOVE_MIDI_SOURCE_EXTERNAL); }

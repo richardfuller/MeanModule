@@ -10,3 +10,9 @@ a('Arp Glass', 4, 4, 3, .35);      a('Arp Wire Pluck', 1, 3, 2, .5)
 a('Arp Dark Stab', 5, 1, 1, .5);   a('Arp Drive Seq', 1, 3, 1, .5); a('Arp Nail Gun', 4, 3, 1, .3);     a('Arp Grit Bounce', 3, 3, 2, .55)
 a('Arp Stutter', 5, 1, 1, .9);     a('Arp Mecha', 1, 3, 1, .5);     a('Arp Rave Stab', 5, 1, 1, .4)
 a('Set Darkwave Drive 3 - Arp', 3, 3, 1, .5); a('Set Cybernetic 2 - Arp', 1, 4, 2, .5)
+
+# Envelope floors for the Arp bank. Time knob values: decay/release 0.4 = 26 ms, 0.5 = 70 ms, 0.6 = 190 ms, 0.65 = 310 ms, 0.7 = 510 ms. The first draft used 0.4-0.5 decays and
+# ~2 ms releases, so the notes were gone almost at once at any tempo; arp notes now ring for roughly a step or more (short, snappy ones a little less).
+SNAPPY = {'Arp Snap Tri', 'Arp Nail Gun', 'Arp Ice Pick', 'Arp Glass', 'Arp Rez Pop'}
+for _n in list(dsl.ARPS):
+    dsl.FLOORS[_n] = dict(e2d=.56, e2r=.42, e2s=.1, e1d=.55) if _n in SNAPPY else dict(e2d=.64, e2r=.5, e2s=.12, e1d=.6)

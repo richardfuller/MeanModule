@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.11.2
+
+* Arp bank notes are longer. The first draft used amp decays of 26-70 ms and releases of about 2 ms (the time knobs are exponential: 0.4 = 26 ms, 0.5 = 70 ms, 0.6 = 190 ms, 0.7 = 510 ms), so each note was gone almost as soon as it sounded, at any tempo. Arp presets now decay over roughly 190-310 ms with a 40-70 ms release and a little sustain (the snappy ones, Snap Tri, Nail Gun, Ice Pick, Glass and Rez Pop, are shorter). Levels were refitted afterwards.
+* `tests/loudness.c` counts note starts with a rise detector, so ringing notes are counted correctly.
+
 ## 0.11.1
 
 ### Library review

@@ -111,7 +111,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     return c;
 }
 
-#define MM_VERSION_TEST "0.11.1"   /* bump with every release */
+#define MM_VERSION_TEST "0.11.2"   /* bump with every release */
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s dsp.so out_dir\n", argv[0]); return 2; }
     void (*en)(void) = dlsym(RTLD_DEFAULT, "rt_guard_enter");
