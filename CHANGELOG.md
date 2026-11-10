@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.11.0
+
+### New library
+* All factory presets were replaced: 209 presets in 9 banks (Init, Bass, Lead, Drone, Arp, Paraphonic, Chaos, Horror, Sets). The four steam-pipe calliope presets are kept in Horror. See `docs/PRESET_BANKS.md`, including how the patch-style descriptions map onto the engine.
+* Bank numbers changed: bank select 1..9 is Init, Bass, Lead, Drone, Arp, Para, Chaos, Horror, Sets; user banks are 10..17 (Bank knob 9..16). Saved projects keep their sound, but the preset name shown for an old saved number now points at the new list.
+
+### Engine additions the new library needed
+* LFO Sync has an Audio setting: the LFO runs 20 Hz to 2 kHz (FM, tones, audio-rate gating).
+* LFO Retrigger (LFO 2 page): each cycle of LFO 1 or LFO 2 restarts both envelopes while a note is held (stutters, gated drones, re-struck plucks).
+* Five new matrix targets: Osc 1 Pitch, Filter Env Attack, Filter Env Decay, Amp Env Attack, Amp Env Decay (30 targets in all). Velocity or Key can now change envelope times per note.
+* New tests for all of the above. Oscillator hard sync is not implemented (the sync-style presets use LFO Retrigger).
+
 ## 0.10.2
 
 ### Preset stays put

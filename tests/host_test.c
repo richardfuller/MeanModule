@@ -111,7 +111,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     return c;
 }
 
-#define MM_VERSION_TEST "0.10.2"   /* bump with every release */
+#define MM_VERSION_TEST "0.11.0"   /* bump with every release */
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s dsp.so out_dir\n", argv[0]); return 2; }
     void (*en)(void) = dlsym(RTLD_DEFAULT, "rt_guard_enter");
@@ -499,20 +499,20 @@ int main(int argc, char **argv) {
         printf("noise colour: first-difference ratio %.2f (white) -> %.2f (dark)\n", hf[0], hf[1]);
         CHECK(hf[1] < 0.5 * hf[0], "Noise Color should darken the noise (%.2f vs %.2f)", hf[1], hf[0]);
         /* Preset Category jumps to the first preset of that type, and follows the current preset */
-        setp(inst, "preset_cat", "3");
+        setp(inst, "preset_cat", "2");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
-        CHECK(strncmp(v, "Lead", 4) == 0, "Preset Category 3 should land on the first Lead preset (%s)", v);
+        CHECK(strncmp(v, "Lead", 4) == 0, "Preset Category 2 should land on the first Lead preset (%s)", v);
         setp(inst, "preset", "0");
         rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 0, "Preset Category should follow the preset (%s)", v);
         setp(inst, "preset", "40");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); char nm[48]; snprintf(nm, sizeof nm, "%s", v); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        const char *cats[17] = {"Init", "Bass", "Sub", "Lead", "Pluck", "Keys", "Stab", "Brass", "Arp", "Seq", "Pad", "Texture", "Vox", "Drone", "FX", "Horror", "Set"};
-        CHECK(atoi(v) >= 0 && atoi(v) < 17 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Bank matches the preset name (%s -> %s)", nm, v);
+        const char *cats[9] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Set"};
+        CHECK(atoi(v) >= 0 && atoi(v) < 9 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Bank matches the preset name (%s -> %s)", nm, v);
         /* Banks: every preset is in exactly one bank, banks are browsed by position, names are shown without the bank word, Program Change is per bank */
         {
             char b2[32]; rt_enter(); api->get_param(inst, "preset_count", b2, sizeof b2); rt_leave(); int total = atoi(b2), sum = 0;
-            for (int bk = 0; bk < 17; bk++) {
+            for (int bk = 0; bk < 9; bk++) {
                 char kk[16]; snprintf(kk, sizeof kk, "%d", bk); setp(inst, "preset_cat", kk);
                 rt_enter(); api->get_param(inst, "bank_count", b2, sizeof b2); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
                 int cnt = atoi(b2); sum += cnt;
@@ -526,13 +526,13 @@ int main(int argc, char **argv) {
                 CHECK(atoi(b2) == cnt - 1, "bank_preset clamps (%s of %d)", b2, cnt);
             }
             CHECK(sum == total, "banks hold every preset once (%d vs %d)", sum, total);
-            setp(inst, "preset_cat", "2"); setp(inst, "bank_preset", "1");
+            setp(inst, "preset_cat", "1"); setp(inst, "bank_preset", "1");
             rt_enter(); api->get_param(inst, "preset_name", v, sizeof v); api->get_param(inst, "preset_full", nm, sizeof nm); rt_leave();
-            CHECK(strncmp(nm, "Sub ", 4) == 0 && strcmp(nm + 4, v) == 0, "browser name drops the bank word ('%s' vs '%s')", nm, v);
+            CHECK(strncmp(nm, "Bass ", 5) == 0 && strcmp(nm + 5, v) == 0, "browser name drops the bank word ('%s' vs '%s')", nm, v);
             setp(inst, "prog_chg", "1");
-            midi(inst, 0xB0, 0, 3); midi(inst, 0xC0, 0, 0);   /* bank select 3 = Sub, program 0 */
+            midi(inst, 0xB0, 0, 3); midi(inst, 0xC0, 0, 0);   /* bank select 3 = Lead, program 0 */
             rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); api->get_param(inst, "preset_cat", b2, sizeof b2); rt_leave();
-            CHECK(atoi(b2) == 2 && strncmp(v, "Sub ", 4) == 0, "Program Change with bank select 3 picks inside the Sub bank (%s)", v);
+            CHECK(atoi(b2) == 2 && strncmp(v, "Lead ", 5) == 0, "Program Change with bank select 3 picks inside the Lead bank (%s)", v);
             midi(inst, 0xB0, 0, 0);
         }
         setp(inst, "preset", "0");
@@ -560,12 +560,12 @@ int main(int argc, char **argv) {
         rt_enter(); api->get_param(inst, "bank_io", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 0, "Bank Files returns to Idle (%s)", v);
         setp(inst, "fx1_type", "0");
-        setp(inst, "preset_cat", "17");
+        setp(inst, "preset_cat", "9");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
         CHECK(strcmp(v, "First") == 0, "User 1 is the first file by name (%s)", v);
         rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 17, "the Bank knob lands on User 1 (%s)", v);
-        setp(inst, "preset_cat", "18");
+        CHECK(atoi(v) == 9, "the Bank knob lands on User 1 (%s)", v);
+        setp(inst, "preset_cat", "10");
         rt_enter(); api->get_param(inst, "bank_count", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 2, "User 2 holds two presets (%s)", v);
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
@@ -582,9 +582,9 @@ int main(int argc, char **argv) {
         setp(inst, "bank_preset", "99");
         rt_enter(); api->get_param(inst, "bank_preset", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 1, "bank_preset clamps inside a user bank (%s)", v);
-        setp(inst, "preset_cat", "24");   /* an empty slot is ignored */
+        setp(inst, "preset_cat", "16");   /* an empty slot is ignored */
         rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 18, "an empty user bank cannot be selected (%s)", v);
+        CHECK(atoi(v) == 10, "an empty user bank cannot be selected (%s)", v);
         setp(inst, "bank_preset", "0"); setp(inst, "env2_s", "1");
         midi(inst, 0x90, 48, 100); render(inst, out, 100); metrics_t mu = measure(out, 100 * FRAMES); midi(inst, 0x80, 48, 0); drain(inst, out);
         CHECK(mu.rms > 0.01 && mu.peak < 1.0, "a user preset plays (rms %.3f)", mu.rms);
@@ -610,7 +610,7 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 3, "the exported file loads as a third user bank (%s)", v);
         double rm[2];
         for (int which = 0; which < 2; which++) {
-            setp(inst, "preset_cat", which ? "18" : "1");   /* Bass, then User 2 = Bass Copy */
+            setp(inst, "preset_cat", which ? "10" : "1");   /* Bass, then User 2 = Bass Copy */
             midi(inst, 0x90, 40, 100); render(inst, out, 120); rm[which] = measure(out, 120 * FRAMES).rms; midi(inst, 0x80, 40, 0); drain(inst, out);
         }
         printf("bank files: Bass first preset rms %.4f, exported copy %.4f\n", rm[0], rm[1]);
@@ -623,7 +623,7 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 0, "removing the files empties the user banks on reload (%s)", v);
         { char cmd[1500]; snprintf(cmd, sizeof cmd, "cp banks/Example.mmbank '%s/banks/'", bankdir); if (system(cmd)) {} }
         setp(inst, "bank_io", "2"); WAIT_STATUS(3);
-        setp(inst, "preset_cat", "17");
+        setp(inst, "preset_cat", "9");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); api->get_param(inst, "bank_count", path, 16); rt_leave();
         CHECK(strcmp(v, "Fat Square Lead") == 0 && atoi(path) == 2, "the shipped Example.mmbank loads (%s, %s presets)", v, path);
         snprintf(path, sizeof path, "%s/banks/Example.mmbank", bankdir); remove(path); setp(inst, "bank_io", "2"); WAIT_STATUS(3);
@@ -940,6 +940,49 @@ int main(int argc, char **argv) {
         }
         printf("env amount target: rms %.4f vs %.4f\n", ea[0], ea[1]);
         CHECK(ea[0] > 1.3 * ea[1], "Env Amount target should open the filter (%.4f vs %.4f)", ea[0], ea[1]);
+        /* Amp Env Attack target: the Mod Wheel at full stretches the attack to seconds, so the note starts far quieter */
+        double at_[2];
+        for (int pass = 0; pass < 2; pass++) {
+            CLEAN_TRI(); setp(inst, "env2_a", "0"); setp(inst, "m1_src", "5"); setp(inst, "m1_dst", "28"); setp(inst, "m1_amt", pass ? "0" : "1");
+            midi(inst, 0xB0, 1, 127); midi(inst, 0x90, 48, 100); render(inst, out, 25); at_[pass] = rms_win(out, 10 * FRAMES, 14 * FRAMES);
+            midi(inst, 0x80, 48, 0); midi(inst, 0xB0, 1, 0); drain(inst, out);
+        }
+        printf("env attack target: rms %.4f vs %.4f\n", at_[0], at_[1]);
+        CHECK(at_[1] > 0.01 && at_[0] < 0.3 * at_[1], "Amp Env Attack target should slow the attack (%.4f vs %.4f)", at_[0], at_[1]);
+        /* Osc 1 Pitch target moves only Osc 1 (+6 semitones at 0.5) */
+        double pc_[2];
+        for (int pass = 0; pass < 2; pass++) {
+            CLEAN_TRI(); setp(inst, "m1_src", "5"); setp(inst, "m1_dst", "25"); setp(inst, "m1_amt", "0.5");
+            midi(inst, 0xB0, 1, pass ? 127 : 0); midi(inst, 0x90, 48, 100); render(inst, out, 80); pc_[pass] = pitch_hz(out, 30 * FRAMES, 40 * FRAMES);
+            midi(inst, 0x80, 48, 0); midi(inst, 0xB0, 1, 0); drain(inst, out);
+        }
+        printf("osc 1 pitch target: %.1f Hz -> %.1f Hz (ratio %.3f, expect 1.414)\n", pc_[0], pc_[1], pc_[1] / pc_[0]);
+        CHECK(fabs(pc_[1] / pc_[0] - 1.4142) < 0.06, "Osc 1 Pitch target ratio %.3f", pc_[1] / pc_[0]);
+        /* LFO Retrigger: a decaying note with no sustain keeps re-striking while the LFO cycles */
+        double rt_[2];
+        for (int pass = 0; pass < 2; pass++) {
+            CLEAN_TRI(); setp(inst, "env2_d", "0.3"); setp(inst, "env2_s", "0.02"); setp(inst, "lfo_wave", "1"); setp(inst, "lfo_rate", "0.75"); setp(inst, "lfo_gate", pass ? "1" : "0");
+            midi(inst, 0x90, 48, 100); render(inst, out, 260); rt_[pass] = rms_win(out, 180 * FRAMES, 70 * FRAMES);
+            midi(inst, 0x80, 48, 0); drain(inst, out);
+        }
+        printf("lfo retrigger: late rms %.4f off, %.4f on\n", rt_[0], rt_[1]);
+        CHECK(rt_[1] > 3.0 * rt_[0] && rt_[1] > 0.01, "LFO Retrigger should keep striking the envelopes (%.4f vs %.4f)", rt_[1], rt_[0]);
+        setp(inst, "lfo_gate", "0");
+        /* Audio-rate LFO: a square LFO on the amp gates noise at ~200 Hz, which the slow range does not */
+        double cov_[2];
+        for (int pass = 0; pass < 2; pass++) {
+            setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "osc1_level", "0"); setp(inst, "noise_level", "0.8"); setp(inst, "cutoff", "0.95"); setp(inst, "flt_fm1", "0");
+            setp(inst, "lfo_wave", "1"); setp(inst, "lfo_rate", pass ? "0.5" : "0.2"); setp(inst, "lfo_sync", pass ? "8" : "0");
+            setp(inst, "m1_src", "1"); setp(inst, "m1_dst", "12"); setp(inst, "m1_amt", "0.5");
+            midi(inst, 0x90, 48, 100); render(inst, out, 60);
+            double sum = 0, sq = 0; int n = 80;
+            for (int w = 0; w < n; w++) { double r = rms_win(out, 30 * FRAMES + w * 40, 40); sum += r; sq += r * r; }
+            double mean = sum / n, var = sq / n - mean * mean; cov_[pass] = mean > 1e-6 ? sqrt(var > 0 ? var : 0) / mean : 0;
+            midi(inst, 0x80, 48, 0); drain(inst, out);
+        }
+        printf("audio-rate LFO: window level variation %.3f slow, %.3f audio\n", cov_[0], cov_[1]);
+        CHECK(cov_[0] < 0.2 && cov_[1] > 0.35, "Audio range LFO gates at audio rate (%.3f slow, %.3f audio)", cov_[0], cov_[1]);
+        setp(inst, "lfo_sync", "0");
         setp(inst, "m1_amt", "0"); setp(inst, "m2_amt", "0"); setp(inst, "preset", "0");
         #undef CLEAN_TRI
     }

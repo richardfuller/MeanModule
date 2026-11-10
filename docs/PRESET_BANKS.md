@@ -1,37 +1,35 @@
 # Preset banks
 
-The 275 factory presets are grouped into 17 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob (Main page, knob 7) picks a bank and jumps to its first preset; the jog
-wheel browses inside that bank only, and the browser shows names without the bank word ("Acid Line", not "Bass Acid Line").
+The 209 factory presets are grouped into 9 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob
+(Main page, knob 7) picks a bank and jumps to its first preset; the jog wheel browses inside that bank only, and the browser shows names
+without the bank word ("Acid 1", not "Bass Acid 1").
 
 | Bank | Presets | What is in it |
 | --- | --- | --- |
-| Init | 6 | Clean, bright starting points: Init, Init Saw, Square, Detuned, Sub Octave, Noise |
-| Bass | 31 | Acid, fuzz, wobble, key/velocity-responsive and a couple of clean ones |
-| Sub | 9 | Low sines and triangles, drifting and pressure subs, dub sub |
-| Lead | 34 | Screams, sync leads, plus clean saw, PWM sweep, glass sync, thin highpass |
-| Pluck | 13 | Iron, koto, mallet, reso and trance plucks, glass tine, bright saw |
-| Keys | 15 | Clavs, organs, metal bells, warm electric piano |
-| Stab | 8 | Industrial, fifths, metal ring, bright chord |
-| Brass | 14 | Fanfare, swells, horns, velocity bite, clean swell |
-| Arp | 17 | Arpeggios from acid to bright sixteenths, a latched pulse and a triplet climb |
-| Seq | 11 | Tempo-locked gate, pump and wobble patterns |
-| Pad | 27 | Dark pads and open strings, PWM choir |
-| Texture | 13 | Beds, static, hum, bright shimmer |
-| Vox | 7 | Formant and vowel sounds |
-| Drone | 11 | Held and latched drones |
-| FX | 15 | Sirens, risers, falls, glitches |
-| Horror | 20 | Haunted amusement park, crypt and creature sounds (below) |
-| Sets | 24 | Eight themes of three presets that belong together (below) |
+| Init | 6 | Clean starting points: Init, Init Saw, Square, Detuned, Sub Octave, Noise |
+| Bass | 25 | Sub (triangle rumbles), Acid and Pluck, Overdriven and Industrial, Modulated and SFX bass |
+| Lead | 25 | Expressive and Glide, Hard Sync and Tearing, FM and Metallic, Distorted and Feedback |
+| Drone | 25 | Evolving drones and textures: Sub-Harmonic, Noise and Windscapes, Complex FM, Rhythmic and Pulsing |
+| Arp | 26 | Arps and sequences: Classic Plucks, Acid Sequences, FM and Metallic, Dark and Industrial |
+| Para | 25 | Paraphonic intervals: fifths and fourths, minor thirds and sixths, tritones and clusters, detuned unisons and octaves |
+| Chaos | 25 | Modular chaos and SFX: Glitch and Malfunction, Sci-Fi and Lasers, Industrial Noise and Impacts, Audio-Rate Mayhem |
+| Horror | 28 | Haunted Keys (calliope), Cinematic Tension, Jumpscares and Stings, Ghostly Ambiences |
+| Sets | 24 | Eight themes of three presets that belong together |
 
-Program Change from an external controller: bank select (CC 0) of 0 keeps the old flat numbering (program = preset number); bank select 1..25
-picks program N inside that bank (1 = Init, 2 = Bass, 3 = Sub ... 16 = Horror, 17 = Sets, 18..25 = user banks 1..8).
+The sub-sections are only a way to organise the list; they are not shown in the Move. No percussion, a dark and industrial lean, with clean and
+bright sounds across the banks.
+
+Program Change from an external controller (needs Program Change = Accept on the Bank Files page): bank select (CC 0) of 0 keeps the flat
+numbering (program = preset number); bank select 1..17 picks program N inside that bank (1 = Init, 2 = Bass, 3 = Lead, 4 = Drone, 5 = Arp,
+6 = Para, 7 = Chaos, 8 = Horror, 9 = Sets, 10..17 = user banks 1..8).
 
 ## Horror
 
-Calliope (out of tune, with a Mod Wheel that detunes it further; hold a chord and the pipes are cycled quickly, a tied 1/32 arp, for a false-polyphonic chord, and a single note stays steady), Calliope Solo (the same sound without the chord cycling), Calliope Fifths (the second pipe a flat fifth above instead of an octave, with the chord cycling), Carousel (arpeggiated calliope), Crypt Organ, Music Box (flat and wandering),
-Cellar Door (creaking glide), Slasher Stab, Dread Drone (latch), Whispers, Heartbeat (tempo-locked throb), Theremin Ghost (use aftertouch),
-Fly Swarm, Toll (church bell), Rotting Pipes, Insect Nest (random arp), Possessed Choir, Grave Rumble, Shriek, Hive Mind.
-Pitch clashes (minor second, tritone), heavy drive, resonance and random movement are on purpose: this bank is meant to unsettle.
+The four calliope presets are the steam-pipe versions from 0.10.1: Calliope (out of tune, Mod Wheel widens the second pipe's wander; hold a chord and
+the pipes are cycled quickly, a tied 1/32 arp, for a false-polyphonic chord), Calliope Solo (no chord cycling), Calliope Fifths (second pipe a flat fifth
+above), Carousel (arpeggiated). The rest of the bank follows the brief: Music Box, Ghost Organ, Broken Toy, Dusty Piano, Cursed Bell; Anxiety Pulse,
+Saw Blade, Creeping, The Hive, Dark Water, Pendulum; Scream Hit, Door Slam, Nerve Zap, Psycho, Glass Break, Sudden Drop; EVP, Banshee, Cold Breath,
+Apparition, Crypt, Spirit Box, Chant. Pitch clashes, heavy drive, resonance and random movement are on purpose.
 
 ## Sets
 
@@ -40,27 +38,45 @@ Put each preset of a set on its own Move track; the three are tuned to occupy di
 
 | Theme | 1 | 2 | 3 |
 | --- | --- | --- | --- |
-| Gritty Punk | Bass | Lead | Stab |
-| Acid Rain | Bass | Lead | Arp |
-| Black Mass | Bass | Choir | Bells |
-| Iron Works | Bass (tempo-locked wub) | Stab | Gate (tempo-locked) |
-| Cold Wave | Bass | Lead | Pad |
-| Dub Cellar | Sub | Stab | Siren |
-| Doom | Drone Bass | Horns | Choir |
-| Neon Static (bright) | Bass | PWM Lead | Arp |
+| Industrial Decay | Bass | Lead | Drone |
+| Darkwave Drive | Bass | Stab | Arp |
+| Void Walker | Sub | Lead | Texture |
+| Acid Reactor | Bass | Pluck | SFX |
+| Cybernetic | Bass | Arp | Pad |
+| Cryptic Ritual | Bass | Chime | Drone |
+| Warehouse Rave | Bass | Stab | Sweep |
+| Alien Flora | Pluck | Lead | Pad |
 
-## What the review found (0.9.2)
+## How the brief maps onto the engine (0.11.0)
 
-Measured with `tests/preset_audit.c`, which renders every preset (one held note) and prints level, spectral centroid, octave-band shape,
-amplitude movement and tail, then compares the presets pairwise.
+The new library was written from a patch-cable description of a modular-style mono synth. Mean Module has no cables; the same ideas map like this.
 
-* The library skewed dark and narrow: at C3 the median spectral centroid of the Bass, Pluck, Keys, Stab and Texture banks sat between 150 and 260 Hz,
-  and almost nothing used the highpass or bandpass filter modes, PWM (LFO to Shape), the Hold latch with the arp, or very clean oscillators.
-  New presets fill that range (clean/open/bright across Init, Bass, Lead, Pluck, Keys, Stab, Brass, Arp, Seq, Pad, Texture, Vox) without
-  touching the dark core.
-* Removed as near-duplicates of a neighbour: Bass Overdriven, Bass Octave Stack, Brass Stab, Lead Grit Fifth, Pluck Slag, Keys Pluck,
-  Keys Gritty Clav, Keys Grit Bell.
-* Two presets were both named Pad Slow Swell; the one driven by Note Age is now Pad Age Swell.
-* Moved to where they belong: Keys Reso/Rusty/Trance Pluck became Pluck Reso/Rusty/Trance; Bass Dub Sub and Bass Hollow Sub became Sub Dub and Sub Hollow.
-* The new presets were checked the same way against the old ones, and four that sounded too close to an existing preset were reshaped.
-* Nothing here was judged by ear. Levels, brightness, silence and duplicates are measured; taste is the open part.
+| In the description | In Mean Module |
+| --- | --- |
+| VCO Triangle, Saw, Pulse, Square | Osc Wave Tri, Saw, Pulse; a Square is a Pulse at Shape 0.5; pulse width is Shape |
+| VCA Overdrive, VCA Drive | Drive (after the VCA); Mixer past 12 o'clock = Osc Level and Filter Drive |
+| Env 1, Env 2 | Filter Env, Amp Env (the Amp Env is also the VCA). Pitch and FM jobs use the Filter Env |
+| Env to VCF FM1 / LFO to VCF FM2 | Filter Env to Cutoff / LFO to Cutoff |
+| Env or LFO to VCO FM1 / FM2 / 1V per octave | Filter Env to Osc FM / LFO to Osc FM (pitch); VCO 2 into VCO 1 FM is X-Mod |
+| Noise to VCF Aux | the Noise level and Noise Color |
+| LFO Square to Env Gate (stutter, sync drone, broken pin) | **LFO Retrigger** (new): each LFO cycle restarts both envelopes |
+| LFO at audio rates | **LFO Sync = Audio** (new): 20 Hz to 2 kHz |
+| Velocity to Env Attack or Decay | **Matrix targets Filter/Amp Env Attack/Decay** (new) |
+| LFO or Env to VCO 1 pitch only | **Matrix target Osc 1 Pitch** (new) |
+| Joystick X / Y, Modwheel or touch strip (CC 1), Keytrack | Stick X / Y, Mod Wheel, Key |
+| A randomized LFO | LFO wave Random, or the Smooth Random source |
+| Looping Env 2 | LFO Retrigger |
+
+What is not in the engine, and how the presets stand in:
+
+* **True oscillator hard sync** is not implemented. The "sync" presets (Sync Rip, Hard Sync, Stutter, Sync Unison) use LFO Retrigger, which is
+  what the description asks for ("LFO Square to Env 1 Gate"). Real oscillator sync would need band-limited resets; it is a candidate for later.
+* **Velocity curves** (Log, Fixed) are a setting of the external controller. Velocity here is scaled by Velocity to Amp and Velocity to Cutoff on the Response page.
+* A few "level" amounts (FM1 amount, VCF FM level) are routed through the matrix Osc FM / Env Amount / LFO Depth targets, so their feel is close
+  but not numerically identical.
+* The presets were tuned by measurement (level, silence, clipping, near-duplicates), not by ear.
+
+## History
+
+0.11.0 replaced the library (275 presets in 17 banks) with the banks above. The earlier review (0.9.2) measured the old library with
+`tests/preset_audit.c`, which renders every preset (one held note) and prints level, spectral centroid, octave-band shape, amplitude movement and tail.

@@ -4,7 +4,7 @@
     {
       "title": "Start here",
       "lines": [
-        "Mean Module v0.10.2",
+        "Mean Module v0.11.0",
         "1. Play a note.",
         "2. Main page: turn Grit.",
         "Right = dirtier and",
@@ -215,7 +215,10 @@
         "LFO 2 is used through",
         "the Matrix: LFO 2 as a",
         "source; targets are",
-        "LFO 2 Rate and Depth."
+        "LFO 2 Rate and Depth.",
+        "Trig: each cycle of",
+        "LFO 1 or 2 restarts",
+        "both envelopes."
       ]
     },
     {
@@ -267,7 +270,9 @@
         "Sync: 1/2 1/4 1/8 1/8T",
         "1/16 1/16T 1/32,",
         "locked to the beat",
-        "while Move plays."
+        "while Move plays.",
+        "Audio: 20 Hz-2 kHz,",
+        "for FM and tones."
       ]
     },
     {
@@ -296,7 +301,9 @@
         "Amp XMod LFO Rates",
         "Osc1/2 FM Grit Glide",
         "VibDepth LFO1/2 Depth",
-        "EnvAmt Drift.",
+        "EnvAmt Drift Pitch1",
+        "and the Attack and",
+        "Decay of both Envs.",
         "LFO Depth is a gain:",
         "0 = LFO silent, so",
         "Wheel or Age fades",

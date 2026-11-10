@@ -65,6 +65,8 @@ multiply per active slot and is ignored while the slot itself is inactive.
 | LFO Depth, LFO 2 Depth | gain = the slot total | scales that LFO everywhere it is used (knob routings and as a matrix source), clamped 0..2. **0 means silent**: use it with a source that starts at 0 (Mod Wheel, Note Age, Filter Env) to fade the LFO in. Applied one sample late |
 | Env Amount | +1.0 | added to the filter envelope depth (the Filter Env -> Cutoff knob, 5 octaves at full), so Velocity or Key can scale the envelope |
 | Drift Amount | +1.0 on the Drift knob | clamped 0..1 |
+| Osc 1 Pitch | +12 semitones | Osc 1 only (Pitch moves both oscillators) |
+| Filter Env Attack, Filter Env Decay, Amp Env Attack, Amp Env Decay | +1.0 on the 0..1 time knob | the time stretches or shrinks as if the knob moved; read one sample late, so Velocity or Key set it per note |
 
 Grit as a target moves the whole macro at once (filter drive, drive, resonance, noise, drift, cutoff, makeup gain), per sample. Key -> Grit at a
 negative amount makes low notes grittier; Pitch Bend -> Grit makes a push into the wheel dirtier.
@@ -88,6 +90,8 @@ Two LFOs on the LFOs page (Root -> LFOs, after Modulation): Rate, Wave, Sync eac
 * Waves: Triangle, Square, Saw Down, Saw Up, Random (a new sample-and-hold value every cycle).
 * Sync: Free, or 1/2, 1/4, 1/8, 1/8T, 1/16, 1/16T, 1/32 of the tempo, one cycle per division. While Move's transport runs the
   phase is locked to the beat position; with the transport stopped the LFO free-runs at the host tempo. Rate is ignored when synced.
+* **Audio** (the last Sync option): the Rate knob then runs 20 Hz to 2 kHz instead of 0.05 to 40 Hz, for audio-rate FM, tones and gating. It is not tied to the note pitch.
+* **LFO Retrigger** (LFO 2 page: Off, LFO 1, LFO 2): while a note is held, every cycle of that LFO restarts both envelopes from their current level. Combine with a Square LFO for stutters, gated drones and re-struck plucks. With a sustain of 0 the voice stays alive between strikes.
 * LFO 1 also feeds the fixed routings (Cutoff, osc FM, Shape). LFO 2 is available through the matrix only.
 
 ## Tuning
