@@ -111,7 +111,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     return c;
 }
 
-#define MM_VERSION_TEST "0.13.2"   /* bump with every release */
+#define MM_VERSION_TEST "0.13.3"   /* bump with every release */
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s dsp.so out_dir\n", argv[0]); return 2; }
     void (*en)(void) = dlsym(RTLD_DEFAULT, "rt_guard_enter");
@@ -727,10 +727,10 @@ int main(int argc, char **argv) {
         char v[32];
         setp(inst, "preset", "0"); setp(inst, "env2_s", "1"); setp(inst, "osc1_wave", "2"); setp(inst, "resonance", "0"); setp(inst, "flt_fm1", "0");
         setp(inst, "cutoff", "0.5"); setp(inst, "drive", "0"); setp(inst, "drift", "0"); setp(inst, "vibrato_depth", "0");
-        midi(inst, 0x90, 48, 100); render(inst, out, 100);
-        double base = pitch_hz(out, 40 * FRAMES, 50 * FRAMES);
-        setp(inst, "osc1_coarse", "12"); render(inst, out, 100);
-        double up = pitch_hz(out, 40 * FRAMES, 50 * FRAMES);
+        midi(inst, 0x90, 48, 100); render(inst, out, 200);
+        double base = pitch_hz(out, 40 * FRAMES, 150 * FRAMES);   /* a long window: a zero-crossing count is only good to one crossing */
+        setp(inst, "osc1_coarse", "12"); render(inst, out, 200);
+        double up = pitch_hz(out, 40 * FRAMES, 150 * FRAMES);
         printf("osc1 coarse +12: ratio %.3f (expect 2)\n", up / base);
         CHECK(fabs(up / base - 2.0) < 0.1, "osc1 coarse +12 should double the pitch (%.3f)", up / base);
         setp(inst, "osc1_coarse", "0"); setp(inst, "osc1_fine", "50"); render(inst, out, 100);

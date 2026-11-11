@@ -28,10 +28,18 @@ One fresh instance per run. Notes are played in the preset's home register (the 
 | `cpu_avg_us`, `cpu_max_us` | host time per 128-frame block (the device is roughly 4-6 times slower) | `cpu?` (note only) above 60 us |
 | (non-finite output) | | `NONFINITE` |
 
+## Also in the health run
+
+| Column | Meaning | Flag |
+| --- | --- | --- |
+| `p1_cents`, `p2_cents`, `p2_db` | Para presets: the pitch of the two oscillators against their intended interval, and how loud the second one is against the loudest peak | `PARATUNE` (hard): an interval more than 40 cents off, or the second oscillator more than 40 dB down; skipped when a pitch envelope moves the interval |
+| `nonharm_db` | share of the spectrum that is not at a harmonic of the note, at the top of the register (aliasing, noise and FM all raise it, so it is only a column) | (none) |
+| `onset_hf_db` | energy above 4 kHz in the first 6 ms of a note against 30-60 ms later | `click?` (note only) above 25 dB |
+
+`scripts/health_diff.py` compares a health run with the snapshot in `tests/golden/health.csv` (`--update` accepts the current numbers); `scripts/similar.py` lists near-duplicate presets from `tests/preset_audit.c`.
+
 ## Ideas not built yet
 
-* Aliasing at the top of the register (the share of energy that is not at harmonics), using the `audio_eval.c` metric per preset.
-* A golden snapshot of the health CSV in the repo, with a diff report so an unintended change to a preset shows up in the build.
-* A spectral similarity table inside each bank (near-duplicates), from `preset_audit.c`.
-* Chord and two-note behaviour for the Para bank (does the second oscillator stay in tune with the first at every register).
-* Onset click detection (a spectral thump at note-on) for the presets with a zero attack.
+* A real aliasing measure: render every preset with a 4x oversampled build (the engine runs 2x) and compare band energies; where the 2x version has extra energy, that is aliasing. The non-harmonic column cannot tell it from noise and FM.
+* The Para tuning check at the other registers, not only the middle note.
+* Telling a click from a bright attack (a click is broadband and not shaped by the filter envelope).

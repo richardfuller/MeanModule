@@ -22,3 +22,4 @@ for f in sorted(glob.glob('build/test/health_chunk_*.csv'), key=lambda p: int(p.
 csv.writer(open('out/health.csv', 'w', newline='')).writerows([hdr] + rows)
 print(len(rows), 'presets')
 PY
+python scripts/health_diff.py

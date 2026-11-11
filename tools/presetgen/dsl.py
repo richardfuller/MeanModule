@@ -59,6 +59,7 @@ def apply_env_floors(name, kw):
         if g(k) < v: kw[k] = v
     sus = g('e2s')
     floor('e2r', .48 if sus >= .5 else .44)
+    floor('e2a', .15)   # the amp attack knob at 0 is 0.5 ms: on a low note that starts mid-cycle and clicks (tests/health.c onset check); 0.15 = 2.2 ms
     if g('lg') == 0:                                   # LFO-retriggered presets need their short decays
         if sus <= .2: floor('e2d', .54 if name in SHORT_HITS else .6)
         elif sus < .9: floor('e2d', .55)

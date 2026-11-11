@@ -1,5 +1,13 @@
 # Changelog
 
+## 0.13.3
+
+### More sound checks
+* `tests/health.c` now also checks the tuning of the two oscillators in the Para bank (the second oscillator must sit on its interval within 40 cents and be audible; all 25 do, with errors of a few cents), reports a non-harmonic energy share at the top of the register and an onset brightness jump, and skips the interval check on presets with a pitch envelope.
+* `scripts/health_diff.py` compares each health run with the committed snapshot `tests/golden/health.csv`, so an unintended change to a preset shows up; `scripts/similar.py` lists near-duplicate presets from the spectral audit (only 8 pairs of 221 are close, two of them in the same bank: Arp Snap Tri / Nail Gun and Para Hollow Fourth / Grit Chime).
+* Every preset now has an amp attack of at least 2.2 ms (the knob at 0 is 0.5 ms, which starts mid-cycle on a low note). The brightness jump at note-on is mostly the filter-envelope snap of the plucks, which is intended; only the extreme ones (Drone Radar, Bass Thump, Para Pluck Fifth, Chaos Glitch Box) are flagged.
+* The osc1-coarse test measures over a longer window, since a zero-crossing count is only good to one crossing.
+
 ## 0.13.2
 
 ### Sound health checks

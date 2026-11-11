@@ -33,7 +33,7 @@ static void touch(void *i, int a, int b, int c) { uint8_t m[3] = {(uint8_t)a, (u
 static void setp(void *i, const char *k, const char *v) { api->set_param(i, k, v); }
 static int16_t buf[(HOLD_BLOCKS + TAIL_BLOCKS) * BLK * 2];
 
-typedef struct { int nan; double clip, peak_db, crest_db, rel_ms, tail_s, cpu_avg, cpu_max, hold_loud, centroid, onsets, env_cov, pitch_cov; } run_t;
+typedef struct { int nan; double clip, peak_db, crest_db, rel_ms, tail_s, cpu_avg, cpu_max, hold_loud, centroid, onsets, env_cov, pitch_cov, nonharm_db, onset_hf_db, p1_cents, p2_cents, p2_db; } run_t;
 
 typedef struct { int wheel, at, stx, sty; } ctl_t;   /* controllers pushed to full */
 
@@ -70,6 +70,49 @@ static double centroid_of(const int16_t *x, int frames) {
     double num = 0, den = 0;
     for (int k = 1; k < N / 2; k++) { double f = k * SR / N; if (f < 40 || f > 10000) continue; num += f * pw[k]; den += pw[k]; }
     return den > 1e-12 ? num / den : 0;
+}
+
+
+static double g_f0, g_pf1, g_pf2;   /* expected fundamental (alias check) and the two oscillator frequencies (Para tuning check); 0 = skip */
+/* share of the spectrum that is not at a harmonic of f0 (dB): high = aliasing, noise or inharmonic content */
+static double nonharm_db(const int16_t *x, int hold, double f0) {
+    enum { N = 8192 }; static double re[N], im[N]; if (f0 < 30 || hold < N * 2) return -99;
+    int s0 = hold / 3;
+    for (int i = 0; i < N; i++) { double w = 0.5 - 0.5 * cos(2 * M_PI * i / N); re[i] = x[2 * (s0 + i)] / 32768.0 * w; im[i] = 0; }
+    fft(re, im, N);
+    double tot = 0, harm = 0;
+    for (int k = 2; k < N / 2; k++) {
+        double f = k * SR / N; if (f < 60 || f > 16000) continue;
+        double p = re[k] * re[k] + im[k] * im[k], hn = f / f0, nearest = floor(hn + 0.5);
+        tot += p;
+        if (nearest >= 1 && fabs(f - nearest * f0) < fmax(3.0 * SR / N, 0.02 * nearest * f0)) harm += p;
+    }
+    return tot > 1e-12 ? 10 * log10(fmax(tot - harm, 1e-12) / tot) : -99;
+}
+/* the strongest spectral peak within +-60 cents of fexp: its error in cents and its level against the strongest peak overall (dB) */
+static void peak_near(const int16_t *x, int hold, double fexp, double *cents, double *db) {
+    enum { N = 16384 }; static double re[N], im[N], pw[N / 2]; *cents = 0; *db = -99; if (fexp < 30 || hold < N + hold / 3) return;
+    int s0 = hold / 3;
+    for (int i = 0; i < N; i++) { double w = 0.5 - 0.5 * cos(2 * M_PI * i / N); re[i] = x[2 * (s0 + i)] / 32768.0 * w; im[i] = 0; }
+    fft(re, im, N);
+    double mx = 0, best = 0; int bk = 0;
+    for (int k = 2; k < N / 2; k++) { pw[k] = re[k] * re[k] + im[k] * im[k]; if (pw[k] > mx) mx = pw[k]; }
+    int klo = (int)(fexp * pow(2, -60.0 / 1200) * N / SR), khi = (int)(fexp * pow(2, 60.0 / 1200) * N / SR) + 1;
+    for (int k = klo < 2 ? 2 : klo; k <= khi && k < N / 2 - 1; k++) if (pw[k] > best) { best = pw[k]; bk = k; }
+    if (!bk || best <= 0) return;
+    double a = log(pw[bk - 1] + 1e-30), b = log(pw[bk] + 1e-30), c = log(pw[bk + 1] + 1e-30), d = a - 2 * b + c, off = d != 0 ? 0.5 * (a - c) / d : 0;
+    double f = (bk + off) * SR / N; *cents = 1200.0 * log2(f / fexp); *db = 10 * log10(best / (mx + 1e-30));
+}
+/* energy above 4 kHz in the first 6 ms of the note against 30-60 ms later: a big jump is a click */
+static double onset_hf_db(const int16_t *x) {
+    enum { N = 512 }; static double re[N], im[N]; double e[2];
+    int st[2] = {0, 1323};
+    for (int w = 0; w < 2; w++) {
+        for (int i = 0; i < N; i++) { double ww = i < 264 ? 1.0 : 0.0; re[i] = x[2 * (st[w] + i)] / 32768.0 * ww * (i < 264 ? 0.5 - 0.5 * cos(2 * M_PI * i / 264) : 0); im[i] = 0; }
+        fft(re, im, N); e[w] = 0;
+        for (int k = 1; k < N / 2; k++) if (k * SR / N > 4000) e[w] += re[k] * re[k] + im[k] * im[k];
+    }
+    return 10 * log10((e[0] + 1e-12) / (e[1] + 1e-12));
 }
 
 static void run_note(int preset, int note, int vel, ctl_t c, int arp_chord, run_t *r) {
@@ -123,6 +166,8 @@ static void run_note(int preset, int note, int vel, ctl_t c, int arp_chord, run_
           double f = zc / (2205 / SR); fm += f; fq += f * f; nf++; (void)z0;
       }
       double fmean = nf ? fm / nf : 0; r->pitch_cov = fmean > 1 ? sqrt(fmax(fq / nf - fmean * fmean, 0)) / fmean : 0; }
+    r->nonharm_db = nonharm_db(buf, hold, g_f0); r->onset_hf_db = onset_hf_db(buf);
+    r->p1_cents = r->p2_cents = 0; r->p2_db = -99; if (g_pf1 > 0) { double d; peak_near(buf, hold, g_pf1, &r->p1_cents, &d); } if (g_pf2 > 0) peak_near(buf, hold, g_pf2, &r->p2_cents, &r->p2_db);
     r->onsets = 0; int last = -10;
     for (int h = 2; h < n; h++) { double base = ev[h - 1] < ev[h - 2] ? ev[h - 1] : ev[h - 2]; if (ev[h] > 0.1 * mx && ev[h] > 1.35 * base && h - last >= 3) { r->onsets++; last = h; } }
 }
@@ -156,7 +201,7 @@ int main(int argc, char **argv) {
     { void *t = api->create_instance(".", NULL); api->get_param(t, "preset_count", v, sizeof v); api->destroy_instance(t); }
     int cnt = atoi(v), first = argc > 3 ? atoi(argv[2]) : 0, last = argc > 3 ? atoi(argv[3]) : cnt, hard = 0;
     if (last > cnt) last = cnt;
-    if (first == 0) printf("name,clip_pct,peak_db,crest_db,rel_ms,tail_s,cents,wheel_db,wheel_bright,at_db,at_bright,stx_db,stx_bright,sty_db,sty_bright,tempo_ratio,cpu_avg_us,cpu_max_us,flags\n");
+    if (first == 0) printf("name,clip_pct,peak_db,crest_db,rel_ms,tail_s,cents,wheel_db,wheel_bright,at_db,at_bright,stx_db,stx_bright,sty_db,sty_bright,tempo_ratio,cpu_avg_us,cpu_max_us,nonharm_db,onset_hf_db,p1_cents,p2_cents,p2_db,flags\n");
     for (int i = first; i < last; i++) {
         char flags[512] = ""; int arp = 0, sustains = 0;
         void *t = api->create_instance(".", NULL); snprintf(v, sizeof v, "%d", i); setp(t, "preset", v); api->get_param(t, "preset_full", nm, sizeof nm);
@@ -170,6 +215,12 @@ int main(int argc, char **argv) {
         api->get_param(t, "osc1_level", v, sizeof v); double l1 = atof(v);
         api->get_param(t, "osc1_coarse", v, sizeof v); int c1 = atoi(v);
         api->get_param(t, "osc2_coarse", v, sizeof v); int c2 = atoi(v);
+        api->get_param(t, "osc1_fm1", v, sizeof v); double fm1 = atof(v);
+        api->get_param(t, "osc2_fm1", v, sizeof v); double fm2e = atof(v);
+        api->get_param(t, "osc2_wave", v, sizeof v); int w2 = atoi(v);
+        api->get_param(t, "osc2_level", v, sizeof v); double l2 = atof(v);
+        api->get_param(t, "osc1_fine", v, sizeof v); double fine1 = atof(v);
+        api->get_param(t, "osc2_fine", v, sizeof v); double fine2 = atof(v);
         api->get_param(t, "stick_x_to", v, sizeof v); int xto = atoi(v);
         api->get_param(t, "stick_y_to", v, sizeof v); int yto = atoi(v);
         api->destroy_instance(t);
@@ -179,8 +230,15 @@ int main(int argc, char **argv) {
         const int *reg = reg_of(nm);
         run_t lo, mid, hi, base, rw, ra, rx, ry, slow, fast; ctl_t none = {0, 0, 0, 0};
         g_bpm = 120;
-        run_note(i, reg[0], 127, none, 0, &lo); run_note(i, reg[2], 127, none, 0, &mid); run_note(i, reg[4], 127, none, 0, &hi);
-        run_note(i, reg[2], 100, none, 0, &base);
+        #define FREQ(semi) (440.0 * pow(2.0, ((semi) - 69.0) / 12.0))
+        int osc1_heard = w1 > 0 && l1 > 0.05;
+        double base_off = 12.0 * oct + (osc1_heard ? c1 + fine1 / 100.0 : c2 + fine2 / 100.0);
+        g_f0 = 0; g_pf1 = g_pf2 = 0;
+        run_note(i, reg[0], 127, none, 0, &lo); run_note(i, reg[2], 127, none, 0, &mid);
+        g_f0 = arp ? 0 : FREQ(reg[4] + base_off); run_note(i, reg[4], 127, none, 0, &hi); g_f0 = 0;
+        int is_para = !strncmp(nm, "Para ", 5) && !arp && w1 > 0 && w2 > 0 && l1 > 0.3 && l2 > 0.3 && fm1 < 0.01 && fm2e < 0.01;   /* a pitch envelope moves the interval on purpose */
+        if (is_para) { g_pf1 = FREQ(reg[2] + 12.0 * oct + c1 + fine1 / 100.0); g_pf2 = FREQ(reg[2] + 12.0 * oct + c2 + fine2 / 100.0); }
+        run_note(i, reg[2], 100, none, 0, &base); g_pf1 = g_pf2 = 0;
         sustains = base.hold_loud > -40 && mid.tail_s > 0.0;
         double clip = lo.clip > mid.clip ? (lo.clip > hi.clip ? lo.clip : hi.clip) : (mid.clip > hi.clip ? mid.clip : hi.clip);
         /* pitch: expected from the first oscillator that is heard */
@@ -204,10 +262,12 @@ int main(int argc, char **argv) {
         if (uses_at && fabs(ad) < 0.3 && fabs(ab) < 3.0 && am < 0.2) strcat(flags, "aftertouch? ");
         if (arp && !tied && (tempo < 1.15 || tempo > 2.2)) { strcat(flags, "TEMPO "); hard++; }
                 if (cpu > 60.0) strcat(flags, "cpu? ");
+        if (base.onset_hf_db > 25.0) strcat(flags, "click? ");
+        if (is_para && (fabs(base.p2_cents) > 40.0 || base.p2_db < -40.0 || fabs(base.p1_cents) > 40.0)) { strcat(flags, "PARATUNE "); hard++; }
         if (mid.crest_db < 2.0) strcat(flags, "squashed? ");
         { static const char *clean[] = {"Bass Sub 1", "Bass Log Tri", "Lead Glide Tri", "Set Void Walker 1 - Sub"};   /* described as clean or smooth */
           for (int k = 0; k < 4; k++) if (!strcmp(nm, clean[k]) && mid.crest_db < 3.0) { strcat(flags, "NOTCLEAN "); hard++; } }
-        printf("\"%s\",%.2f,%.1f,%.1f,%.0f,%.2f,%.0f,%.1f,%.0f,%.1f,%.0f,%.1f,%.0f,%.1f,%.0f,%.2f,%.0f,%.0f,\"%s\"\n", nm, clip, mid.peak_db, mid.crest_db, base.rel_ms, mid.tail_s, cents, wd, wb, ad, ab, xd, xb, yd, yb, tempo, cpu, cmax, flags);
+        printf("\"%s\",%.2f,%.1f,%.1f,%.0f,%.2f,%.0f,%.1f,%.0f,%.1f,%.0f,%.1f,%.0f,%.1f,%.0f,%.2f,%.0f,%.0f,%.1f,%.1f,%.0f,%.0f,%.1f,\"%s\"\n", nm, clip, mid.peak_db, mid.crest_db, base.rel_ms, mid.tail_s, cents, wd, wb, ad, ab, xd, xb, yd, yb, tempo, cpu, cmax, hi.nonharm_db, base.onset_hf_db, base.p1_cents, base.p2_cents, base.p2_db, flags);
         fflush(stdout);
     }
     fprintf(stderr, "health: %d hard flags in presets %d..%d\n", hard, first, last);
