@@ -1,28 +1,27 @@
 # Preset banks
 
-The 221 factory presets are grouped into 10 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob
+The 167 factory presets are grouped into 9 banks (plus up to 8 user banks loaded from files, `docs/BANK_FILES.md`). The **Bank** knob
 (Main page, knob 7) picks a bank and jumps to its first preset; the jog wheel browses inside that bank only, and the browser shows names
-without the bank word ("Acid 1", not "Bass Acid 1").
+without the bank word ("Acid 2", not "Bass Acid 2").
 
 | Bank | Presets | What is in it |
 | --- | --- | --- |
 | Init | 1 | The default patch (needed as the starting point; everything else is from the brief) |
-| Bass | 25 | Sub (triangle rumbles), Acid and Pluck, Overdriven and Industrial, Modulated and SFX bass |
-| Lead | 25 | Expressive and Glide, Hard Sync and Tearing, FM and Metallic, Distorted and Feedback |
-| Drone | 25 | Evolving drones and textures: Sub-Harmonic, Noise and Windscapes, Complex FM, Rhythmic and Pulsing |
-| Arp | 26 | Arps and sequences: Classic Plucks, Acid Sequences, FM and Metallic, Dark and Industrial |
-| Para | 25 | Paraphonic intervals: fifths and fourths, minor thirds and sixths, tritones and clusters, detuned unisons and octaves |
-| Chaos | 25 | Modular chaos and SFX: Glitch and Malfunction, Sci-Fi and Lasers, Industrial Noise and Impacts, Audio-Rate Mayhem |
+| Bass | 18 | Sub (triangle rumbles), Acid and Pluck, Overdriven and Industrial, Modulated and SFX bass |
+| Lead | 15 | Expressive and Glide, Hard Sync and Tearing, FM and Metallic, Distorted and Feedback |
+| Drone | 20 | Evolving drones and textures: Sub-Harmonic, Noise and Windscapes, Complex FM, Rhythmic and Pulsing |
+| Arp | 21 | Arps and sequences: Classic Plucks, Acid Sequences, FM and Metallic, Dark and Industrial |
+| Para | 23 | Paraphonic intervals: fifths and fourths, minor thirds and sixths, tritones and clusters, detuned unisons and octaves |
+| Chaos | 24 | Modular chaos and SFX: Glitch and Malfunction, Sci-Fi and Lasers, Industrial Noise and Impacts, Audio-Rate Mayhem |
 | Horror | 25 | Haunted Keys (calliope), Cinematic Tension, Jumpscares and Stings, Ghostly Ambiences |
-| Sets | 24 | Eight themes of three presets that belong together |
-| Keys | 20 | Electric pianos, clavs, organs and struck keys, built for velocity dynamics (below) |
+| Sets | 20 | Five sets of four presets that are played together (below) |
 
 The sub-sections are only a way to organise the list; they are not shown in the Move. No percussion, a dark and industrial lean, with clean and
 bright sounds across the banks.
 
 Program Change from an external controller (needs Program Change = Accept on the Bank Files page): bank select (CC 0) of 0 keeps the flat
-numbering (program = preset number); bank select 1..17 picks program N inside that bank (1 = Init, 2 = Bass, 3 = Lead, 4 = Drone, 5 = Arp,
-6 = Para, 7 = Chaos, 8 = Horror, 9 = Sets, 10 = Keys, 11..18 = user banks 1..8).
+numbering (program = preset number); bank select 1..16 picks program N inside that bank (1 = Init, 2 = Bass, 3 = Lead, 4 = Drone, 5 = Arp,
+6 = Para, 7 = Chaos, 8 = Horror, 9 = Sets, 10..17 = user banks 1..8).
 
 ## Horror
 
@@ -37,29 +36,20 @@ Apparition, Crypt, Spirit Box, Chant. Pitch clashes, heavy drive, resonance and 
 Selecting a preset (the jog, the Bank knob, Program Change or a state load of a preset number) sets every parameter to the preset's saved value, so a tweaked preset comes back exactly as shipped when you leave and return to it.
 Only the performance setup survives: the FX Bank (the four effect types and levels), FX Touch and Program Change. Anything you want to keep goes into a user bank (`docs/BANK_FILES.md`).
 
-## Keys
-
-Electric pianos (Tine EP, Wurly, Suitcase, Bell EP, Dirty EP), clavs (Clav, Funk Clav, Pick Clav, Dirty Clav), organs (Combo Organ, Drawbar Organ, Church Organ, Perc Organ) and struck or plucked keys
-(Harpsichord, Toy Piano, Marimba, Vibes, Muted Piano, Honky Piano, FM Piano). The point of the bank is dynamic range: Velocity to Amp is high and Velocity to Cutoff higher, so a hard hit is loud and bright and
-a soft one is quiet and dull, and the matrix sends Velocity to FM depth (the tines) or to Drive (the dirty ones). The organs are deliberately less velocity-sensitive. The Keys bank skips the
-heavy drive and filter-drive floor the other banks get, because drive flattens dynamics. The synth is mono, so these are single-line keyboards: a held key under a lead hand, and organs without chords.
-The Mod Wheel brings in a tremolo or vibrato on the EPs and the drawbar organ.
-
 ## Sets
 
-Put each preset of a set on its own Move track; the three are tuned to occupy different registers and share a character. Names read
-"<Theme> <n> - <Role>".
+Five sets of four presets, designed to be played together (one per Move track). Each set divides the sonic space so the four do not fight: number 1 is the low voice
+(Sub or Bass, below about 150 Hz, almost no top end), 2 is the middle (Drone, Pad, Texture or Sweep: band-pass or high-pass, slow attack, out of the bass), 3 is the top voice
+(Lead or Chime, one clear line) and 4 is the rhythm (Arp, Pluck or Chime, short notes in the top octave). Names read "<Theme> <n> - <Role>". The sets also show the Malevolent
+features added in 0.14: sync, aux feedback, shape flip, saw an octave up, linear FM and integrator saturation.
 
-| Theme | 1 | 2 | 3 |
-| --- | --- | --- | --- |
-| Industrial Decay | Bass | Lead | Drone |
-| Darkwave Drive | Bass | Stab | Arp |
-| Void Walker | Sub | Lead | Texture |
-| Acid Reactor | Bass | Pluck | SFX |
-| Cybernetic | Bass | Arp | Pad |
-| Cryptic Ritual | Bass | Chime | Drone |
-| Warehouse Rave | Bass | Stab | Sweep |
-| Alien Flora | Pluck | Lead | Pad |
+| Theme | 1 | 2 | 3 | 4 |
+| --- | --- | --- | --- | --- |
+| Rust Cathedral | Sub | Drone | Lead (sync) | Arp |
+| Dead Frequencies | Sub | Texture | Lead | Chime (linear FM) |
+| Pressure Drop | Bass | Pad (shape flip) | Lead (saw +1 oct) | Sweep |
+| Acid Hymn | Bass | Pad | Lead | Arp |
+| Steel Weather | Sub | Drone (saw +1 oct) | Chime (linear FM) | Pluck |
 
 ## Levels and character (0.11.1)
 

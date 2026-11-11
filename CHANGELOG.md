@@ -1,5 +1,43 @@
 # Changelog
 
+## 0.14.0
+
+### More like the Malevolent
+This release comes out of a comparison with the PWM Malevolent (manual, the Molten Music Technology review, Sonic State, Gearnews, a modder's write-up and the MS-20 filter literature).
+Every new option defaults to "unchanged", so a v0.13 patch sounds as before.
+* **Hard Sync** (`osc_sync`, FM and X-Mod page): Off, Osc 1 to Osc 2 (the 2<1 mod the modder fitted) or Osc 2 to Osc 1. The master restarts the slave at its wrap with the sub-sample phase kept. Measured: the synced oscillator repeats at the master's period (autocorrelation 0.996 and 0.993, against 0.000 without sync).
+* **X-Mod Type** (`xmod_mode`): Exponential (as before) or Linear, where osc 2 moves osc 1's frequency by a fixed number of Hz (up to 2x osc 2's frequency), never below a tenth of the note.
+* **Shape Flip** (`shape_flip`, Analog page): the waveform passes through silence and inverts as the shape knob crosses the centre (the review's "throbbing" at the midpoint). Inferred from that one sentence.
+* **Saw Octave Up** (`saw_oct`): the saw sounds one octave above the triangle and pulse, as the 4046 saw does (130.8 Hz becomes 261.6 Hz).
+* **Resonance Onset** (`res_curve`): self-oscillation starts near 40% of the knob instead of 56% (the review: well before 12 o'clock). At 0.45 the filter now self-oscillates (rms 0.24, it was silent).
+* **Integrator Saturation** (`integ_sat`): a larger signal swing lowers the cutoff, as an opto-FET integrator does (a hot saw is about 26% darker). Evidence for the Malevolent is from forum posts about opto-FETs, not a measurement of the unit.
+* **Stretch Tuning** (`stretch`, Tuning page, +-10 cents per octave around C3): the manual's tuning stretch. Measured exactly: -20.0 cents at note 36 and +30.0 at note 96 for +10.
+* **Aux Feedback** (`aux_fb`, Filter page): the output after the drive stage goes back into the filter input (Out patched to Aux on the hardware), AC-coupled at about 20 Hz so DC and sub-bass cannot run away. Stable at every setting, no full-scale samples.
+* **Osc 1 and 2 Level** go up to 1.5: past 1 the mixer drives the filter input harder, as the hardware's level knobs do past about 3 o'clock.
+* **AM1 and AM2**: `am_env` (Amp Env page, default 1) lets the amp envelope move the VCA less so a pluck sustains longer (at 0 it holds until the envelope falls to 5%, then fades with it, no click); `am_lfo` (LFO 1 page, default 0) is LFO 1 tremolo, 1 chops to silence at the LFO's low point (11.9 dB swing at 0.8).
+* A hot input still squeezes the resonance out, as on the hardware and the MS-20 (reviews and the MS-20 sources agree). An experimental knob that did the opposite was dropped before release.
+* New Analog page (Shape Flip, Saw+1, Onset, ISat); Stretch replaces the second copy of Bend Range on the Tuning page (Bend Range stays on Stick and Voice).
+
+### Presets: 221 down to 167
+From a listen-through of v0.13: the plucks and the clean, mild voices that did not sound like the Malevolent were cut, and the strongest were fixed.
+* Cut from Bass: Sub 1, Sub 2, Log Tri, Square Peg, Acid 1, Grit Pluck, Thump. Lead: Glide Tri, Solo Saw, Buzz, Metal Solo, Grit Bell, Alloy, Fuzz, Broken Pin, Howl, Acid. Drone: Deep Void, Abyss, Ground Swell, Iron Scrape, Engine Room. Arp: Saw Pluck, Rubb Tri, Brass Seq, Snap Tri, Acid 303. Chaos: Anvil Hit. Para: Dark Minor, Sixth Pad.
+* **Keys bank removed** (none sounded in character); banks are now Init, Bass, Lead, Drone, Arp, Para, Chaos, Horror, Sets, and the user banks follow as bank 9 to 16.
+* **Sets rebuilt** from scratch as five sets of four that are meant to be played together (low voice, middle texture, top voice, rhythm), using the new options; see `docs/PRESET_BANKS.md`.
+* Fixes: Bass Ghost Sub is first in its bank and an octave lower; Rezzy has less drift; Dirt PWM no longer fades out (its pulse width swung to a sliver); FM Drop is brighter; Mod Chaos clicks less; Rave Stomp is dirtier; Lead Scream wobbles; Steel Zap has less drive.
+* The generator has a per-preset override (`OVR` in `tools/presetgen/dsl.py`) that applies after the character floors.
+
+### Test changes
+* The stress test no longer pushes Level Trim and Key Level to 1: those two level-fit offsets are +24 dB and +3 octaves of gain, and the output limiter turned any asymmetry of such a signal into a DC offset (0.5), which is not a fault.
+* The bank-export test turns Shape Mod off before comparing a preset with its exported copy: the LFO free-runs, so a pulse-width sweep measured differently depending on where the LFO was.
+* The "described as clean" crest check has no presets left after the cuts and was removed.
+* `tests/audio_eval.c` has measurements for everything above (sections H to J).
+
+### Aux Feedback and hotter oscillator levels (from the Malevolent comparison)
+* New `aux_fb` (Filter page, knob "AuxFb", 0..1, default 0 = unchanged, so every preset sounds as before): the output after the drive stage goes back into the filter input, like patching Out to Aux on the Malevolent (audio taper, 1 = 1.6x). It adds grit and overload, and stays bounded because the filter input saturates. Measured (`tests/audio_eval.c`, section H): stable at every setting, no full-scale samples; the level moves by about 1 dB and the peaks grow at 1.0 (0.36 to 0.46).
+* Oscillator 1 and 2 Level now go up to 1.5 (they stopped at 1). Past 1 the mixer drives the filter input harder, as the hardware's level knobs do past about 3 o'clock. Existing presets are untouched. At resonance 0, level 1.5 is 1.8 dB above 1.0 (the filter input saturates), so the extra range is overdrive, not volume.
+* New AM1 and AM2 knobs, the Malevolent's VCA controls. `am_env` (AM1, "Amp Env Depth", Amp Env page, default 1 = unchanged): below 1 the amp envelope moves the VCA less, so a pluck sustains longer (at 0 it holds near full level until the envelope has fallen to 5%, then fades out with it; no click). `am_lfo` (AM2, "LFO to Amp", LFO 1 page, default 0 = off): LFO 1 tremolo, 1 chops to silence at the LFO's low point. Measured (`audio_eval.c`, section I): a pluck at 150 ms / 600 ms / 1.2 s is -19.6 / -37.9 / -62.9 dB at AM1 = 1 and -13.8 / -13.7 / -36.7 dB at AM1 = 0; AM2 at 0.8 swings the level by 11.9 dB (0.1 dB at 0).
+* A hotter input still squeezes the resonance out. The Malevolent reviews (Sonic State, Molten Music, Beat, Matrixsynth demos) and the MS-20 literature all describe that, so the filter keeps that behaviour. (An experimental "Resonance Level Response" knob that did the opposite was removed before release.)
+
 ## 0.13.3
 
 ### More sound checks

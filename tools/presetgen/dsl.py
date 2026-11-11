@@ -20,6 +20,8 @@ DEF = dict(w1=1, sh1=.5, w2=0, sh2=.5, c1=0, f1=0, c2=0, f2=7, l1=.8, l2=.6, nz=
            e1a=0, e1d=.45, e1s=0, e1r=.3, e2a=0, e2d=.5, e2s=1, e2r=.35, o1e=0, o2e=0, o1l=0, o2l=0, xm=0, shm=0, lr=.35, lw=0, ls=0, l2r=.3, l2w=0, l2s=0, lg=0,
            gl=0, leg=0, vib=0, vibr=.5, drift=.3, drone=0, vol=.7, velc=0, vela=0, atd=2, ata=.5, oct=0, tune=0, arp=0, arpr=3, arpo=1, arpg=.6, pri=0, grit=0, trim=.5, kl=0)
 
+ID.update(af='AUX_FB', am1='AM_ENV', am2='AM_LFO', flip='SHAPE_FLIP', sawo='SAW_OCT', sync='OSC_SYNC', xlin='XMOD_MODE', onset='RES_CURVE', isat='INTEG_SAT', strc='STRETCH')
+DEF.update(af=0, am1=1, am2=0, flip=0, sawo=0, sync=0, xlin=0, onset=0, isat=0, strc=0)
 import json, os
 _tp = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'trims.json')
 TRIMS = json.load(open(_tp)) if os.path.exists(_tp) else {}
@@ -28,13 +30,13 @@ TRIMS = json.load(open(_tp)) if os.path.exists(_tp) else {}
 # so every preset gets a floor of filter drive, drive, resonance and drift, plus a little hiss and the Grit macro. Ambient/soft presets get a gentler floor.
 FULL = dict(fd=.85, dr=.5, res=.4, drift=.6, nz=.03)
 SOFT = dict(fd=.7, dr=.3, res=.3, drift=.5)
-SOFT_NAMES = {'Bass Sub 1', 'Bass Sub 2', 'Bass Log Tri', 'Bass Ghost Sub', 'Set Void Walker 1 - Sub', 'Lead Glide Tri', 'Lead Theremin', 'Lead Flute Mod',
-              'Set Void Walker 2 - Lead', 'Horror Music Box', 'Horror Cold Breath', 'Horror Ghost Organ', 'Horror EVP', 'Horror Banshee', 'Horror Apparition',
-              'Horror Crypt', 'Horror Chant', 'Set Void Walker 3 - Texture'}
+SOFT_NAMES = {'Bass Ghost Sub', 'Lead Theremin', 'Lead Flute Mod', 'Horror Music Box', 'Horror Cold Breath', 'Horror Ghost Organ', 'Horror EVP', 'Horror Banshee', 'Horror Apparition',
+              'Horror Crypt', 'Horror Chant', 'Set Rust Cathedral 1 - Sub', 'Set Dead Frequencies 1 - Sub', 'Set Steel Weather 1 - Sub'}
+OVR = {}   # name -> dict applied after the character floors (a preset that must stay below a floor: less drift, less drive)
 FLOORS = {}   # name -> dict of minimum values (arps.py)
 ARPS = {}   # name -> dict(arp=, arpr=, arpo=, arpg=), filled by arps.py
 KEYS = dict(drift=.4)   # the Keys bank keeps its own drive and filter values (the dynamics are the point): only a little drift and Grit
-CLEAN_NAMES = {'Bass Sub 1', 'Bass Log Tri', 'Lead Glide Tri', 'Set Void Walker 1 - Sub'}   # described as clean or smooth: a measured crest factor check keeps them out of saturation
+CLEAN_NAMES = set()   # described as clean or smooth: a measured crest factor check keeps them out of saturation
 def tier(name):
     if name in CLEAN_NAMES: return 'clean'
     if name.startswith('Keys '): return 'keys'
@@ -105,6 +107,7 @@ def pre(name, mx=(), **kw):
     apply_character(name, kw)
     apply_env_floors(name, kw)
     apply_velocity(name, kw)
+    kw.update(OVR.get(name, {}))
     if name in KEYLVLS: kw['kl'] = KEYLVLS[name]
     # brightness fit: only static filters (little filter-envelope sweep); a swept filter is meant to start low, and opening it would flatten the envelope
     if name in CUTS and kw.get('fm', DEF['fm']) < .25 and kw.get('cut', DEF['cut']) < CUTS[name]: kw['cut'] = min(CUTS[name], .75)

@@ -111,7 +111,7 @@ static int param_keys(void *inst, char keys[][48], int max) {
     return c;
 }
 
-#define MM_VERSION_TEST "0.13.3"   /* bump with every release */
+#define MM_VERSION_TEST "0.14.0"   /* bump with every release */
 int main(int argc, char **argv) {
     if (argc < 3) { fprintf(stderr, "usage: %s dsp.so out_dir\n", argv[0]); return 2; }
     void (*en)(void) = dlsym(RTLD_DEFAULT, "rt_guard_enter");
@@ -165,7 +165,7 @@ int main(int argc, char **argv) {
 
     /* 2. all params at min, then max (with low/mid/high notes) */
     for (int pass = 0; pass < 2; pass++) {
-        for (int k = 0; k < nk; k++) setp(inst, keys[k], pass ? "1" : "0");
+        for (int k = 0; k < nk; k++) { if (!strcmp(keys[k], "trim") || !strcmp(keys[k], "key_lvl")) continue; setp(inst, keys[k], pass ? "1" : "0"); }   /* the two level-fit offsets stay as the preset set them: at 1 they are +24 dB and +3 octaves of gain, and the output limiter then turns any asymmetry into a DC offset */
         for (int n = 0; n < 3; n++) {
             int note = 24 + n * 36;
             midi(inst, 0x90, note, 127); render(inst, out, BLOCKS / 3);
@@ -542,12 +542,12 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 0, "Preset Category should follow the preset (%s)", v);
         setp(inst, "preset", "40");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); char nm[48]; snprintf(nm, sizeof nm, "%s", v); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        const char *cats[10] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Set", "Keys"};
-        CHECK(atoi(v) >= 0 && atoi(v) < 10 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Bank matches the preset name (%s -> %s)", nm, v);
+        const char *cats[9] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Set"};
+        CHECK(atoi(v) >= 0 && atoi(v) < 9 && strncmp(nm, cats[atoi(v)], strlen(cats[atoi(v)])) == 0, "Preset Bank matches the preset name (%s -> %s)", nm, v);
         /* Banks: every preset is in exactly one bank, banks are browsed by position, names are shown without the bank word, Program Change is per bank */
         {
             char b2[32]; rt_enter(); api->get_param(inst, "preset_count", b2, sizeof b2); rt_leave(); int total = atoi(b2), sum = 0;
-            for (int bk = 0; bk < 10; bk++) {
+            for (int bk = 0; bk < 9; bk++) {
                 char kk[16]; snprintf(kk, sizeof kk, "%d", bk); setp(inst, "preset_cat", kk);
                 rt_enter(); api->get_param(inst, "bank_count", b2, sizeof b2); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
                 int cnt = atoi(b2); sum += cnt;
@@ -595,12 +595,12 @@ int main(int argc, char **argv) {
         rt_enter(); api->get_param(inst, "bank_io", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 0, "Bank Files returns to Idle (%s)", v);
         setp(inst, "fx1_type", "0");
-        setp(inst, "preset_cat", "10");
+        setp(inst, "preset_cat", "9");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
         CHECK(strcmp(v, "First") == 0, "User 1 is the first file by name (%s)", v);
         rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 10, "the Bank knob lands on User 1 (%s)", v);
-        setp(inst, "preset_cat", "11");
+        CHECK(atoi(v) == 9, "the Bank knob lands on User 1 (%s)", v);
+        setp(inst, "preset_cat", "10");
         rt_enter(); api->get_param(inst, "bank_count", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 2, "User 2 holds two presets (%s)", v);
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); rt_leave();
@@ -617,9 +617,9 @@ int main(int argc, char **argv) {
         setp(inst, "bank_preset", "99");
         rt_enter(); api->get_param(inst, "bank_preset", v, sizeof v); rt_leave();
         CHECK(atoi(v) == 1, "bank_preset clamps inside a user bank (%s)", v);
-        setp(inst, "preset_cat", "17");   /* an empty slot is ignored */
+        setp(inst, "preset_cat", "16");   /* an empty slot is ignored */
         rt_enter(); api->get_param(inst, "preset_cat", v, sizeof v); rt_leave();
-        CHECK(atoi(v) == 11, "an empty user bank cannot be selected (%s)", v);
+        CHECK(atoi(v) == 10, "an empty user bank cannot be selected (%s)", v);
         setp(inst, "bank_preset", "0"); setp(inst, "env2_s", "1");
         midi(inst, 0x90, 48, 100); render(inst, out, 100); metrics_t mu = measure(out, 100 * FRAMES); midi(inst, 0x80, 48, 0); drain(inst, out);
         CHECK(mu.rms > 0.01 && mu.peak < 1.0, "a user preset plays (rms %.3f)", mu.rms);
@@ -645,7 +645,8 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 3, "the exported file loads as a third user bank (%s)", v);
         double rm[2];
         for (int which = 0; which < 2; which++) {
-            setp(inst, "preset_cat", which ? "11" : "1");   /* Bass, then User 2 = Bass Copy */
+            setp(inst, "preset_cat", which ? "10" : "1");   /* Bass, then User 2 = Bass Copy */
+            setp(inst, "shape_mod", "0");   /* the LFO free-runs, so a preset that sweeps the pulse width would measure differently depending on the LFO phase */
             midi(inst, 0x90, 40, 100); render(inst, out, 120); rm[which] = measure(out, 120 * FRAMES).rms; midi(inst, 0x80, 40, 0); drain(inst, out);
         }
         printf("bank files: Bass first preset rms %.4f, exported copy %.4f\n", rm[0], rm[1]);
@@ -658,7 +659,7 @@ int main(int argc, char **argv) {
         CHECK(atoi(v) == 0, "removing the files empties the user banks on reload (%s)", v);
         { char cmd[1500]; snprintf(cmd, sizeof cmd, "cp banks/Example.mmbank '%s/banks/'", bankdir); if (system(cmd)) {} }
         setp(inst, "bank_io", "2"); WAIT_STATUS(3);
-        setp(inst, "preset_cat", "10");
+        setp(inst, "preset_cat", "9");
         rt_enter(); api->get_param(inst, "preset_full", v, sizeof v); api->get_param(inst, "bank_count", path, 16); rt_leave();
         CHECK(strcmp(v, "Fat Square Lead") == 0 && atoi(path) == 2, "the shipped Example.mmbank loads (%s, %s presets)", v, path);
         snprintf(path, sizeof path, "%s/banks/Example.mmbank", bankdir); remove(path); setp(inst, "bank_io", "2"); WAIT_STATUS(3);

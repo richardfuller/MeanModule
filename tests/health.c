@@ -265,8 +265,6 @@ int main(int argc, char **argv) {
         if (base.onset_hf_db > 25.0) strcat(flags, "click? ");
         if (is_para && (fabs(base.p2_cents) > 40.0 || base.p2_db < -40.0 || fabs(base.p1_cents) > 40.0)) { strcat(flags, "PARATUNE "); hard++; }
         if (mid.crest_db < 2.0) strcat(flags, "squashed? ");
-        { static const char *clean[] = {"Bass Sub 1", "Bass Log Tri", "Lead Glide Tri", "Set Void Walker 1 - Sub"};   /* described as clean or smooth */
-          for (int k = 0; k < 4; k++) if (!strcmp(nm, clean[k]) && mid.crest_db < 3.0) { strcat(flags, "NOTCLEAN "); hard++; } }
         printf("\"%s\",%.2f,%.1f,%.1f,%.0f,%.2f,%.0f,%.1f,%.0f,%.1f,%.0f,%.1f,%.0f,%.1f,%.0f,%.2f,%.0f,%.0f,%.1f,%.1f,%.0f,%.0f,%.1f,\"%s\"\n", nm, clip, mid.peak_db, mid.crest_db, base.rel_ms, mid.tail_s, cents, wd, wb, ad, ab, xd, xb, yd, yb, tempo, cpu, cmax, hi.nonharm_db, base.onset_hf_db, base.p1_cents, base.p2_cents, base.p2_db, flags);
         fflush(stdout);
     }

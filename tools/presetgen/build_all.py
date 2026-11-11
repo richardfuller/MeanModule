@@ -2,7 +2,7 @@ import sys, re, os
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import dsl
 import arps
-for m in ('bank_bass', 'bank_lead', 'bank_drone', 'bank_arp', 'bank_para', 'bank_chaos', 'bank_horror', 'bank_sets', 'bank_keys'):
+for m in ('bank_bass', 'bank_lead', 'bank_drone', 'bank_arp', 'bank_para', 'bank_chaos', 'bank_horror', 'bank_sets'):
     __import__(m)
 
 R = os.path.abspath(os.path.join(os.path.dirname(os.path.abspath(__file__)), '..', '..'))

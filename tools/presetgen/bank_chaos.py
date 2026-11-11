@@ -17,7 +17,6 @@ pre('Chaos Warp Drive', w1=1, w2=1, f2=8, cut=.5, res=.3, fd=.5, dr=.2, fm=0, lr
 pre('Chaos Mothership', w1=1, w2=1, c1=-24, c2=-24, f2=12, cut=.3, res=.35, fd=.6, dr=.3, fm=.8, e1a=.8, e1d=.9, e1s=.4, e1r=.7, e2a=.5, e2r=.7, mx=[('SX', 'DRV', .5)])
 pre('Chaos Plasma Beam', w1=1, l1=.5, nz=.3, nc=.1, cut=.55, res=.4, fd=.6, dr=.3, fm=0, e2a=.05, e2r=.2, mx=[('NSE', 'CUT', .1), ('KEY', 'RES', .3)])
 # --- Industrial noise and impacts
-pre('Chaos Anvil Hit', w1=4, sh1=.5, w2=2, c2=7, f2=0, l2=.6, cut=.8, res=.2, fd=.7, dr=.5, fm=0, o1e=.4, e1d=.3, e2d=.45, e2s=.1, e2r=.4, mx=[('VEL', 'DRV', .5)])
 pre('Chaos Steam Vent', l1=0, nz=.9, nc=0, fmode=2, cut=.6, res=.3, fd=.4, dr=.1, fm=0, e2a=.05, e2d=.5, e2s=.5, e2r=.35, mx=[('VEL', 'NSE', .5, 'AEN')])
 pre('Chaos Factory Crash', w1=1, l1=.4, nz=.7, nc=.2, cut=.5, res=.25, fd=.8, dr=1, fm=.5, e1d=.6, e2d=.6, e2s=.1, e2r=.4, atd=1, ata=.6)
 pre('Chaos Scrap Metal', w1=1, l1=.5, cut=.55, res=.5, fd=.7, dr=.4, fm=0, lfc=.5, ls=8, lw=1, lr=.5, e2a=.05, mx=[('WHL', 'RES', .3)])

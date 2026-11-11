@@ -32,8 +32,8 @@ __asm__(".symver dlopen,dlopen@GLIBC_2.17");
 __asm__(".symver dladdr,dladdr@GLIBC_2.17");
 #endif
 
-#define MM_VERSION "0.13.3"   /* keep in step with src/module.json and release.json (the host test checks) */
-#define MM_VERSION_S "0.13"
+#define MM_VERSION "0.14.0"   /* keep in step with src/module.json and release.json (the host test checks) */
+#define MM_VERSION_S "0.14"
 #define SR 44100.0f
 #define MAX_NOTES 16
 #define MAX_INSTANCES 16     /* static pool; create_instance returns NULL when exhausted */
@@ -56,8 +56,8 @@ typedef enum { K_F, K_I, K_E } kind_t;
 #define XTO "Bend,Vibrato Speed,Cutoff,Grit,Arp Rate,Arp Mode"
 #define YTO "Glide,Vibrato Depth,Cutoff,Grit,Hold Toggle,Arp Rate,Arp Mode"
 #define FXT "Off,Grit,Filter Open,Filter Close,Crunch,Resonance,Noise,Pitch Rise,Pitch Dive,Vibrato,Wobble,Gate Chop,Detune,Arp Faster,Hold"
-#define PCATS "Init,Bass,Lead,Drone,Arp,Paraphonic,Chaos,Horror,Sets,Keys,User 1,User 2,User 3,User 4,User 5,User 6,User 7,User 8"
-#define N_BANKS 10           /* factory banks */
+#define PCATS "Init,Bass,Lead,Drone,Arp,Paraphonic,Chaos,Horror,Sets,User 1,User 2,User 3,User 4,User 5,User 6,User 7,User 8"
+#define N_BANKS 9           /* factory banks */
 #define MAX_UBANKS 8         /* user banks (files in the bank folder) */
 #define UB_PRE 48            /* presets per user bank */
 #define UB_PV 96             /* settings per user preset */
@@ -90,8 +90,8 @@ enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, F
  X(OSC2_SHAPE, "osc2_shape", "Osc 2 Shape", K_F, 0, 1, 0.5, 0.02, NULL) \
  X(OSC2_COARSE, "osc2_coarse", "Osc 2 Coarse", K_I, -24, 24, 0, 1, NULL) \
  X(OSC2_FINE, "osc2_fine", "Osc 2 Fine", K_F, -50, 50, 7, 1, NULL) \
- X(OSC1_LEVEL, "osc1_level", "Osc 1 Level", K_F, 0, 1, 0.8, 0.02, NULL) \
- X(OSC2_LEVEL, "osc2_level", "Osc 2 Level", K_F, 0, 1, 0.6, 0.02, NULL) \
+ X(OSC1_LEVEL, "osc1_level", "Osc 1 Level", K_F, 0, 1.5, 0.8, 0.02, NULL) \
+ X(OSC2_LEVEL, "osc2_level", "Osc 2 Level", K_F, 0, 1.5, 0.6, 0.02, NULL) \
  X(ENV1_A, "env1_a", "Filter Env Attack", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(ENV1_D, "env1_d", "Filter Env Decay", K_F, 0, 1, 0.45, 0.02, NULL) \
  X(ENV1_S, "env1_s", "Filter Env Sustain", K_F, 0, 1, 0.0, 0.02, NULL) \
@@ -168,7 +168,7 @@ enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, F
  X(FX4_LVL, "fx4_lvl", "FX 4 Level", K_F, 0, 1, 0.5, 0.02, NULL) \
  X(NOISE_COLOR, "noise_color", "Noise Color", K_F, 0, 1, 0.0, 0.02, NULL) \
  X(FX_SCOPE, "fx_scope", "FX Touch", K_E, 0, 1, 0, 1, FXSC) \
- X(PRESET_CAT, "preset_cat", "Preset Bank", K_E, 0, 17, 0, 1, PCATS) \
+ X(PRESET_CAT, "preset_cat", "Preset Bank", K_E, 0, 16, 0, 1, PCATS) \
  X(BANK_IO, "bank_io", "Bank Files", K_E, 0, 2, 0, 1, "Idle,Export Bank,Reload Folder") \
  X(BANK_STATUS, "bank_status", "Bank File Status", K_E, 0, 4, 0, 1, "Ready,Working,Exported,Loaded,Error") \
  X(USER_BANKS, "user_banks", "User Banks Loaded", K_I, 0, 8, 0, 1, NULL) \
@@ -185,7 +185,17 @@ enum { FXT_OFF, FXT_GRIT, FXT_OPEN, FXT_CLOSE, FXT_CRUNCH, FXT_RES, FXT_NOISE, F
  X(M3_VIA, "m3_via", "Matrix 3 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
  X(M4_VIA, "m4_via", "Matrix 4 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
  X(M5_VIA, "m5_via", "Matrix 5 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
- X(M6_VIA, "m6_via", "Matrix 6 Scaled By", K_E, 0, 19, 0, 1, MXSRC)
+ X(M6_VIA, "m6_via", "Matrix 6 Scaled By", K_E, 0, 19, 0, 1, MXSRC) \
+ X(AUX_FB, "aux_fb", "Aux Feedback", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(AM_ENV, "am_env", "Amp Env Depth", K_F, 0, 1, 1.0, 0.02, NULL) \
+ X(AM_LFO, "am_lfo", "LFO to Amp", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(SHAPE_FLIP, "shape_flip", "Shape Flip", K_E, 0, 1, 0, 1, OFFON) \
+ X(SAW_OCT, "saw_oct", "Saw Octave Up", K_E, 0, 1, 0, 1, OFFON) \
+ X(OSC_SYNC, "osc_sync", "Hard Sync", K_E, 0, 2, 0, 1, "Off,Osc 1 to Osc 2,Osc 2 to Osc 1") \
+ X(XMOD_MODE, "xmod_mode", "X-Mod Type", K_E, 0, 1, 0, 1, "Exponential,Linear") \
+ X(RES_CURVE, "res_curve", "Resonance Onset", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(INTEG_SAT, "integ_sat", "Integrator Saturation", K_F, 0, 1, 0.0, 0.02, NULL) \
+ X(STRETCH, "stretch", "Stretch Tuning", K_F, -10, 10, 0.0, 0.5, NULL)
 
 typedef struct { const char *key, *label; kind_t kind; float min, max, def, step; const char *opts; } pdef_t;
 enum {
@@ -201,7 +211,7 @@ static const pdef_t PD[P_COUNT] = {
 };
 
 static const char *const SHORT_NAME[P_COUNT] = {
-    [P_OSC1_WAVE]="Wave1", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Bank", [P_BANK_IO]="Files", [P_BANK_STATUS]="State", [P_USER_BANKS]="User", [P_VERSION]="Ver", [P_PROG_CHG]="PgmCh", [P_LAST_CHANGE]="Last", [P_PC_SEEN]="PCs", [P_M1_VIA]="VIA1", [P_M2_VIA]="VIA2", [P_M3_VIA]="VIA3", [P_M4_VIA]="VIA4", [P_M5_VIA]="VIA5", [P_M6_VIA]="VIA6",
+    [P_OSC1_WAVE]="Wave1", [P_AUX_FB]="AuxFb", [P_AM_ENV]="AM1", [P_AM_LFO]="AM2", [P_SHAPE_FLIP]="Flip", [P_SAW_OCT]="Saw+1", [P_OSC_SYNC]="Sync", [P_XMOD_MODE]="XTyp", [P_RES_CURVE]="Onset", [P_INTEG_SAT]="ISat", [P_STRETCH]="Strch", [P_OSC1_SHAPE]="Shp1", [P_OSC2_WAVE]="Wave2", [P_OSC2_SHAPE]="Shp2", [P_OSC2_COARSE]="Semi2", [P_OSC2_FINE]="Fine2", [P_OSC1_COARSE]="Semi1", [P_OSC1_FINE]="Fine1", [P_FX1_LVL]="FX 1", [P_FX2_LVL]="FX 2", [P_FX3_LVL]="FX 3", [P_FX4_LVL]="FX 4", [P_FX1_TYPE]="Type", [P_FX2_TYPE]="Type", [P_FX3_TYPE]="Type", [P_FX4_TYPE]="Type", [P_NOISE_COLOR]="Color", [P_FX_SCOPE]="Touch",[P_PRESET_CAT]="Bank", [P_BANK_IO]="Files", [P_BANK_STATUS]="State", [P_USER_BANKS]="User", [P_VERSION]="Ver", [P_PROG_CHG]="PgmCh", [P_LAST_CHANGE]="Last", [P_PC_SEEN]="PCs", [P_M1_VIA]="VIA1", [P_M2_VIA]="VIA2", [P_M3_VIA]="VIA3", [P_M4_VIA]="VIA4", [P_M5_VIA]="VIA5", [P_M6_VIA]="VIA6",
     [P_OSC1_LEVEL]="Lvl1", [P_OSC2_LEVEL]="Lvl2",
     [P_ENV1_A]="Atk", [P_ENV1_D]="Dec", [P_ENV1_S]="Sus", [P_ENV1_R]="Rel", [P_ENV2_A]="Atk", [P_ENV2_D]="Dec", [P_ENV2_S]="Sus", [P_ENV2_R]="Rel",
     [P_OSC1_FM1]="EFM1", [P_OSC2_FM1]="EFM2", [P_OSC1_FM2]="FM 1", [P_OSC2_FM2]="FM 2", [P_XMOD]="XMod", [P_SHAPE_MOD]="Shape",
@@ -281,13 +291,13 @@ static const char *const UNIT[P_COUNT] = {
     [P_ARP_OCT]="oct",
     [P_OSC1_FINE]="cents",
     [P_OSC2_FINE]="cents",
-    [P_TUNE]="cents",
+    [P_TUNE]="cents", [P_STRETCH]="c/oct",
 };
 static const char *const SHORT_OPTS[P_COUNT] = {
     [P_OSC1_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_OSC2_WAVE]="OFF,SAW,TRI,S+T,PLS,S+P,T+P,ALL", [P_LFO_WAVE]="TRI,SQR,SAW,RMP,RND", [P_LFO2_WAVE]="TRI,SQR,SAW,RMP,RND",
     [P_LFO_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32,AUD", [P_LFO2_SYNC]="FRE,1/2,1/4,1/8,8T,16,16T,32,AUD", [P_LFO_GATE]="OFF,LF1,LF2",
-    [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
-    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,LED,DRN,ARP,PAR,CHS,HOR,SET,KEY,U1,U2,U3,U4,U5,U6,U7,U8", [P_BANK_IO]="IDL,EXP,RLD", [P_BANK_STATUS]="RDY,WRK,EXP,LOD,ERR", [P_VERSION]=MM_VERSION_S, [P_M1_VIA]=MXSRC_S, [P_M2_VIA]=MXSRC_S, [P_M3_VIA]=MXSRC_S, [P_M4_VIA]=MXSRC_S, [P_M5_VIA]=MXSRC_S, [P_M6_VIA]=MXSRC_S,[P_HOLD]="OFF,ON", [P_FX_SCOPE]="PAG,ANY",
+    [P_FILTER_MODE]="LP,BP,HP,L+H,B+L", [P_LEGATO]="OFF,ON", [P_SHAPE_FLIP]="OFF,ON", [P_SAW_OCT]="OFF,ON", [P_OSC_SYNC]="OFF,1-2,2-1", [P_XMOD_MODE]="EXP,LIN", [P_DRONE]="OFF,HLD,LTC", [P_AT_DEST]="OFF,CUT,VIB,DRV,FM", [P_PRIORITY]="LST,LOW,HI",
+    [P_STICK_X_TO]="BND,VSP,CUT,GRT,ARR,ARM", [P_STICK_Y_TO]="GLD,VDP,CUT,GRT,HLD,ARR,ARM", [P_FX1_TYPE]=FXT_S, [P_FX2_TYPE]=FXT_S, [P_FX3_TYPE]=FXT_S, [P_FX4_TYPE]=FXT_S, [P_PRESET_CAT]="INI,BAS,LED,DRN,ARP,PAR,CHS,HOR,SET,U1,U2,U3,U4,U5,U6,U7,U8", [P_BANK_IO]="IDL,EXP,RLD", [P_BANK_STATUS]="RDY,WRK,EXP,LOD,ERR", [P_VERSION]=MM_VERSION_S, [P_M1_VIA]=MXSRC_S, [P_M2_VIA]=MXSRC_S, [P_M3_VIA]=MXSRC_S, [P_M4_VIA]=MXSRC_S, [P_M5_VIA]=MXSRC_S, [P_M6_VIA]=MXSRC_S,[P_HOLD]="OFF,ON", [P_FX_SCOPE]="PAG,ANY",
     [P_ARP_MODE]="OFF,UP,DWN,UD1,RND,ASP,UD2", [P_ARP_RATE]="1/4,1/8,8T,16,16T,32",
     [P_M1_SRC]=MXSRC_S, [P_M1_DST]=MXDST_S, [P_M2_SRC]=MXSRC_S, [P_M2_DST]=MXDST_S, [P_M3_SRC]=MXSRC_S, [P_M3_DST]=MXDST_S, [P_M4_SRC]=MXSRC_S, [P_M4_DST]=MXDST_S, [P_M5_SRC]=MXSRC_S, [P_M5_DST]=MXDST_S, [P_M6_SRC]=MXSRC_S, [P_M6_DST]=MXDST_S,
 };
@@ -350,6 +360,10 @@ typedef struct {
     int latched;                /* drone LATCH: sound holds after note-off until panic / preset / drone change */
     int was_idle;               /* voice idle (silent): render_block skips all DSP */
     int cur_note;               /* sounding note after priority resolution, -1 when none */
+    int sw1; float sf1;                       /* Hard Sync 1 to 2: osc 1 wrapped on the previous sub-sample, and where */
+    float isat;                               /* Integrator Saturation amount, set per block */
+    float fb_lp;                              /* slow average of the output: removed before feedback so DC and sub-bass cannot run away */
+    float fb_z;                               /* last post-drive output sample: Aux Feedback returns it to the filter input */
     float f_s1, f_s2, f_s3;                   /* Sallen-Key (Korg35-style) TPT states, at OS rate */
     float hb[HB_N]; int hb_pos;          /* decimator history ring */
     float tap_val[HB_NZ]; int tap_idx[HB_NZ];
@@ -361,6 +375,8 @@ static inline float frand(uint32_t *s) {  /* xorshift32 -> [-1,1) */
     return (float)(int32_t)x * (1.0f / 2147483648.0f);
 }
 static inline float env_time(float x) { return 0.0005f * powf(20000.0f, x); }  /* 0.5 ms .. 10 s */
+
+static inline float resk(float r, float c) { return c > 0.0f ? 3.6f * powf(r, 1.0f - 0.36f * c) : r * 3.6f; }   /* Resonance Onset: self-oscillation starts nearer 40% than 56% of the knob */
 
 static inline float poly_blep(float t, float dt) {
     if (t < dt) { t /= dt; return t + t - t * t - 1.0f; }
@@ -383,12 +399,14 @@ static inline float lfo_shape(float ph, int wave, float rv) {
 static inline float warp(float ph, float k) { return ph / (k + (1.0f - k) * ph); }
 
 /* One oscillator sample. wave is a bitmask (1 saw, 2 tri, 4 pulse). */
-static inline float osc_wave(float ph, float dt, int wave, float shape, float warp_k) {
+static inline float osc_wave(float ph, float dt, int wave, float shape, float warp_k, int sawup) {
     float out = 0.0f;
     int n = 0;
     if (wave & 1) {  /* saw, shape bows the ramp */
-        float y = 2.0f * warp(ph, warp_k) - 1.0f;
-        out += y - poly_blep(ph, dt);
+        float ps = ph, ds = dt;
+        if (sawup) { ps = ph * 2.0f; if (ps >= 1.0f) ps -= 1.0f; ds = dt * 2.0f; }   /* 4046 saw: one octave above the triangle and pulse */
+        float y = 2.0f * warp(ps, warp_k) - 1.0f;
+        out += y - poly_blep(ps, ds);
         n++;
     }
     if (wave & 2) {  /* skewed triangle: breakpoint follows shape */
@@ -676,44 +694,24 @@ static const preset_t PRESETS[] = {
     /* ---- Init ---- */
     PRE("Init", {P_VOLUME, 0.7f}),
     /* ---- Bass ---- */
-    PRE("Bass Sub 1",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.75f},{P_RESONANCE,.05f},{P_FILTER_DRIVE,.25f},{P_DRIVE,.08f},{P_FLT_FM1,0},
-        {P_KEY_TRACK,.6f},{P_ENV2_R,.48f},{P_VEL_AMP,.5f},{P_DRIFT,.5f},{P_LFO2_RATE,.14f},{P_ENV2_A,.15f},{P_VEL_CUTOFF,.3f},{P_TRIM,.492f},
-        MX(1,S_LF2,D_SH1,.45f),MX(2,S_SX,D_CUT,.3f)),
-    PRE("Bass Sub 2",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,9},{P_OSC1_LEVEL,.85f},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.5f},{P_FILTER_DRIVE,.7f},
-        {P_DRIVE,.3f},{P_FLT_FM1,0},{P_KEY_TRACK,.6f},{P_LFO_RATE,.12f},{P_ENV2_R,.48f},{P_VEL_AMP,.4f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_ENV2_A,.15f},
-        {P_VEL_CUTOFF,.3f},{P_TRIM,.429f},MX(1,S_LFO,D_PC2,.05f)),
-    PRE("Bass Log Tri",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.38f},{P_RESONANCE,.12f},{P_FILTER_DRIVE,.3f},{P_DRIVE,.1f},{P_FLT_FM1,.25f},
-        {P_ENV1_D,.3f},{P_VEL_CUTOFF,.9f},{P_VEL_AMP,.4f},{P_ENV2_D,.55f},{P_ENV2_S,.8f},{P_ENV2_R,.48f},{P_DRIFT,.4f},{P_ENV2_A,.15f},{P_TRIM,.518f}),
-    PRE("Bass Ghost Sub",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.22f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},
-        {P_FLT_FM1,0},{P_KEY_TRACK,.3f},{P_LFO_RATE,.2f},{P_SHAPE_MOD,.6f},{P_ENV2_R,.48f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
-        {P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.117f},{P_TRIM,.449f},MX(1,S_SX,D_CUT,.4f)),
-    PRE("Bass Deep FM",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.5f},{P_XMOD,.12f},{P_CUTOFF,.75f},
+    PRE("Bass Ghost Sub",{P_OCTAVE,-1},{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.22f},{P_FILTER_DRIVE,.7f},
+        {P_DRIVE,.3f},{P_FLT_FM1,0},{P_KEY_TRACK,.3f},{P_LFO_RATE,.2f},{P_SHAPE_MOD,.6f},{P_ENV2_R,.48f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_ENV2_A,.15f},
+        {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.117f},{P_TRIM,.512f},MX(1,S_SX,D_CUT,.4f)),
+    PRE("Bass Deep FM",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.5f},{P_XMOD,.12f},{P_CUTOFF,.55f},
         {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_RATE,.3f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
         {P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.453f},MX(1,S_LFO,D_FM1,.15f),{P_M1_VIA,S_WHL}),
-    PRE("Bass Square Peg",{P_OSC1_WAVE,4},{P_OSC1_LEVEL,.9f},{P_CUTOFF,.56f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
-        {P_KEY_TRACK,.6f},{P_ENV2_R,.48f},{P_VEL_AMP,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_CUTOFF,.3f},
-        {P_TRIM,.45f}),
-    PRE("Bass Acid 1",{P_CUTOFF,.3f},{P_RESONANCE,.7f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.8f},{P_ENV1_D,.55f},{P_ENV2_D,.55f},
-        {P_ENV2_S,.7f},{P_ENV2_R,.48f},{P_GLIDE,.08f},{P_LEGATO,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
-        {P_VEL_CUTOFF,.3f},{P_TRIM,.458f},MX(1,S_VEL,D_ENV,.5f)),
     PRE("Bass Acid 2",{P_CUTOFF,.26f},{P_RESONANCE,.68f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.85f},{P_ENV1_A,.5f},{P_ENV1_D,.62f},
         {P_ENV2_D,.6f},{P_ENV2_S,.7f},{P_ENV2_R,.48f},{P_GLIDE,.08f},{P_LEGATO,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
         {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.368f},MX(1,S_VEL,D_E1A,.25f)),
-    PRE("Bass Grit Pluck",{P_OSC1_LEVEL,.9f},{P_CUTOFF,.4f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.5f},{P_ENV1_D,.55f},
-        {P_ENV2_D,.6f},{P_ENV2_S,.08f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},
-        {P_VEL_CUTOFF,.3f},{P_TRIM,.563f},MX(1,S_E1,D_DRV,.8f),MX(2,S_VEL,D_E1D,.3f)),
-    PRE("Bass Thump",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.5f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
-        {P_OSC1_FM1,.6f},{P_ENV1_D,.35f},{P_ENV2_D,.54f},{P_ENV2_S,.05f},{P_ENV2_R,.44f},{P_VEL_AMP,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
-        {P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_CUTOFF,.3f},{P_TRIM,.581f}),
-    PRE("Bass Rezzy",{P_OSC1_LEVEL,.4f},{P_CUTOFF,.439f},{P_RESONANCE,.96f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_KEY_TRACK,1},
+    PRE("Bass Rezzy",{P_OSC1_LEVEL,.4f},{P_CUTOFF,.4f},{P_RESONANCE,.96f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_KEY_TRACK,1},
         {P_ENV2_D,.6f},{P_ENV2_S,.7f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
-        {P_VEL_CUTOFF,.3f},{P_TRIM,.388f},MX(1,S_KEY,D_CUT,.3f)),
-    PRE("Bass FM Drop",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,5},{P_OSC2_FINE,0},{P_OSC1_LEVEL,.85f},{P_OSC2_LEVEL,.5f},{P_XMOD,.12f},
-        {P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_OSC1_FM1,.3f},{P_ENV1_D,.4f},{P_ENV2_D,.54f},
-        {P_ENV2_S,.05f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},
-        {P_TRIM,.574f},MX(1,S_VEL,D_FM1,.3f),{P_M1_VIA,S_E1}),
+        {P_VEL_CUTOFF,.3f},{P_TRIM,.403f},MX(1,S_KEY,D_CUT,.3f)),
+    PRE("Bass FM Drop",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,5},{P_OSC2_FINE,0},{P_OSC1_LEVEL,.85f},{P_XMOD,.12f},{P_CUTOFF,.72f},
+        {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_OSC1_FM1,.3f},{P_ENV1_D,.4f},{P_ENV2_D,.54f},{P_ENV2_S,.05f},
+        {P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_TRIM,.564f},
+        MX(1,S_VEL,D_FM1,.3f),{P_M1_VIA,S_E1}),
     PRE("Bass Dirt PWM",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.3f},{P_OSC2_COARSE,-12},{P_OSC2_FINE,5},{P_CUTOFF,.45f},
-        {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,1},{P_FLT_FM1,0},{P_LFO_RATE,.3f},{P_SHAPE_MOD,.8f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
+        {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,1},{P_FLT_FM1,0},{P_LFO_RATE,.3f},{P_SHAPE_MOD,.35f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
         {P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.518f},MX(1,S_SY,D_CUT,.5f)),
     PRE("Bass Saw Rip",{P_OSC2_WAVE,1},{P_OSC2_FINE,12},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.45f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,1},
         {P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
@@ -726,7 +724,7 @@ static const preset_t PRESETS[] = {
         MX(1,S_LFO,D_NSE,.2f)),
     PRE("Bass Hard Sync",{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_CUTOFF,.45f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,.6f},{P_ENV1_D,.35f},{P_ENV2_D,.35f},{P_ENV2_S,.12f},{P_LFO_WAVE,1},{P_LFO_RATE,.78f},{P_LFO_GATE,1},{P_DRIFT,.6f},
-        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.44f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_TRIM,.582f},MX(1,S_AT,D_LFR,.4f)),
+        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.44f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_TRIM,.574f},MX(1,S_AT,D_LFR,.4f)),
     PRE("Bass Growl",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_FILTER_MODE,1},{P_CUTOFF,.38f},{P_RESONANCE,.55f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,0},{P_FLT_FM2,.25f},{P_LFO_RATE,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},
         {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.452f},MX(1,S_WHL,D_CUT,.6f)),
@@ -739,33 +737,25 @@ static const preset_t PRESETS[] = {
     PRE("Bass Sync Drone",{P_OSC2_WAVE,1},{P_OSC2_FINE,12},{P_CUTOFF,.5f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.3f},
         {P_ENV2_A,.2f},{P_ENV2_S,.5f},{P_ENV2_R,.48f},{P_LFO_WAVE,1},{P_LFO_RATE,.62f},{P_LFO_GATE,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.42f},MX(1,S_AT,D_LFR,.5f)),
-    PRE("Bass Slow Mod",{P_OSC1_WAVE,3},{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,9},{P_CUTOFF,.665f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
+    PRE("Bass Slow Mod",{P_OSC1_WAVE,3},{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,9},{P_CUTOFF,.5f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
         {P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.55f},{P_ENV2_R,.7f},{P_LFO_RATE,.2f},{P_OSC1_FM2,.25f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.444f},MX(1,S_WHL,D_LFR,.5f)),
-    PRE("Bass Grit Wobble",{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,8},{P_CUTOFF,.447f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.8f},
+    PRE("Bass Grit Wobble",{P_OSC2_WAVE,1},{P_OSC2_COARSE,-12},{P_OSC2_FINE,8},{P_CUTOFF,.35f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.8f},
         {P_FLT_FM1,0},{P_FLT_FM2,.8f},{P_LFO_RATE,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
         {P_VEL_CUTOFF,.3f},{P_TRIM,.465f},MX(1,S_SY,D_LFR,.5f)),
-    PRE("Bass Broken Tape",{P_OSC1_WAVE,3},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_RATE,.15f},
+    PRE("Bass Broken Tape",{P_OSC1_WAVE,3},{P_CUTOFF,.45f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_RATE,.15f},
         {P_DRIFT,.8f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.46f},
         MX(1,S_LFO,D_PCH,.08f),MX(2,S_NSE,D_PCH,.02f)),
-    PRE("Bass Mod Chaos",{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.4f},{P_OSC2_COARSE,-12},{P_OSC2_FINE,0},{P_CUTOFF,.75f},{P_RESONANCE,.4f},
-        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.6f},{P_LFO_WAVE,1},{P_LFO_RATE,.45f},{P_ENV2_D,.6f},{P_ENV2_S,.5f},{P_DRIFT,.6f},
-        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.517f},MX(1,S_E2,D_LFR,.8f),
-        MX(2,S_VEL,D_LFR,.3f)),
+    PRE("Bass Mod Chaos",{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.4f},{P_OSC2_COARSE,-12},{P_OSC2_FINE,0},{P_CUTOFF,.4f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
+        {P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.3f},{P_LFO_WAVE,1},{P_LFO_RATE,.45f},{P_ENV2_D,.6f},{P_ENV2_S,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
+        {P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.561f},MX(1,S_E2,D_LFR,.8f),MX(2,S_VEL,D_LFR,.3f)),
     /* ---- Lead ---- */
-    PRE("Lead Glide Tri",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.75f},{P_RESONANCE,.15f},{P_FILTER_DRIVE,.3f},{P_DRIVE,.15f},{P_FLT_FM1,.2f},
-        {P_ENV1_D,.5f},{P_GLIDE,.35f},{P_LEGATO,1},{P_LFO_RATE,.65f},{P_LFO2_RATE,.22f},{P_DRIFT,.6f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
-        {P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.659f},{P_TRIM,.521f},MX(1,S_LFO,D_PCH,.03f),MX(2,S_SX,D_GLD,.6f),MX(3,S_LF2,D_SH1,.4f)),
-    PRE("Lead Solo Saw",{P_OSC2_WAVE,1},{P_OSC2_FINE,12},{P_CUTOFF,.62f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.35f},
-        {P_ENV1_D,.55f},{P_ENV2_S,.9f},{P_LFO_RATE,.62f},{P_GLIDE,.1f},{P_LEGATO,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},
-        {P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.244f},{P_TRIM,.425f},MX(1,S_LFO,D_PCH,.05f),{P_M1_VIA,S_SY},
-        MX(2,S_WHL,D_LFR,.3f)),
     PRE("Lead Flute Mod",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_NOISE_LEVEL,.18f},{P_NOISE_COLOR,.45f},{P_CUTOFF,.5f},{P_FILTER_DRIVE,.7f},
         {P_DRIVE,.3f},{P_FLT_FM1,.5f},{P_ENV1_A,.55f},{P_ENV1_D,.7f},{P_ENV1_S,.35f},{P_ENV2_A,.15f},{P_ENV2_S,.9f},{P_VEL_CUTOFF,.8f},{P_VEL_AMP,.4f},
         {P_DRIFT,.6f},{P_GRIT,.1f},{P_ENV2_R,.48f},{P_KEY_LVL,-.582f},{P_TRIM,.487f},MX(1,S_E1,D_NSE,.4f)),
-    PRE("Lead Theremin",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.591f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
+    PRE("Lead Theremin",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.16f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
         {P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_GLIDE,.6f},{P_LEGATO,1},{P_LFO_RATE,.65f},{P_OSC2_WAVE,2},{P_OSC2_FINE,14},{P_OSC2_LEVEL,.55f},
-        {P_DRIFT,.7f},{P_GRIT,.1f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.854f},{P_TRIM,.63f},MX(1,S_LFO,D_PCH,.025f),{P_M1_VIA,S_AT},
+        {P_DRIFT,.7f},{P_GRIT,.1f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.854f},{P_TRIM,.505f},MX(1,S_LFO,D_PCH,.025f),{P_M1_VIA,S_AT},
         MX(2,S_SMR,D_PC2,.04f)),
     PRE("Lead Vow",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_FILTER_MODE,1},{P_CUTOFF,.45f},{P_RESONANCE,.55f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,.2f},{P_ENV1_D,.5f},{P_ENV2_S,.9f},{P_GLIDE,.08f},{P_LEGATO,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},
@@ -776,24 +766,15 @@ static const preset_t PRESETS[] = {
     PRE("Lead Tear Saw",{P_OSC2_WAVE,1},{P_OSC2_FINE,11},{P_CUTOFF,.65f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.3f},
         {P_OSC1_FM1,.25f},{P_ENV1_D,.55f},{P_ENV2_S,.9f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},
         {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.234f},{P_TRIM,.424f},MX(1,S_VEL,D_ENV,.5f)),
-    PRE("Lead Sync Rip",{P_OSC1_WAVE,4},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_ENV2_A,.15f},
+    PRE("Lead Sync Rip",{P_OSC1_WAVE,4},{P_CUTOFF,.62f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_ENV2_A,.15f},
         {P_ENV2_D,.35f},{P_ENV2_S,.35f},{P_LFO_WAVE,1},{P_LFO_RATE,.8f},{P_LFO_GATE,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.44f},
         {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.432f},{P_TRIM,.506f},MX(1,S_WHL,D_LFR,.3f)),
-    PRE("Lead Laser Bite",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},
+    PRE("Lead Laser Bite",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_CUTOFF,.7f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},
         {P_OSC1_FM1,.7f},{P_ENV1_D,.5f},{P_ENV2_D,.55f},{P_ENV2_S,.3f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.44f},{P_ENV2_A,.15f},
         {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.361f},{P_TRIM,.451f},MX(1,S_VEL,D_E2D,.5f)),
-    PRE("Lead Buzz",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.03f},{P_CUTOFF,.7f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},
-        {P_ENV2_S,.9f},{P_LFO_RATE,.75f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
-        {P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.155f},{P_TRIM,.514f},MX(1,S_LFO,D_CUT,.4f),{P_M1_VIA,S_WHL}),
-    PRE("Lead Acid",{P_CUTOFF,.38f},{P_RESONANCE,.8f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.8f},{P_ENV1_D,.55f},{P_ENV2_D,.55f},
-        {P_ENV2_S,.8f},{P_GLIDE,.06f},{P_LEGATO,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
-        {P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.155f},{P_TRIM,.431f},MX(1,S_VEL,D_ENV,.5f)),
     PRE("Lead Pulse Cut",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.7f},{P_OSC2_FINE,9},{P_CUTOFF,.75f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.15f},{P_ENV2_S,.9f},{P_LFO_RATE,.3f},{P_AT_DEST,3},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
         {P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.434f},{P_TRIM,.48f},MX(1,S_LFO,D_SH1,.6f)),
-    PRE("Lead Metal Solo",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.75f},{P_XMOD,.3f},{P_CUTOFF,.82f},
-        {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_S,.9f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
-        {P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.383f},{P_TRIM,.46f},MX(1,S_WHL,D_FM1,.4f)),
     PRE("Lead Ice FM",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_CUTOFF,.85f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
         {P_ENV2_S,.9f},{P_LFO_SYNC,8},{P_LFO_WAVE,1},{P_LFO_RATE,.55f},{P_OSC1_FM2,.25f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.512f},{P_TRIM,.494f},MX(1,S_SY,D_LFR,.3f)),
@@ -803,57 +784,32 @@ static const preset_t PRESETS[] = {
     PRE("Lead Glass Cut",{P_OSC1_WAVE,4},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_LEVEL,0},{P_FILTER_MODE,2},{P_CUTOFF,.55f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_S,.9f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},
         {P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.322f},{P_TRIM,.485f},MX(1,S_OS2,D_CUT,.15f),MX(2,S_AT,D_CUT,.4f)),
-    PRE("Lead Grit Bell",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,3},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.8f},{P_RESONANCE,.4f},
-        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_D,.65f},{P_ENV2_S,.3f},{P_ENV2_R,.5f},{P_LFO_RATE,.3f},{P_DRIFT,.6f},
-        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.473f},{P_TRIM,.496f},MX(1,S_LFO,D_PC2,.03f),
-        MX(2,S_WHL,D_DRV,.5f)),
     PRE("Lead Wire FM",{P_OSC1_WAVE,4},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_LEVEL,0},{P_CUTOFF,.8f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
         {P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_S,.9f},{P_LFO_RATE,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},
         {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.198f},{P_TRIM,.411f},MX(1,S_OS2,D_SH1,.7f),MX(2,S_LFO,D_PC2,.3f),{P_M2_VIA,S_SX}),
-    PRE("Lead Alloy",{P_OSC1_WAVE,2},{P_OSC2_WAVE,3},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.78f},{P_RESONANCE,.4f},
-        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_OSC1_FM2,.2f},{P_OSC2_FM1,.3f},{P_ENV1_D,.6f},{P_ENV2_S,.9f},{P_LFO_RATE,.25f},
-        {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.368f},
-        {P_TRIM,.458f},MX(1,S_WHL,D_LFR,.4f)),
-    PRE("Lead Scream",{P_OSC1_LEVEL,.45f},{P_CUTOFF,.554f},{P_RESONANCE,.95f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.6f},{P_FLT_FM1,0},{P_KEY_TRACK,1},
-        {P_ENV2_S,.9f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},
-        {P_KEY_LVL,.66f},{P_TRIM,.329f},MX(1,S_KEY,D_CUT,.5f)),
-    PRE("Lead Howl",{P_CUTOFF,.4f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,1},{P_FLT_FM1,.5f},{P_ENV1_D,.6f},{P_ENV2_S,.9f},{P_AT_DEST,3},
-        {P_AT_AMOUNT,.7f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},
-        {P_KEY_LVL,-.473f},{P_TRIM,.553f}),
-    PRE("Lead Fuzz",{P_OSC1_WAVE,4},{P_NOISE_LEVEL,.4f},{P_NOISE_COLOR,.2f},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.9f},{P_DRIVE,.8f},
-        {P_FLT_FM1,.2f},{P_ENV2_S,.9f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.44f},
-        {P_TRIM,.517f},MX(1,S_WHL,D_NSE,.5f)),
-    PRE("Lead Burn Saw",{P_OSC2_WAVE,1},{P_OSC2_FINE,14},{P_CUTOFF,.64f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.8f},{P_FLT_FM1,.2f},
+    PRE("Lead Scream",{P_OSC1_LEVEL,.45f},{P_CUTOFF,.45f},{P_RESONANCE,.95f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.6f},{P_FLT_FM1,0},{P_KEY_TRACK,1},
+        {P_ENV2_S,.9f},{P_FLT_FM2,.3f},{P_LFO_RATE,.62f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},
+        {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,.66f},{P_TRIM,.329f},MX(1,S_KEY,D_CUT,.5f),MX(2,S_LFO,D_PCH,.04f)),
+    PRE("Lead Burn Saw",{P_OSC2_WAVE,1},{P_OSC2_FINE,14},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.8f},{P_FLT_FM1,.2f},
         {P_ENV2_S,.9f},{P_LFO_RATE,.2f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
         {P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.213f},{P_TRIM,.457f},MX(1,S_LFO,D_PCH,.1f),{P_M1_VIA,S_VEL}),
     PRE("Lead Squeal",{P_OSC1_LEVEL,.5f},{P_FILTER_MODE,1},{P_CUTOFF,.55f},{P_RESONANCE,.9f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
         {P_ENV2_S,.9f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},
         {P_KEY_LVL,.231f},{P_TRIM,.36f},MX(1,S_E2,D_CUT,.5f),MX(2,S_WHL,D_RES,.08f),MX(3,S_WHL,D_CUT,.25f)),
-    PRE("Lead Broken Pin",{P_OSC1_WAVE,4},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_ENV2_D,.35f},
-        {P_ENV2_S,.4f},{P_LFO_WAVE,1},{P_LFO_RATE,.8f},{P_LFO_GATE,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.44f},{P_ENV2_A,.15f},
-        {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.434f},{P_TRIM,.498f},MX(1,S_NSE,D_FM1,.06f),MX(2,S_SY,D_LFR,.6f)),
     /* ---- Drone ---- */
-    PRE("Drone Deep Void",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.3f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_FLT_FM2,.6f},
-        {P_LFO_RATE,.15f},{P_ENV2_A,.5f},{P_ENV2_R,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.849f},{P_TRIM,.491f},MX(1,S_WHL,D_LFR,.5f)),
-    PRE("Drone Tectonic",{P_OSC2_WAVE,1},{P_OSC2_FINE,28},{P_OSC2_LEVEL,.8f},{P_OCTAVE,-1},{P_CUTOFF,.675f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.4f},
+    PRE("Drone Tectonic",{P_OSC2_WAVE,1},{P_OSC2_FINE,28},{P_OSC2_LEVEL,.8f},{P_OCTAVE,-1},{P_CUTOFF,.35f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.4f},
         {P_FLT_FM1,0},{P_LFO_RATE,.12f},{P_SHAPE_MOD,.6f},{P_ENV2_A,.45f},{P_ENV2_R,.55f},{P_AT_DEST,3},{P_AT_AMOUNT,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},
-        {P_KEY_LVL,-.644f},{P_TRIM,.505f}),
-    PRE("Drone Abyss",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.25f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,.6f},{P_ENV1_A,.7f},
-        {P_ENV1_D,.85f},{P_ENV1_S,.3f},{P_ENV2_A,.5f},{P_ENV2_R,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.838f},{P_TRIM,.491f},
-        MX(1,S_SX,D_PC1,.02f)),
-    PRE("Drone Dark Wash",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_CUTOFF,.571f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_ENV2_A,.6f},
-        {P_ENV2_D,.85f},{P_ENV2_S,.8f},{P_ENV2_R,.7f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.559f},{P_TRIM,.457f},MX(1,S_E2,D_CUT,.5f),
+        {P_KEY_LVL,-.644f},{P_TRIM,.621f}),
+    PRE("Drone Dark Wash",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_CUTOFF,.4f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_ENV2_A,.6f},
+        {P_ENV2_D,.85f},{P_ENV2_S,.8f},{P_ENV2_R,.7f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.559f},{P_TRIM,.473f},MX(1,S_E2,D_CUT,.5f),
         MX(2,S_VEL,D_E2A,.5f)),
-    PRE("Drone Hollow Earth",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.244f},{P_RESONANCE,.8f},{P_FILTER_DRIVE,.7f},
-        {P_DRIVE,.3f},{P_FLT_FM1,0},{P_KEY_TRACK,.3f},{P_ENV2_A,.4f},{P_ENV2_R,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.445f},{P_TRIM,.599f},
+    PRE("Drone Hollow Earth",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.2f},{P_RESONANCE,.8f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},
+        {P_FLT_FM1,0},{P_KEY_TRACK,.3f},{P_ENV2_A,.4f},{P_ENV2_R,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.445f},{P_TRIM,.599f},
         MX(1,S_WHL,D_CUT,.5f)),
-    PRE("Drone Ground Swell",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,5},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.4f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},
-        {P_FLT_FM1,.5f},{P_ENV1_A,.8f},{P_ENV1_D,.9f},{P_ENV1_S,.4f},{P_ENV1_R,.7f},{P_LFO_RATE,.1f},{P_ENV2_A,.5f},{P_ENV2_R,.6f},{P_DRIFT,.5f},
-        {P_GRIT,.1f},{P_KEY_LVL,-.718f},{P_TRIM,.473f},MX(1,S_LFO,D_AMP,.5f),MX(2,S_SY,D_DRV,.6f)),
     PRE("Drone Cold Wind",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.7f},{P_NOISE_COLOR,.5f},{P_FILTER_MODE,1},{P_CUTOFF,.55f},{P_RESONANCE,.5f},
         {P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_KEY_TRACK,.3f},{P_LFO_RATE,.13f},{P_ENV2_A,.7f},{P_ENV2_R,.7f},{P_DRIFT,.5f},{P_GRIT,.1f},
         {P_TRIM,.342f},MX(1,S_LFO,D_CUT,.35f)),
-    PRE("Drone Ruins",{P_OSC1_WAVE,2},{P_NOISE_LEVEL,.2f},{P_NOISE_COLOR,.2f},{P_CUTOFF,.75f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
+    PRE("Drone Ruins",{P_OSC1_WAVE,2},{P_NOISE_LEVEL,.2f},{P_NOISE_COLOR,.2f},{P_CUTOFF,.7f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
         {P_ENV2_A,.3f},{P_ENV2_R,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.857f},MX(1,S_NSE,D_FM1,.15f),{P_M1_VIA,S_WHL}),
     PRE("Drone Dust Storm",{P_OSC1_LEVEL,.6f},{P_CUTOFF,.5f},{P_RESONANCE,.9f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.3f},
         {P_ENV2_R,.6f},{P_AT_DEST,0},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.244f},{P_TRIM,.418f},MX(1,S_NSE,D_CUT,.12f),MX(2,S_AT,D_NSE,1)),
@@ -864,9 +820,6 @@ static const preset_t PRESETS[] = {
         {P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,.051f},{P_TRIM,.391f},MX(1,S_E1,D_NSE,.8f),MX(2,S_VEL,D_ENV,.5f)),
     PRE("Drone Vinyl Crack",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.5f},{P_FILTER_MODE,2},{P_CUTOFF,.5f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
         {P_LFO_WAVE,4},{P_LFO_RATE,.85f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.5f},{P_GRIT,.1f},MX(1,S_LFO,D_AMP,.9f)),
-    PRE("Drone Iron Scrape",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.5f},{P_XMOD,.3f},{P_CUTOFF,.8f},
-        {P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_LFO_RATE,.12f},{P_ENV2_A,.35f},{P_ENV2_R,.5f},{P_DRIFT,.5f},{P_GRIT,.1f},
-        {P_KEY_LVL,-.698f},{P_TRIM,.474f},MX(1,S_LFO,D_PC2,.3f),MX(2,S_WHL,D_XMD,.5f)),
     PRE("Drone Reactor",{P_OSC1_WAVE,4},{P_CUTOFF,.6f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_LFO_SYNC,8},{P_LFO_WAVE,1},{P_LFO_RATE,.4f},
         {P_OSC1_FM2,.15f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.589f},{P_TRIM,.454f},MX(1,S_SX,D_LFR,.3f)),
     PRE("Drone Bell Toll",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,6},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_XMOD,.2f},{P_CUTOFF,.8f},
@@ -874,7 +827,7 @@ static const preset_t PRESETS[] = {
         {P_KEY_LVL,-.658f},{P_TRIM,.457f},MX(1,S_E2,D_XMD,.5f)),
     PRE("Drone Wire",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.06f},{P_CUTOFF,.75f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_LFO_RATE,.22f},
         {P_SHAPE_MOD,.8f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.534f},{P_TRIM,.44f},MX(1,S_WHL,D_SH1,.6f)),
-    PRE("Drone Stasis",{P_OSC1_WAVE,2},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.55f},{P_CUTOFF,.674f},{P_FILTER_DRIVE,.7f},
+    PRE("Drone Stasis",{P_OSC1_WAVE,2},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.55f},{P_CUTOFF,.5f},{P_FILTER_DRIVE,.7f},
         {P_DRIVE,.3f},{P_FLT_FM1,0},{P_FLT_FM2,.5f},{P_LFO_RATE,.2f},{P_LFO2_RATE,.15f},{P_ENV2_A,.5f},{P_ENV2_R,.7f},{P_AT_DEST,3},{P_AT_AMOUNT,.6f},
         {P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.558f},{P_TRIM,.448f},MX(1,S_LF2,D_SH1,.5f)),
     PRE("Drone Radiation",{P_OSC1_LEVEL,.3f},{P_CUTOFF,.5f},{P_RESONANCE,.92f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_FLT_FM2,.7f},
@@ -882,50 +835,31 @@ static const preset_t PRESETS[] = {
     PRE("Drone Glass Fog",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,19},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.5f},{P_XMOD,.25f},{P_FILTER_MODE,2},
         {P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_ENV2_A,.6f},{P_ENV2_R,.7f},{P_LFO2_RATE,.18f},
         {P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.366f},{P_TRIM,.457f},MX(1,S_WHL,D_RES,.3f),MX(2,S_LF2,D_SH1,.5f)),
-    PRE("Drone Heartbeat",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.36f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_LFO_WAVE,2},
-        {P_LFO_RATE,.52f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.56f},{P_TRIM,.508f},MX(1,S_LFO,D_AMP,.5f),
+    PRE("Drone Heartbeat",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.35f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_LFO_WAVE,2},
+        {P_LFO_RATE,.52f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.56f},{P_TRIM,.52f},MX(1,S_LFO,D_AMP,.5f),
         MX(2,S_WHL,D_LFR,.4f)),
-    PRE("Drone Machinery",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.4f},{P_OSC2_FINE,0},{P_OSC2_COARSE,-12},{P_CUTOFF,.557f},{P_FILTER_DRIVE,.7f},
+    PRE("Drone Machinery",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.4f},{P_OSC2_FINE,0},{P_OSC2_COARSE,-12},{P_CUTOFF,.55f},{P_FILTER_DRIVE,.7f},
         {P_DRIVE,.4f},{P_FLT_FM1,0},{P_LFO_RATE,.6f},{P_OSC1_FM2,.25f},{P_ENV2_A,.15f},{P_AT_DEST,3},{P_AT_AMOUNT,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},
         {P_ENV2_R,.48f},{P_KEY_LVL,-.606f},{P_TRIM,.482f}),
     PRE("Drone Warning",{P_FILTER_MODE,1},{P_CUTOFF,.5f},{P_RESONANCE,.5f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_FLT_FM2,.6f},
         {P_LFO_RATE,.45f},{P_ENV2_A,.15f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_ENV2_R,.48f},{P_KEY_LVL,-.28f},{P_TRIM,.381f},MX(1,S_SX,D_RES,.3f)),
-    PRE("Drone Breather",{P_OSC2_WAVE,1},{P_OSC2_FINE,10},{P_CUTOFF,.407f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.5f},
-        {P_LFO_RATE,.25f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.485f},{P_TRIM,.442f},MX(1,S_SY,D_LFR,.5f)),
-    PRE("Drone Engine Room",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.6f},{P_OSC2_FINE,0},{P_OSC2_COARSE,-12},{P_CUTOFF,.385f},
-        {P_FILTER_DRIVE,.7f},{P_DRIVE,.4f},{P_FLT_FM1,0},{P_LFO_WAVE,1},{P_LFO_RATE,.7f},{P_ENV2_A,.15f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_ENV2_R,.48f},
-        {P_KEY_LVL,-.545f},{P_TRIM,.528f},MX(1,S_LFO,D_PCH,.01f),MX(2,S_WHL,D_CUT,.5f)),
+    PRE("Drone Breather",{P_OSC2_WAVE,1},{P_OSC2_FINE,10},{P_CUTOFF,.3f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.5f},
+        {P_LFO_RATE,.25f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.485f},{P_TRIM,.497f},MX(1,S_SY,D_LFR,.5f)),
     PRE("Drone Radar",{P_CUTOFF,.3f},{P_RESONANCE,.6f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,.9f},{P_ENV1_D,.4f},{P_ENV2_D,.55f},
         {P_ENV2_S,.5f},{P_ENV2_R,.48f},{P_LFO_WAVE,1},{P_LFO_RATE,.4f},{P_LFO_GATE,1},{P_DRIFT,.5f},{P_GRIT,.1f},{P_ENV2_A,.15f},{P_KEY_LVL,-.288f},
         {P_TRIM,.59f},MX(1,S_AT,D_LFR,.4f)),
     /* ---- Arp ---- */
-    PRE("Arp Saw Pluck",{P_CUTOFF,.38f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.6f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},
-        {P_ENV2_S,.12f},{P_ENV2_R,.5f},{P_ARP_MODE,1},{P_ARP_OCT,2},{P_ARP_GATE,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
-        {P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.37f},{P_TRIM,.523f},MX(1,S_VEL,D_ENV,.5f)),
-    PRE("Arp Rubb Tri",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,6},{P_OSC1_LEVEL,.85f},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.4f},{P_RESONANCE,.4f},
-        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.5f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},{P_ENV2_S,.12f},{P_ENV2_R,.5f},{P_ARP_MODE,3},
-        {P_ARP_GATE,.55f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.365f},
-        {P_TRIM,.53f},MX(1,S_KEY,D_E1D,-.3f)),
     PRE("Arp Hollow",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.1f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_ENV1_D,.6f},
         {P_ENV2_D,.64f},{P_ENV2_S,.12f},{P_ENV2_R,.5f},{P_VEL_AMP,.5f},{P_ARP_MODE,1},{P_ARP_RATE,1},{P_ARP_OCT,2},{P_ARP_GATE,.4f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.086f},{P_TRIM,.492f}),
-    PRE("Arp Soft Bounce",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.615f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
+    PRE("Arp Soft Bounce",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.28f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,.15f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},{P_ENV2_S,.12f},{P_ENV2_R,.5f},{P_LFO_RATE,.3f},{P_ARP_MODE,2},{P_ARP_RATE,2},{P_ARP_OCT,2},
-        {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.518f},{P_TRIM,.603f},
+        {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.518f},{P_TRIM,.556f},
         MX(1,S_LFO,D_CUT,.1f)),
-    PRE("Arp Brass Seq",{P_OSC2_WAVE,1},{P_OSC2_FINE,11},{P_CUTOFF,.35f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.5f},
-        {P_ENV1_A,.12f},{P_ENV1_D,.6f},{P_ENV2_A,.15f},{P_ENV2_D,.64f},{P_ENV2_S,.15f},{P_ENV2_R,.5f},{P_VEL_CUTOFF,.7f},{P_ARP_MODE,5},{P_ARP_RATE,1},
-        {P_ARP_GATE,.7f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_VEL_AMP,.5f},{P_KEY_LVL,-.273f},{P_TRIM,.471f}),
     PRE("Arp Ghost",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_NOISE_LEVEL,.18f},{P_NOISE_COLOR,.35f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.3f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},{P_ENV2_S,.12f},{P_ENV2_R,.5f},{P_AT_DEST,0},{P_ARP_MODE,4},
         {P_ARP_RATE,4},{P_ARP_OCT,2},{P_ARP_GATE,.5f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.357f},
         {P_TRIM,.489f},MX(1,S_AT,D_NSE,.4f)),
-    PRE("Arp Snap Tri",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.95f},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.3f},
-        {P_OSC1_FM1,.5f},{P_ENV1_D,.55f},{P_ENV2_D,.56f},{P_ENV2_S,.1f},{P_ENV2_R,.44f},{P_ARP_MODE,1},{P_ARP_OCT,3},{P_ARP_GATE,.3f},{P_DRIFT,.6f},
-        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_TRIM,.45f},MX(1,S_WHL,D_E1D,.4f)),
-    PRE("Arp Acid 303",{P_CUTOFF,.3f},{P_RESONANCE,.72f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.85f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},
-        {P_ENV2_S,.5f},{P_ENV2_R,.5f},{P_GLIDE,.06f},{P_LEGATO,1},{P_ARP_MODE,5},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
-        {P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.049f},{P_TRIM,.427f},MX(1,S_VEL,D_ENV,.5f)),
     PRE("Arp Squelch",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_FILTER_MODE,1},{P_CUTOFF,.4f},{P_RESONANCE,.75f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,.6f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},{P_ENV2_S,.45f},{P_ENV2_R,.5f},{P_ARP_MODE,3},{P_ARP_OCT,2},{P_ARP_GATE,.55f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.082f},{P_TRIM,.405f},MX(1,S_SY,D_RES,.15f)),
@@ -950,7 +884,7 @@ static const preset_t PRESETS[] = {
         {P_ENV2_D,.56f},{P_ENV2_S,.1f},{P_ENV2_R,.44f},{P_LFO_SYNC,8},{P_LFO_WAVE,1},{P_LFO_RATE,.6f},{P_OSC1_FM2,.2f},{P_ARP_MODE,4},{P_ARP_OCT,3},
         {P_ARP_GATE,.3f},{P_ENV1_D,.55f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},
         {P_KEY_LVL,-.182f},{P_TRIM,.507f},MX(1,S_WHL,D_LFR,.5f)),
-    PRE("Arp Steel Seq",{P_OSC1_WAVE,4},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.75f},{P_RESONANCE,.4f},
+    PRE("Arp Steel Seq",{P_OSC1_WAVE,4},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_OSC1_FM1,.25f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},{P_ENV2_S,.12f},{P_ENV2_R,.5f},
         {P_VEL_CUTOFF,.7f},{P_ARP_MODE,3},{P_ARP_RATE,1},{P_ARP_GATE,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
         {P_VEL_AMP,.5f},{P_KEY_LVL,-.377f},{P_TRIM,.486f}),
@@ -992,7 +926,7 @@ static const preset_t PRESETS[] = {
     PRE("Para Fifth Stab",{P_OSC2_WAVE,4},{P_OSC2_COARSE,7},{P_OSC2_FINE,9},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.33f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
         {P_DRIVE,.5f},{P_FLT_FM1,.6f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.12f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.321f},{P_TRIM,.487f},MX(1,S_VEL,D_E1D,.4f)),
-    PRE("Para Hollow Fourth",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,5},{P_OSC2_FINE,2},{P_OSC1_LEVEL,.85f},{P_OSC2_LEVEL,.75f},{P_CUTOFF,.75f},
+    PRE("Para Hollow Fourth",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,5},{P_OSC2_FINE,2},{P_OSC1_LEVEL,.85f},{P_OSC2_LEVEL,.75f},{P_CUTOFF,.5f},
         {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_D,.55f},{P_ENV2_S,.25f},{P_ENV2_R,.44f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.472f},{P_TRIM,.528f},MX(1,S_E2,D_CUT,.4f),
         MX(2,S_WHL,D_DRV,.5f)),
@@ -1010,33 +944,27 @@ static const preset_t PRESETS[] = {
     PRE("Para Pluck Fifth",{P_OSC1_WAVE,4},{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,2},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.45f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.06f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
         {P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,.092f},{P_TRIM,.586f},MX(1,S_KEY,D_E2D,-.3f)),
-    PRE("Para Dark Minor",{P_OSC2_WAVE,1},{P_OSC2_COARSE,3},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.35f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
-        {P_DRIVE,.5f},{P_FLT_FM1,.5f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.2f},{P_ENV2_R,.44f},{P_VEL_CUTOFF,.6f},{P_DRIFT,.6f},
-        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_KEY_LVL,-.256f},{P_TRIM,.506f}),
     PRE("Para Sad Pluck",{P_OSC1_WAVE,2},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.4f},{P_OSC2_COARSE,3},{P_OSC2_FINE,2},{P_OSC1_LEVEL,.85f},{P_CUTOFF,.5f},
         {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.06f},{P_ENV2_R,.44f},{P_LFO_RATE,.3f},
         {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.381f},{P_TRIM,.531f},
         MX(1,S_LFO,D_CUT,.15f)),
-    PRE("Para Sixth Pad",{P_OSC2_WAVE,2},{P_OSC2_COARSE,8},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.75f},{P_CUTOFF,.45f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
-        {P_DRIVE,.5f},{P_FLT_FM1,.5f},{P_ENV1_A,.6f},{P_ENV1_D,.85f},{P_ENV1_S,.3f},{P_ENV2_A,.6f},{P_ENV2_R,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
-        {P_GRIT,.2f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.292f},{P_TRIM,.433f},MX(1,S_WHL,D_RES,.3f),MX(2,S_SX,D_DRV,.4f)),
     PRE("Para Minor Grit",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_COARSE,3},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.5f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.75f},{P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV2_D,.55f},{P_ENV2_S,.25f},{P_ENV2_R,.44f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.481f},{P_TRIM,.557f},MX(1,S_SX,D_DRV,.5f)),
-    PRE("Para Weep",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,3},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.75f},{P_CUTOFF,.75f},{P_RESONANCE,.4f},
+    PRE("Para Weep",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,3},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.75f},{P_CUTOFF,.6f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_OSC1_FM1,.1f},{P_ENV1_A,.3f},{P_ENV1_D,.5f},{P_ENV2_A,.15f},{P_ENV2_D,.55f},
         {P_ENV2_S,.5f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.452f},
         {P_TRIM,.491f},MX(1,S_VEL,D_ENV,.5f)),
     PRE("Para Minor Acid",{P_OSC2_WAVE,4},{P_OSC2_COARSE,3},{P_OSC2_FINE,2},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.33f},{P_RESONANCE,.65f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.7f},{P_ENV1_D,.55f},{P_ENV2_D,.55f},{P_ENV2_S,.4f},{P_ENV2_R,.44f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.258f},{P_TRIM,.49f},MX(1,S_AT,D_ENV,.5f)),
-    PRE("Para Devil's Interval",{P_OSC2_WAVE,1},{P_OSC2_COARSE,6},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.442f},{P_RESONANCE,.4f},
+    PRE("Para Devil's Interval",{P_OSC2_WAVE,1},{P_OSC2_COARSE,6},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.4f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_RATE,.12f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
-        {P_GRIT,.2f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.309f},{P_TRIM,.47f},MX(1,S_LFO,D_PCH,.03f),MX(2,S_WHL,D_LFR,.5f)),
+        {P_GRIT,.2f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.309f},{P_TRIM,.495f},MX(1,S_LFO,D_PCH,.03f),MX(2,S_WHL,D_LFR,.5f)),
     PRE("Para Alarm",{P_OSC1_WAVE,4},{P_OSC2_WAVE,2},{P_OSC2_COARSE,6},{P_OSC2_FINE,2},{P_OSC2_LEVEL,.7f},{P_FILTER_MODE,2},{P_CUTOFF,.45f},
         {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_D,.55f},{P_ENV2_S,.3f},{P_ENV2_R,.44f},{P_VEL_AMP,.5f},
         {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.387f},{P_TRIM,.531f}),
-    PRE("Para Scrape",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_COARSE,1},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.507f},{P_RESONANCE,.4f},
+    PRE("Para Scrape",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_COARSE,1},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.5f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.3f},{P_LFO_SYNC,8},{P_LFO_WAVE,1},{P_LFO_RATE,.5f},{P_ENV2_A,.15f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.365f},{P_TRIM,.485f},MX(1,S_AT,D_LFR,.4f)),
     PRE("Para Cluster",{P_OSC2_WAVE,1},{P_OSC2_COARSE,1},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.85f},{P_CUTOFF,.4f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
@@ -1049,7 +977,7 @@ static const preset_t PRESETS[] = {
     PRE("Para Grit Chime",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,6},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_XMOD,.25f},{P_CUTOFF,.8f},
         {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_D,.6f},{P_ENV2_S,.2f},{P_ENV2_R,.44f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.447f},{P_TRIM,.515f},MX(1,S_WHL,D_FM1,.4f)),
-    PRE("Para Anxiety",{P_OSC1_WAVE,4},{P_OSC2_WAVE,1},{P_OSC2_COARSE,6},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.75f},{P_RESONANCE,.4f},
+    PRE("Para Anxiety",{P_OSC1_WAVE,4},{P_OSC2_WAVE,1},{P_OSC2_COARSE,6},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_WAVE,1},{P_LFO_RATE,.7f},{P_ENV2_A,.15f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
         {P_GRIT,.2f},{P_ENV2_R,.48f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.436f},{P_TRIM,.48f},MX(1,S_LFO,D_AMP,.5f),MX(2,S_AT,D_LFR,.5f)),
     PRE("Para Massive Saw",{P_OSC2_WAVE,1},{P_OSC2_FINE,25},{P_OSC2_LEVEL,.9f},{P_CUTOFF,.4f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
@@ -1065,10 +993,9 @@ static const preset_t PRESETS[] = {
     PRE("Para Octave Pluck",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,2},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.5f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.06f},{P_ENV2_R,.44f},{P_VEL_CUTOFF,.6f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_KEY_LVL,-.469f},{P_TRIM,.54f}),
-    PRE("Para Sync Unison",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_FINE,18},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.603f},{P_RESONANCE,.4f},
-        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_ENV2_A,.15f},{P_ENV2_D,.35f},{P_ENV2_S,.35f},{P_ENV2_R,.44f},{P_LFO_WAVE,1},
-        {P_LFO_RATE,.75f},{P_LFO_GATE,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.41f},
-        {P_TRIM,.534f},MX(1,S_WHL,D_LFR,.4f)),
+    PRE("Para Sync Unison",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_FINE,18},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
+        {P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_ENV2_A,.15f},{P_ENV2_D,.35f},{P_ENV2_S,.35f},{P_ENV2_R,.44f},{P_LFO_WAVE,1},{P_LFO_RATE,.75f},{P_LFO_GATE,1},
+        {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.41f},{P_TRIM,.534f},MX(1,S_WHL,D_LFR,.4f)),
     PRE("Para Thick Acid",{P_OSC2_WAVE,1},{P_OSC2_FINE,14},{P_OSC2_LEVEL,.85f},{P_CUTOFF,.3f},{P_RESONANCE,.7f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,.8f},{P_ENV1_D,.55f},{P_ENV2_D,.55f},{P_ENV2_S,.55f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.175f},{P_TRIM,.472f},MX(1,S_VEL,D_ENV,.5f)),
@@ -1076,16 +1003,16 @@ static const preset_t PRESETS[] = {
     PRE("Chaos Glitch Box",{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.4f},{P_OSC2_COARSE,-12},{P_OSC2_FINE,0},{P_CUTOFF,.55f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_ENV1_D,.35f},{P_ENV2_D,.3f},{P_ENV2_S,.4f},{P_ENV2_R,.44f},{P_LFO_WAVE,1},{P_LFO_RATE,.7f},
         {P_LFO_GATE,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_KEY_LVL,-.37f},{P_TRIM,.594f},MX(1,S_SX,D_LFR,.5f)),
-    PRE("Chaos Short Circuit",{P_OSC1_WAVE,2},{P_NOISE_LEVEL,.15f},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
+    PRE("Chaos Short Circuit",{P_OSC1_WAVE,2},{P_NOISE_LEVEL,.15f},{P_CUTOFF,.7f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
         {P_ENV2_D,.6f},{P_ENV2_S,.1f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.781f},
         {P_TRIM,.564f},MX(1,S_NSE,D_FM1,.2f),MX(2,S_VEL,D_AMP,.5f),{P_M2_VIA,S_E2}),
-    PRE("Chaos CPU Melt",{P_OSC2_WAVE,1},{P_OSC2_FINE,15},{P_CUTOFF,.609f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
-        {P_LFO_RATE,.5f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,1},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.453f},{P_TRIM,.436f},
+    PRE("Chaos CPU Melt",{P_OSC2_WAVE,1},{P_OSC2_FINE,15},{P_CUTOFF,.5f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
+        {P_LFO_RATE,.5f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,1},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.453f},{P_TRIM,.478f},
         MX(1,S_E2,D_LFR,-.7f),MX(2,S_WHL,D_PCH,.05f),{P_M2_VIA,S_LFO}),
     PRE("Chaos Wire Tap",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.5f},{P_FILTER_MODE,2},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,0},{P_LFO_RATE,.55f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_KEY_LVL,.042f},{P_TRIM,.525f},
         MX(1,S_LFO,D_NSE,.5f)),
-    PRE("Chaos Tape Snag",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,9},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
+    PRE("Chaos Tape Snag",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,9},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,0},{P_LFO_RATE,.2f},{P_DRIFT,.9f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_AT_DEST,0},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_KEY_LVL,-.617f},{P_TRIM,.492f},MX(1,S_LFO,D_PCH,.1f),MX(2,S_AT,D_LD1,.8f)),
     PRE("Chaos Broken Jack",{P_OSC2_WAVE,1},{P_OSC2_FINE,10},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
@@ -1104,18 +1031,15 @@ static const preset_t PRESETS[] = {
     PRE("Chaos Alien Comm",{P_OSC1_WAVE,4},{P_FILTER_MODE,1},{P_CUTOFF,.5f},{P_RESONANCE,.55f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
         {P_LFO_WAVE,1},{P_LFO_RATE,.65f},{P_SHAPE_MOD,.8f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_KEY_LVL,-.3f},{P_TRIM,.425f},MX(1,S_AT,D_LFR,.4f)),
-    PRE("Chaos Warp Drive",{P_OSC2_WAVE,1},{P_OSC2_FINE,8},{P_CUTOFF,.571f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
+    PRE("Chaos Warp Drive",{P_OSC2_WAVE,1},{P_OSC2_FINE,8},{P_CUTOFF,.5f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
         {P_LFO_RATE,.3f},{P_OSC1_FM2,.25f},{P_ENV2_A,.4f},{P_ENV2_R,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.471f},
-        {P_TRIM,.44f},MX(1,S_WHL,D_LFR,.7f)),
+        {P_TRIM,.478f},MX(1,S_WHL,D_LFR,.7f)),
     PRE("Chaos Mothership",{P_OSC2_WAVE,1},{P_OSC1_COARSE,-24},{P_OSC2_COARSE,-24},{P_OSC2_FINE,12},{P_CUTOFF,.3f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.8f},{P_ENV1_A,.8f},{P_ENV1_D,.9f},{P_ENV1_S,.4f},{P_ENV1_R,.7f},{P_ENV2_A,.5f},{P_ENV2_R,.7f},
         {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.663f},{P_TRIM,.587f},MX(1,S_SX,D_DRV,.5f)),
-    PRE("Chaos Plasma Beam",{P_OSC1_LEVEL,.5f},{P_NOISE_LEVEL,.3f},{P_NOISE_COLOR,.1f},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
+    PRE("Chaos Plasma Beam",{P_OSC1_LEVEL,.5f},{P_NOISE_LEVEL,.3f},{P_NOISE_COLOR,.1f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
         {P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.672f},
-        {P_TRIM,.491f},MX(1,S_NSE,D_CUT,.1f),MX(2,S_KEY,D_RES,.3f)),
-    PRE("Chaos Anvil Hit",{P_OSC1_WAVE,4},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_CUTOFF,.8f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
-        {P_DRIVE,.5f},{P_FLT_FM1,0},{P_OSC1_FM1,.4f},{P_ENV1_D,.3f},{P_ENV2_D,.54f},{P_ENV2_S,.1f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
-        {P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.523f},{P_TRIM,.578f},MX(1,S_VEL,D_DRV,.5f)),
+        {P_TRIM,.473f},MX(1,S_NSE,D_CUT,.1f),MX(2,S_KEY,D_RES,.3f)),
     PRE("Chaos Steam Vent",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,0},{P_ENV2_A,.15f},{P_ENV2_D,.55f},{P_ENV2_S,.5f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_KEY_LVL,.053f},{P_TRIM,.546f},
         MX(1,S_VEL,D_NSE,.5f),{P_M1_VIA,S_E2}),
@@ -1128,12 +1052,12 @@ static const preset_t PRESETS[] = {
     PRE("Chaos Pressure Valve",{P_OSC1_LEVEL,.3f},{P_CUTOFF,.3f},{P_RESONANCE,.97f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.8f},
         {P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.2f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
         {P_KEY_LVL,-.089f},{P_TRIM,.37f},MX(1,S_VEL,D_E1D,.4f)),
-    PRE("Chaos Ground Fault",{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_WAVE,1},{P_LFO_RATE,.6f},
+    PRE("Chaos Ground Fault",{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_WAVE,1},{P_LFO_RATE,.6f},
         {P_SHAPE_MOD,.5f},{P_ENV2_A,.15f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_KEY_LVL,-.634f},{P_TRIM,.505f},
         MX(1,S_SY,D_LFR,.5f)),
-    PRE("Chaos Feedback Loop",{P_OSC1_LEVEL,.25f},{P_FILTER_MODE,1},{P_CUTOFF,.56f},{P_RESONANCE,.98f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
+    PRE("Chaos Feedback Loop",{P_OSC1_LEVEL,.25f},{P_FILTER_MODE,1},{P_CUTOFF,.5f},{P_RESONANCE,.98f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,0},{P_KEY_TRACK,1},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.716f},
-        {P_TRIM,.408f},MX(1,S_KEY,D_CUT,.4f)),
+        {P_TRIM,.422f},MX(1,S_KEY,D_CUT,.4f)),
     PRE("Chaos Tear Gas",{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,0},{P_OSC1_LEVEL,.6f},{P_OSC2_LEVEL,.3f},{P_CUTOFF,.55f},{P_RESONANCE,.5f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.6f},{P_FLT_FM1,0},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_KEY_LVL,-.347f},{P_TRIM,.439f},MX(1,S_OS2,D_CUT,.1f),{P_M1_VIA,S_WHL}),
@@ -1145,8 +1069,8 @@ static const preset_t PRESETS[] = {
         {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.598f},{P_TRIM,.494f}),
     PRE("Chaos Geiger",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.8f},{P_FILTER_MODE,2},{P_CUTOFF,.55f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,0},{P_LFO_WAVE,4},{P_LFO_RATE,.9f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_TRIM,.519f},MX(1,S_LFO,D_AMP,1)),
-    PRE("Chaos Radio Static",{P_OSC1_WAVE,4},{P_NOISE_LEVEL,.3f},{P_NOISE_COLOR,.2f},{P_CUTOFF,.63f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
-        {P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_KEY_LVL,-.442f},{P_TRIM,.472f},MX(1,S_NSE,D_SH1,.8f),
+    PRE("Chaos Radio Static",{P_OSC1_WAVE,4},{P_NOISE_LEVEL,.3f},{P_NOISE_COLOR,.2f},{P_CUTOFF,.45f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
+        {P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_KEY_LVL,-.442f},{P_TRIM,.496f},MX(1,S_NSE,D_SH1,.8f),
         MX(2,S_WHL,D_CUT,.6f)),
     /* ---- Horror ---- */
     PRE("Horror Calliope",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.65f},{P_OSC2_COARSE,12},{P_OSC2_FINE,-34},
@@ -1161,7 +1085,7 @@ static const preset_t PRESETS[] = {
         {P_RESONANCE,.35f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_AT_DEST,0},{P_LFO2_RATE,.2f},
         {P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.318f},{P_TRIM,.396f},MX(1,S_NSE,D_FM1,.03f),MX(2,S_AT,D_NSE,.4f),MX(3,S_LF2,D_SH1,.6f),
         MX(4,S_SX,D_CUT,.4f)),
-    PRE("Horror Broken Toy",{P_OSC1_WAVE,4},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_OSC1_FM1,.35f},
+    PRE("Horror Broken Toy",{P_OSC1_WAVE,4},{P_CUTOFF,.65f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_OSC1_FM1,.35f},
         {P_ENV1_D,.3f},{P_ENV2_D,.35f},{P_ENV2_S,.4f},{P_LFO_WAVE,1},{P_LFO_RATE,.7f},{P_LFO_GATE,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
         {P_ENV2_R,.44f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.53f},{P_TRIM,.503f},MX(1,S_SX,D_LFR,.5f)),
     PRE("Horror Dusty Piano",{P_CUTOFF,.45f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},
@@ -1170,29 +1094,29 @@ static const preset_t PRESETS[] = {
     PRE("Horror Cursed Bell",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,6},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_XMOD,.2f},{P_CUTOFF,.8f},
         {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_D,.75f},{P_ENV2_S,.1f},{P_ENV2_R,.6f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.598f},{P_TRIM,.483f},MX(1,S_VEL,D_XMD,.4f)),
-    PRE("Horror Anxiety Pulse",{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_WAVE,1},{P_LFO_RATE,.66f},
-        {P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.622f},{P_TRIM,.502f},MX(1,S_LFO,D_AMP,.45f),
+    PRE("Horror Anxiety Pulse",{P_CUTOFF,.4f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_WAVE,1},{P_LFO_RATE,.66f},
+        {P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.622f},{P_TRIM,.517f},MX(1,S_LFO,D_AMP,.45f),
         MX(2,S_WHL,D_LFR,.5f)),
     PRE("Horror Saw Blade",{P_CUTOFF,.5f},{P_RESONANCE,.8f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.35f},{P_LFO_SYNC,8},
         {P_LFO_WAVE,1},{P_LFO_RATE,.45f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.195f},
         {P_TRIM,.422f},MX(1,S_AT,D_CUT,.5f)),
-    PRE("Horror Creeping",{P_OSC1_WAVE,2},{P_OSC2_WAVE,1},{P_OSC2_COARSE,1},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.47f},{P_RESONANCE,.4f},
+    PRE("Horror Creeping",{P_OSC1_WAVE,2},{P_OSC2_WAVE,1},{P_OSC2_COARSE,1},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.4f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.85f},{P_ENV2_R,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
-        {P_KEY_LVL,-.595f},{P_TRIM,.509f},MX(1,S_SY,D_DRV,.6f)),
+        {P_KEY_LVL,-.595f},{P_TRIM,.528f},MX(1,S_SY,D_DRV,.6f)),
     PRE("Horror The Hive",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.03f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.04f},{P_OSC2_FINE,15},{P_CUTOFF,.75f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_RATE,.7f},{P_SHAPE_MOD,.8f},{P_ENV2_A,.2f},{P_ENV2_R,.48f},{P_DRIFT,.6f},
         {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.391f},{P_TRIM,.512f},MX(1,S_WHL,D_LFR,.5f)),
     PRE("Horror Dark Water",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_CUTOFF,.3f},{P_RESONANCE,.6f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
         {P_FLT_FM2,.6f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.713f},{P_TRIM,.507f},
         MX(1,S_KEY,D_RES,.3f)),
-    PRE("Horror Pendulum",{P_FILTER_MODE,1},{P_CUTOFF,.624f},{P_RESONANCE,.55f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.7f},
-        {P_LFO_RATE,.1f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_AT_DEST,3},{P_AT_AMOUNT,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_TRIM,.36f}),
+    PRE("Horror Pendulum",{P_FILTER_MODE,1},{P_CUTOFF,.45f},{P_RESONANCE,.55f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.7f},
+        {P_LFO_RATE,.1f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_AT_DEST,3},{P_AT_AMOUNT,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_TRIM,.371f}),
     PRE("Horror Scream Hit",{P_OSC1_LEVEL,.5f},{P_FILTER_MODE,2},{P_CUTOFF,.45f},{P_RESONANCE,.9f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.6f},
         {P_ENV1_D,.5f},{P_ENV2_D,.54f},{P_ENV2_S,.1f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},
         {P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.172f},{P_TRIM,.449f},MX(1,S_VEL,D_ENV,.5f)),
-    PRE("Horror Door Slam",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_COARSE,-12},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.742f},{P_RESONANCE,.4f},
+    PRE("Horror Door Slam",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_COARSE,-12},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.4f},{P_RESONANCE,.4f},
         {P_FILTER_DRIVE,.9f},{P_DRIVE,1},{P_FLT_FM1,0},{P_ENV2_D,.55f},{P_ENV2_S,.2f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
-        {P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.466f},{P_TRIM,.631f},MX(1,S_WHL,D_DRV,.5f)),
+        {P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.466f},{P_TRIM,.614f},MX(1,S_WHL,D_DRV,.5f)),
     PRE("Horror Nerve Zap",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.5f},{P_FILTER_MODE,2},{P_CUTOFF,.5f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
         {P_FLT_FM1,0},{P_LFO_WAVE,1},{P_LFO_RATE,.85f},{P_ENV2_D,.55f},{P_ENV2_S,.3f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_ENV2_A,.15f},
         {P_TRIM,.599f},MX(1,S_LFO,D_AMP,.9f),MX(2,S_AT,D_NSE,.5f)),
@@ -1201,7 +1125,7 @@ static const preset_t PRESETS[] = {
         {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_KEY_LVL,-.31f},{P_TRIM,.463f}),
     PRE("Horror Glass Break",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.8f},{P_FILTER_MODE,2},{P_CUTOFF,.7f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
         {P_DRIVE,.5f},{P_FLT_FM1,.5f},{P_ENV1_D,.5f},{P_ENV2_D,.54f},{P_ENV2_S,.15f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_ENV2_A,.15f},
-        {P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.846f},{P_TRIM,.589f},MX(1,S_KEY,D_RES,.4f)),
+        {P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.846f},{P_TRIM,.579f},MX(1,S_KEY,D_RES,.4f)),
     PRE("Horror Sudden Drop",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,1},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
         {P_OSC1_FM1,1},{P_ENV1_D,.6f},{P_ENV2_D,.6f},{P_ENV2_S,.1f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
         {P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,.435f},{P_TRIM,.492f},MX(1,S_VEL,D_E1D,.4f)),
@@ -1211,13 +1135,13 @@ static const preset_t PRESETS[] = {
     PRE("Horror Banshee",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.3f},{P_NOISE_COLOR,.2f},{P_CUTOFF,.55f},{P_RESONANCE,.9f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},
         {P_FLT_FM1,0},{P_FLT_FM2,.3f},{P_LFO_RATE,.3f},{P_ENV2_A,.3f},{P_ENV2_R,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.081f},{P_TRIM,.327f},
         MX(1,S_NSE,D_CUT,.15f),MX(2,S_SY,D_CUT,.5f)),
-    PRE("Horror Cold Breath",{P_OSC1_WAVE,2},{P_NOISE_LEVEL,.05f},{P_FILTER_MODE,2},{P_CUTOFF,.75f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
-        {P_FLT_FM2,.5f},{P_LFO_RATE,.2f},{P_ENV2_A,.4f},{P_ENV2_R,.5f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-1},{P_TRIM,.636f},MX(1,S_AT,D_NSE,.5f)),
+    PRE("Horror Cold Breath",{P_OSC1_WAVE,2},{P_NOISE_LEVEL,.05f},{P_FILTER_MODE,2},{P_CUTOFF,.45f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
+        {P_FLT_FM2,.5f},{P_LFO_RATE,.2f},{P_ENV2_A,.4f},{P_ENV2_R,.5f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-1},{P_TRIM,.544f},MX(1,S_AT,D_NSE,.5f)),
     PRE("Horror Apparition",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.6f},{P_OSC2_FINE,9},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.7f},
         {P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_LFO_RATE,.25f},{P_SHAPE_MOD,.6f},{P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_DRIFT,.5f},{P_GRIT,.1f},
         {P_KEY_LVL,-.566f},{P_TRIM,.461f},MX(1,S_SX,D_SH2,.5f)),
-    PRE("Horror Crypt",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.7f},{P_CUTOFF,.266f},{P_RESONANCE,.85f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
-        {P_ENV2_A,.6f},{P_ENV2_R,.7f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.426f},{P_TRIM,.607f},MX(1,S_WHL,D_CUT,.5f)),
+    PRE("Horror Crypt",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.7f},{P_CUTOFF,.25f},{P_RESONANCE,.85f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
+        {P_ENV2_A,.6f},{P_ENV2_R,.7f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.426f},{P_TRIM,.62f},MX(1,S_WHL,D_CUT,.5f)),
     PRE("Horror Spirit Box",{P_OSC1_WAVE,4},{P_NOISE_LEVEL,.3f},{P_NOISE_COLOR,.2f},{P_FILTER_MODE,1},{P_CUTOFF,.5f},{P_RESONANCE,.5f},
         {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_FLT_FM2,.5f},{P_LFO_WAVE,4},{P_LFO_RATE,.75f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},
         {P_DRIFT,.6f},{P_GRIT,.2f},{P_KEY_LVL,-.116f},{P_TRIM,.378f},MX(1,S_NSE,D_FM1,.15f)),
@@ -1225,149 +1149,74 @@ static const preset_t PRESETS[] = {
         {P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_ENV1_A,.6f},{P_ENV1_D,.8f},{P_ENV1_S,.4f},{P_LFO_RATE,.2f},{P_SHAPE_MOD,.6f},{P_ENV2_A,.35f},
         {P_ENV2_R,.5f},{P_AT_DEST,3},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.579f},{P_TRIM,.475f}),
     /* ---- Set ---- */
-    PRE("Set Industrial Decay 1 - Bass",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.6f},{P_OSC2_FINE,8},{P_OSC2_LEVEL,.7f},
-        {P_CUTOFF,.4f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.9f},{P_ENV1_D,.55f},{P_LFO_RATE,.3f},{P_SHAPE_MOD,.7f},{P_DRIFT,.6f},
-        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.546f},MX(1,S_VEL,D_DRV,.5f)),
-    PRE("Set Industrial Decay 2 - Lead",{P_FILTER_MODE,1},{P_CUTOFF,.55f},{P_RESONANCE,.95f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.6f},
-        {P_ENV1_D,.55f},{P_ENV2_S,.9f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
-        {P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.056f},{P_TRIM,.371f},MX(1,S_WHL,D_CUT,.5f)),
-    PRE("Set Industrial Decay 3 - Drone",{P_OSC1_WAVE,4},{P_CUTOFF,.55f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
-        {P_ENV2_A,.3f},{P_ENV2_R,.5f},{P_LFO_WAVE,1},{P_LFO_RATE,.4f},{P_OSC1_FM2,.2f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
-        {P_KEY_LVL,-.575f},{P_TRIM,.483f},MX(1,S_AT,D_LFR,.5f)),
-    PRE("Set Darkwave Drive 1 - Bass",{P_CUTOFF,.32f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.6f},{P_ENV1_D,.55f},
-        {P_ENV2_D,.55f},{P_ENV2_S,.5f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},
-        {P_VEL_CUTOFF,.3f},{P_TRIM,.514f},MX(1,S_VEL,D_ENV,.5f)),
-    PRE("Set Darkwave Drive 2 - Stab",{P_OSC2_WAVE,1},{P_OSC2_COARSE,3},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.45f},{P_RESONANCE,.4f},
-        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.06f},{P_ENV2_R,.44f},{P_DRIFT,.6f},
-        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.376f},{P_TRIM,.507f},MX(1,S_KEY,D_CUT,.4f)),
-    PRE("Set Darkwave Drive 3 - Arp",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,6},{P_OSC2_LEVEL,.7f},{P_FILTER_MODE,2},{P_CUTOFF,.538f},
-        {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.2f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},{P_ENV2_S,.12f},{P_ENV2_R,.5f},
-        {P_LFO_RATE,.4f},{P_ARP_MODE,3},{P_ARP_GATE,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},
-        {P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.55f},{P_TRIM,.58f},MX(1,S_LFO,D_CUT,.15f)),
-    PRE("Set Void Walker 1 - Sub",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.7f},{P_CUTOFF,.75f},{P_RESONANCE,.05f},{P_FILTER_DRIVE,.25f},{P_DRIVE,.08f},
-        {P_FLT_FM1,0},{P_KEY_TRACK,.3f},{P_ENV2_R,.48f},{P_VEL_AMP,.5f},{P_DRIFT,.5f},{P_LFO2_RATE,.13f},{P_ENV2_A,.15f},{P_VEL_CUTOFF,.3f},
-        {P_TRIM,.536f},MX(1,S_LF2,D_SH1,.4f)),
-    PRE("Set Void Walker 2 - Lead",{P_OSC1_WAVE,0},{P_OSC2_WAVE,2},{P_OSC2_SHAPE,.3f},{P_OSC2_COARSE,12},{P_OSC2_FINE,0},{P_OSC1_LEVEL,0},
-        {P_OSC2_LEVEL,.9f},{P_FILTER_MODE,2},{P_CUTOFF,.694f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_ENV2_A,.15f},{P_ENV2_R,.5f},
-        {P_GLIDE,.65f},{P_LEGATO,1},{P_VIB_DEPTH,.1f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.627f},{P_TRIM,.559f},
-        MX(1,S_SX,D_GLD,.7f)),
-    PRE("Set Void Walker 3 - Texture",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.7f},{P_NOISE_COLOR,.4f},{P_FILTER_MODE,1},{P_CUTOFF,.45f},{P_RESONANCE,.45f},
-        {P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,.6f},{P_ENV1_A,.75f},{P_ENV1_D,.9f},{P_ENV1_S,.35f},{P_FLT_FM2,.3f},{P_LFO_RATE,.15f},
-        {P_ENV2_A,.5f},{P_ENV2_R,.6f},{P_DRIFT,.5f},{P_GRIT,.1f},{P_KEY_LVL,-.081f},{P_TRIM,.372f},MX(1,S_WHL,D_NSE,.5f)),
-    PRE("Set Acid Reactor 1 - Bass",{P_CUTOFF,.3f},{P_RESONANCE,.8f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.8f},{P_ENV1_D,.55f},
-        {P_ENV2_D,.55f},{P_ENV2_S,.7f},{P_ENV2_R,.48f},{P_GLIDE,.08f},{P_LEGATO,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
-        {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.453f},MX(1,S_VEL,D_ENV,.5f)),
-    PRE("Set Acid Reactor 2 - Pluck",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_CUTOFF,.4f},{P_RESONANCE,.6f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
-        {P_FLT_FM1,.9f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.06f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
-        {P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.191f},{P_TRIM,.478f},MX(1,S_WHL,D_RES,.3f)),
-    PRE("Set Acid Reactor 3 - SFX",{P_OSC1_LEVEL,.3f},{P_CUTOFF,.55f},{P_RESONANCE,.6f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
-        {P_FLT_FM2,.5f},{P_LFO_SYNC,8},{P_LFO_WAVE,1},{P_LFO_RATE,.5f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
-        {P_KEY_LVL,-.087f},{P_TRIM,.42f},MX(1,S_SY,D_LFR,.5f)),
-    PRE("Set Cybernetic 1 - Bass",{P_OSC1_WAVE,4},{P_CUTOFF,.596f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},
-        {P_OSC1_FM1,.8f},{P_ENV2_D,.6f},{P_ENV2_S,.1f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},
-        {P_VEL_CUTOFF,.3f},{P_TRIM,.438f},MX(1,S_VEL,D_E2D,.4f)),
-    PRE("Set Cybernetic 2 - Arp",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_XMOD,.25f},{P_CUTOFF,.8f},{P_RESONANCE,.4f},
-        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_D,.64f},{P_ENV2_S,.12f},{P_ENV2_R,.5f},{P_ARP_MODE,1},{P_ARP_RATE,4},{P_ARP_OCT,2},
-        {P_ARP_GATE,.5f},{P_ENV1_D,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},
-        {P_KEY_LVL,-.287f},{P_TRIM,.48f},MX(1,S_KEY,D_XMD,.4f)),
-    PRE("Set Cybernetic 3 - Pad",{P_OSC1_WAVE,4},{P_CUTOFF,.75f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_WAVE,1},
-        {P_LFO_RATE,.7f},{P_LFO_GATE,1},{P_ENV2_A,.15f},{P_ENV2_D,.3f},{P_ENV2_S,.5f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
-        {P_KEY_LVL,-.54f},{P_TRIM,.492f},MX(1,S_AT,D_LFR,.5f)),
-    PRE("Set Cryptic Ritual 1 - Bass",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_FILTER_MODE,1},{P_CUTOFF,.357f},{P_RESONANCE,.5f},{P_FILTER_DRIVE,.85f},
-        {P_DRIVE,.5f},{P_FLT_FM1,0},{P_LFO_RATE,.15f},{P_SHAPE_MOD,.6f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
-        {P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.453f},MX(1,S_WHL,D_CUT,.5f)),
-    PRE("Set Cryptic Ritual 2 - Chime",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,6},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.8f},
-        {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_OSC1_FM1,.3f},{P_ENV1_D,.5f},{P_ENV2_D,.7f},{P_ENV2_S,.05f},
-        {P_ENV2_R,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.333f},
-        {P_TRIM,.451f},MX(1,S_VEL,D_FM1,.4f)),
-    PRE("Set Cryptic Ritual 3 - Drone",{P_OSC2_WAVE,1},{P_OSC2_FINE,12},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.419f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
-        {P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.6f},{P_ENV2_R,.7f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_KEY_LVL,-.422f},{P_TRIM,.502f},
-        MX(1,S_SX,D_DRV,.5f)),
-    PRE("Set Warehouse Rave 1 - Bass",{P_OSC1_WAVE,4},{P_OSC1_LEVEL,1},{P_CUTOFF,.45f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.9f},{P_DRIVE,1},
-        {P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV2_D,.55f},{P_ENV2_S,.6f},{P_ENV2_R,.48f},{P_VEL_AMP,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
-        {P_ENV2_A,.15f},{P_VEL_CUTOFF,.3f},{P_TRIM,.524f}),
-    PRE("Set Warehouse Rave 2 - Stab",{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.3f},{P_OSC2_COARSE,7},{P_OSC2_FINE,2},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.36f},
-        {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.7f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.1f},{P_ENV2_R,.44f},
-        {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.172f},{P_TRIM,.536f},
-        MX(1,S_WHL,D_E1D,.4f)),
-    PRE("Set Warehouse Rave 3 - Sweep",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.8f},{P_NOISE_COLOR,.1f},{P_CUTOFF,.2f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
-        {P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.85f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_KEY_LVL,-.227f},{P_TRIM,.453f},MX(1,S_E2,D_CUT,.9f),
-        MX(2,S_AT,D_RES,.4f)),
-    PRE("Set Alien Flora 1 - Pluck",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.05f},{P_CUTOFF,.6f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},
-        {P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.05f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
-        {P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.178f},{P_TRIM,.555f},MX(1,S_OS2,D_SH1,.5f),{P_M1_VIA,S_VEL}),
-    PRE("Set Alien Flora 2 - Lead",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,6},{P_CUTOFF,.8f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},
-        {P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_S,.9f},{P_LFO_RATE,.6f},{P_OSC1_FM2,.25f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},
-        {P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_KEY_LVL,-.473f},{P_TRIM,.484f},MX(1,S_WHL,D_LFR,.4f)),
-    PRE("Set Alien Flora 3 - Pad",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,0},{P_FILTER_MODE,2},{P_CUTOFF,.61f},
-        {P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.6f},{P_ENV2_R,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
-        {P_GRIT,.2f},{P_KEY_LVL,-1},{P_TRIM,.487f},MX(1,S_OS2,D_CUT,.1f),MX(2,S_KEY,D_RES,.3f)),
-    /* ---- Keys ---- */
-    PRE("Keys Tine EP",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,3},{P_OSC1_LEVEL,.9f},{P_OSC2_LEVEL,.5f},{P_XMOD,.08f},
-        {P_CUTOFF,.75f},{P_RESONANCE,.2f},{P_DRIVE,.15f},{P_FLT_FM1,.2f},{P_ENV1_D,.6f},{P_ENV2_D,.76f},{P_ENV2_S,.18f},{P_ENV2_R,.55f},
-        {P_VEL_AMP,.8f},{P_VEL_CUTOFF,.7f},{P_LFO_RATE,.7f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.799f},MX(1,S_VEL,D_XMD,.3f),
-        MX(2,S_LFO,D_AMP,.12f),{P_M2_VIA,S_WHL}),
-    PRE("Keys Wurly",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,2},{P_OSC2_LEVEL,.4f},{P_CUTOFF,.58f},
-        {P_FILTER_DRIVE,.6f},{P_DRIVE,.25f},{P_FLT_FM1,.35f},{P_ENV1_D,.58f},{P_ENV2_D,.68f},{P_ENV2_S,.25f},{P_ENV2_R,.5f},{P_VEL_AMP,.8f},
-        {P_VEL_CUTOFF,.8f},{P_LFO_RATE,.7f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.542f},{P_TRIM,.481f},MX(1,S_VEL,D_DRV,.35f),
-        MX(2,S_LFO,D_AMP,.1f),{P_M2_VIA,S_WHL}),
-    PRE("Keys Suitcase",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,5},{P_OSC1_LEVEL,.9f},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.75f},{P_RESONANCE,.15f},
-        {P_DRIVE,.15f},{P_FLT_FM1,.2f},{P_ENV1_D,.6f},{P_ENV2_D,.8f},{P_ENV2_S,.22f},{P_ENV2_R,.6f},{P_VEL_AMP,.85f},{P_VEL_CUTOFF,1},
-        {P_LFO_RATE,.65f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-1},MX(1,S_LFO,D_AMP,.18f),{P_M1_VIA,S_WHL}),
-    PRE("Keys Bell EP",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,19},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.4f},{P_XMOD,.15f},{P_CUTOFF,.78f},
-        {P_RESONANCE,.2f},{P_DRIVE,.15f},{P_FLT_FM1,.1f},{P_ENV2_D,.82f},{P_ENV2_S,.1f},{P_ENV2_R,.6f},{P_VEL_AMP,.8f},{P_VEL_CUTOFF,.5f},
-        {P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.688f},{P_TRIM,.478f},MX(1,S_VEL,D_XMD,.4f),MX(2,S_E2,D_XMD,.25f)),
-    PRE("Keys Dirty EP",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,4},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.55f},
-        {P_RESONANCE,.35f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.4f},{P_FLT_FM1,.3f},{P_ENV1_D,.6f},{P_ENV2_D,.7f},{P_ENV2_S,.2f},{P_ENV2_R,.5f},
-        {P_VEL_AMP,.75f},{P_VEL_CUTOFF,.8f},{P_LFO_RATE,.7f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.537f},{P_TRIM,.527f},
-        MX(1,S_VEL,D_DRV,.6f),MX(2,S_LFO,D_AMP,.15f),{P_M2_VIA,S_WHL}),
-    PRE("Keys Clav",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.15f},{P_OSC2_WAVE,1},{P_OSC2_FINE,6},{P_OSC1_LEVEL,.85f},{P_OSC2_LEVEL,.4f},{P_CUTOFF,.6f},
-        {P_RESONANCE,.35f},{P_FILTER_DRIVE,.6f},{P_DRIVE,.25f},{P_FLT_FM1,.6f},{P_ENV1_D,.58f},{P_ENV2_D,.64f},{P_ENV2_S,.1f},{P_ENV2_R,.45f},
-        {P_VEL_AMP,.8f},{P_VEL_CUTOFF,.9f},{P_KEY_TRACK,.7f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.446f},MX(1,S_VEL,D_ENV,.6f)),
-    PRE("Keys Funk Clav",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.2f},{P_OSC1_LEVEL,.9f},{P_FILTER_MODE,1},{P_CUTOFF,.5f},{P_RESONANCE,.5f},{P_FILTER_DRIVE,.6f},
-        {P_DRIVE,.25f},{P_FLT_FM1,.7f},{P_ENV1_D,.56f},{P_ENV2_D,.62f},{P_ENV2_S,.12f},{P_ENV2_R,.44f},{P_VEL_AMP,.8f},{P_VEL_CUTOFF,.9f},
-        {P_KEY_TRACK,.7f},{P_GLIDE,.05f},{P_LEGATO,1},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.177f},{P_TRIM,.514f},
-        MX(1,S_VEL,D_ENV,.5f)),
-    PRE("Keys Pick Clav",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.1f},{P_OSC2_COARSE,12},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.35f},
-        {P_CUTOFF,.7f},{P_FILTER_DRIVE,.55f},{P_FLT_FM1,.5f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.08f},{P_ENV2_R,.44f},{P_VEL_AMP,.85f},
-        {P_VEL_CUTOFF,.9f},{P_KEY_TRACK,.7f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.472f},{P_TRIM,.518f}),
-    PRE("Keys Dirty Clav",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.12f},{P_OSC2_WAVE,1},{P_OSC2_FINE,8},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},
-        {P_FILTER_DRIVE,.8f},{P_DRIVE,.5f},{P_FLT_FM1,.6f},{P_ENV1_D,.58f},{P_ENV2_D,.64f},{P_ENV2_S,.12f},{P_ENV2_R,.45f},{P_VEL_AMP,.8f},
-        {P_VEL_CUTOFF,.9f},{P_KEY_TRACK,.6f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.418f},{P_TRIM,.552f},MX(1,S_VEL,D_DRV,.6f),
-        MX(2,S_VEL,D_ENV,.4f)),
-    PRE("Keys Combo Organ",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_COARSE,12},{P_OSC2_FINE,4},{P_OSC2_LEVEL,.45f},{P_CUTOFF,.72f},{P_RESONANCE,.2f},
-        {P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV2_R,.48f},{P_VEL_AMP,.3f},{P_VEL_CUTOFF,.5f},{P_VIB_DEPTH,.25f},{P_VIB_RATE,.65f},{P_DRIFT,.4f},
-        {P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.538f},{P_TRIM,.429f}),
-    PRE("Keys Drawbar Organ",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,3},{P_OSC1_LEVEL,.85f},{P_CUTOFF,.78f},{P_RESONANCE,.15f},
-        {P_FLT_FM1,.35f},{P_ENV1_D,.55f},{P_ENV2_R,.48f},{P_VEL_AMP,.3f},{P_VEL_CUTOFF,.5f},{P_LFO_RATE,.78f},{P_DRIFT,.4f},{P_GRIT,.06f},
-        {P_ENV2_A,.15f},{P_KEY_LVL,-.687f},{P_TRIM,.459f},MX(1,S_LFO,D_PCH,.05f),{P_M1_VIA,S_WHL},MX(2,S_LFO,D_AMP,.25f),{P_M2_VIA,S_WHL}),
-    PRE("Keys Church Organ",{P_OSC2_WAVE,2},{P_OSC2_COARSE,-12},{P_OSC2_FINE,2},{P_OSC1_LEVEL,.7f},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.75f},
-        {P_RESONANCE,.1f},{P_DRIVE,.15f},{P_FLT_FM1,0},{P_ENV2_A,.42f},{P_ENV2_R,.62f},{P_VEL_AMP,.25f},{P_VEL_CUTOFF,.4f},{P_DRIFT,.4f},{P_GRIT,.06f},
-        {P_KEY_LVL,-.564f},{P_TRIM,.47f}),
-    PRE("Keys Perc Organ",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,19},{P_OSC2_FINE,0},{P_OSC1_LEVEL,.85f},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.75f},
-        {P_RESONANCE,.15f},{P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV2_R,.48f},{P_VEL_AMP,.3f},{P_VEL_CUTOFF,.5f},{P_DRIFT,.4f},{P_GRIT,.06f},
-        {P_ENV2_A,.15f},{P_KEY_LVL,-.441f},{P_TRIM,.39f},MX(1,S_E1,D_LV2,.7f)),
-    PRE("Keys Harpsichord",{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.12f},{P_OSC2_FINE,5},{P_OSC2_LEVEL,.55f},{P_NOISE_LEVEL,.04f},{P_CUTOFF,.78f},
-        {P_RESONANCE,.25f},{P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV2_D,.62f},{P_ENV2_S,.12f},{P_ENV2_R,.44f},{P_VEL_AMP,.55f},{P_VEL_CUTOFF,.6f},
-        {P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.409f},{P_TRIM,.577f}),
-    PRE("Keys Toy Piano",{P_OSC1_WAVE,2},{P_OSC1_COARSE,12},{P_OSC2_WAVE,2},{P_OSC2_COARSE,14},{P_OSC2_FINE,0},{P_OSC1_LEVEL,.85f},{P_OSC2_LEVEL,.4f},
-        {P_XMOD,.1f},{P_CUTOFF,.8f},{P_RESONANCE,.2f},{P_DRIVE,.15f},{P_FLT_FM1,.1f},{P_ENV2_D,.64f},{P_ENV2_S,.06f},{P_ENV2_R,.5f},{P_VEL_AMP,.7f},
-        {P_VEL_CUTOFF,.5f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.623f},MX(1,S_VEL,D_XMD,.3f)),
-    PRE("Keys Marimba",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,19},{P_OSC2_FINE,0},{P_OSC1_LEVEL,.9f},{P_OSC2_LEVEL,.2f},{P_CUTOFF,.62f},
-        {P_RESONANCE,.15f},{P_DRIVE,.15f},{P_FLT_FM1,.3f},{P_OSC1_FM1,.1f},{P_ENV1_D,.55f},{P_ENV2_D,.66f},{P_ENV2_S,.04f},{P_ENV2_R,.5f},
-        {P_VEL_AMP,.8f},{P_VEL_CUTOFF,.7f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.81f},{P_TRIM,.572f}),
-    PRE("Keys Vibes",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,3},{P_OSC1_LEVEL,.9f},{P_CUTOFF,.75f},{P_RESONANCE,.15f},{P_DRIVE,.15f},
-        {P_FLT_FM1,.15f},{P_ENV1_D,.6f},{P_ENV2_D,.84f},{P_ENV2_S,.22f},{P_ENV2_R,.62f},{P_VEL_AMP,.75f},{P_VEL_CUTOFF,.5f},{P_LFO_RATE,.58f},
-        {P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.964f},MX(1,S_LFO,D_AMP,.3f)),
-    PRE("Keys Muted Piano",{P_OSC2_WAVE,2},{P_OSC2_COARSE,-12},{P_OSC2_FINE,2},{P_OSC1_LEVEL,.7f},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.45f},{P_RESONANCE,.2f},
-        {P_FILTER_DRIVE,.55f},{P_ENV1_D,.6f},{P_ENV2_D,.72f},{P_ENV2_S,.1f},{P_ENV2_R,.5f},{P_VEL_AMP,.85f},{P_VEL_CUTOFF,1},{P_DRIFT,.4f},
-        {P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.66f},{P_TRIM,.558f},MX(1,S_VEL,D_ENV,.5f)),
-    PRE("Keys Honky Piano",{P_OSC2_WAVE,1},{P_OSC2_FINE,22},{P_OSC2_LEVEL,.7f},{P_CUTOFF,.62f},{P_RESONANCE,.25f},{P_FILTER_DRIVE,.6f},{P_DRIVE,.25f},
-        {P_ENV1_D,.58f},{P_ENV2_D,.7f},{P_ENV2_S,.1f},{P_ENV2_R,.5f},{P_VEL_AMP,.8f},{P_VEL_CUTOFF,.8f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},
-        {P_KEY_LVL,-.669f},{P_TRIM,.491f}),
-    PRE("Keys FM Piano",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_FINE,0},{P_OSC1_LEVEL,.9f},{P_OSC2_LEVEL,.5f},{P_XMOD,.12f},
-        {P_CUTOFF,.8f},{P_RESONANCE,.15f},{P_DRIVE,.15f},{P_FLT_FM1,.1f},{P_ENV2_D,.74f},{P_ENV2_S,.12f},{P_ENV2_R,.55f},{P_VEL_AMP,.8f},
-        {P_VEL_CUTOFF,.4f},{P_DRIFT,.4f},{P_GRIT,.06f},{P_ENV2_A,.15f},{P_KEY_LVL,-.754f},MX(1,S_VEL,D_XMD,.45f),MX(2,S_E2,D_XMD,.35f)),
+    PRE("Set Rust Cathedral 1 - Sub",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_CUTOFF,.33f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
+        {P_KEY_TRACK,.3f},{P_AUX_FB,.12f},{P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_VEL_AMP,.5f},{P_DRIFT,.5f},{P_LFO2_RATE,.13f},{P_GRIT,.1f},
+        {P_VEL_CUTOFF,.3f},MX(1,S_LF2,D_SH1,.3f)),
+    PRE("Set Rust Cathedral 2 - Drone",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.4f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.6f},{P_OSC2_FINE,11},{P_OSC2_LEVEL,.8f},
+        {P_FILTER_MODE,1},{P_CUTOFF,.5f},{P_RESONANCE,.45f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.55f},{P_ENV2_R,.7f},
+        {P_INTEG_SAT,.4f},{P_LFO_RATE,.2f},{P_FLT_FM2,.35f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_TRIM,.384f},MX(1,S_LF2,D_SH2,.3f)),
+    PRE("Set Rust Cathedral 3 - Lead",{P_OSC2_WAVE,1},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC1_LEVEL,.35f},{P_OSC2_LEVEL,.9f},{P_OSC_SYNC,1},
+        {P_OSC2_FM1,.5f},{P_CUTOFF,.7f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.3f},{P_ENV1_D,.55f},{P_ENV1_S,.3f},
+        {P_ENV2_S,.9f},{P_ENV2_R,.5f},{P_GLIDE,.1f},{P_LEGATO,1},{P_VIB_DEPTH,.05f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},
+        {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.393f},MX(1,S_WHL,D_PC2,.5f),MX(2,S_AT,D_PC2,.6f)),
+    PRE("Set Rust Cathedral 4 - Arp",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.3f},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.7f},{P_OSC2_COARSE,12},{P_OSC2_FINE,0},
+        {P_OSC2_LEVEL,.5f},{P_CUTOFF,.62f},{P_RESONANCE,.45f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},{P_ENV2_S,.12f},
+        {P_ENV2_R,.5f},{P_SHAPE_MOD,.4f},{P_LFO_RATE,.55f},{P_ARP_MODE,1},{P_ARP_OCT,2},{P_ARP_GATE,.45f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},
+        {P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_TRIM,.448f},MX(1,S_ARP,D_CUT,.3f)),
+    PRE("Set Dead Frequencies 1 - Sub",{P_OSC1_WAVE,2},{P_OSC1_LEVEL,.9f},{P_CUTOFF,.28f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},
+        {P_KEY_TRACK,.3f},{P_AUX_FB,.2f},{P_NOISE_LEVEL,.05f},{P_NOISE_COLOR,.9f},{P_ENV2_A,.2f},{P_ENV2_R,.48f},{P_VIB_DEPTH,.05f},{P_VIB_RATE,.35f},
+        {P_DRIFT,.5f},{P_GRIT,.1f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.588f}),
+    PRE("Set Dead Frequencies 2 - Texture",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.8f},{P_NOISE_COLOR,.2f},{P_FILTER_MODE,1},{P_CUTOFF,.62f},
+        {P_RESONANCE,.6f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.3f},{P_ENV1_A,.7f},{P_ENV1_D,.9f},{P_ENV1_S,.4f},{P_FLT_FM2,.4f},
+        {P_LFO_RATE,.12f},{P_ENV2_A,.55f},{P_ENV2_R,.65f},{P_DRIFT,.6f},{P_GRIT,.2f},{P_TRIM,.36f},MX(1,S_SMR,D_CUT,.3f),MX(2,S_WHL,D_NSE,.4f)),
+    PRE("Set Dead Frequencies 3 - Lead",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_FINE,9},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.58f},{P_RESONANCE,.4f},
+        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_KEY_TRACK,.6f},{P_GLIDE,.6f},{P_LEGATO,1},{P_VIB_DEPTH,.22f},{P_VIB_RATE,.55f},
+        {P_ENV2_A,.15f},{P_ENV2_R,.48f},{P_AUX_FB,.25f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},
+        {P_TRIM,.452f},MX(1,S_WHL,D_VIB,.4f)),
+    PRE("Set Dead Frequencies 4 - Chime",{P_OSC1_WAVE,2},{P_OSC2_COARSE,12},{P_OSC2_WAVE,2},{P_OSC2_LEVEL,0},{P_XMOD,.35f},{P_XMOD_MODE,1},
+        {P_CUTOFF,.78f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV1_D,.55f},{P_ENV2_D,.7f},{P_ENV2_S,.05f},
+        {P_ENV2_R,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},{P_TRIM,.452f},
+        MX(1,S_VEL,D_XMD,.4f)),
+    PRE("Set Pressure Drop 1 - Bass",{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.3f},{P_OSC2_COARSE,-12},{P_OSC2_FINE,6},{P_OSC2_LEVEL,.8f},{P_AUX_FB,.5f},
+        {P_CUTOFF,.4f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.9f},{P_DRIVE,.8f},{P_FLT_FM1,.5f},{P_ENV1_D,.55f},{P_ENV2_D,.55f},{P_ENV2_S,.6f},
+        {P_ENV2_R,.48f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.602f},
+        MX(1,S_VEL,D_DRV,.4f)),
+    PRE("Set Pressure Drop 2 - Pad",{P_OSC1_WAVE,4},{P_OSC2_WAVE,4},{P_OSC2_FINE,8},{P_OSC2_LEVEL,.7f},{P_SHAPE_FLIP,1},{P_SHAPE_MOD,.5f},
+        {P_LFO_RATE,.22f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.55f},{P_ENV2_R,.65f},
+        {P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_TRIM,.429f},MX(1,S_LF2,D_SH2,.4f)),
+    PRE("Set Pressure Drop 3 - Lead",{P_SAW_OCT,1},{P_OSC2_WAVE,2},{P_OSC2_COARSE,7},{P_OSC2_FINE,0},{P_OSC2_LEVEL,.5f},{P_CUTOFF,.66f},
+        {P_RESONANCE,.5f},{P_RES_CURVE,1},{P_FILTER_DRIVE,.85f},{P_DRIVE,.6f},{P_FLT_FM1,.35f},{P_ENV1_D,.55f},{P_ENV2_S,.9f},{P_ENV2_R,.48f},
+        {P_GLIDE,.12f},{P_LEGATO,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.38f},
+        MX(1,S_WHL,D_CUT,.4f)),
+    PRE("Set Pressure Drop 4 - Sweep",{P_OSC1_LEVEL,0},{P_NOISE_LEVEL,.9f},{P_NOISE_COLOR,.15f},{P_FILTER_MODE,2},{P_CUTOFF,.25f},{P_RESONANCE,.5f},
+        {P_RES_CURVE,1},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_AUX_FB,.35f},{P_ENV2_A,.85f},{P_ENV2_R,.48f},{P_DRIFT,.6f},{P_GRIT,.2f},
+        {P_TRIM,.391f},MX(1,S_E2,D_CUT,.7f),MX(2,S_AT,D_RES,.4f)),
+    PRE("Set Acid Hymn 1 - Bass",{P_CUTOFF,.28f},{P_RESONANCE,.62f},{P_RES_CURVE,1},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.8f},
+        {P_ENV1_D,.55f},{P_ENV2_D,.55f},{P_ENV2_S,.65f},{P_ENV2_R,.48f},{P_GLIDE,.07f},{P_LEGATO,1},{P_INTEG_SAT,.25f},{P_DRIFT,.6f},
+        {P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.468f},MX(1,S_VEL,D_ENV,.5f)),
+    PRE("Set Acid Hymn 2 - Pad",{P_OSC1_WAVE,2},{P_OSC2_WAVE,4},{P_OSC2_SHAPE,.4f},{P_OSC2_COARSE,12},{P_OSC2_FINE,0},{P_FILTER_MODE,2},
+        {P_CUTOFF,.35f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.6f},{P_ENV2_R,.7f},{P_FLT_FM2,.3f},
+        {P_LFO_RATE,.17f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_TRIM,.402f},MX(1,S_LF2,D_CUT,.15f)),
+    PRE("Set Acid Hymn 3 - Lead",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.35f},{P_OSC2_WAVE,1},{P_OSC2_COARSE,12},{P_OSC2_FINE,5},{P_OSC2_LEVEL,.4f},
+        {P_FILTER_MODE,1},{P_CUTOFF,.62f},{P_RESONANCE,.6f},{P_RES_CURVE,1},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.5f},{P_ENV1_D,.55f},
+        {P_ENV2_S,.85f},{P_GLIDE,.15f},{P_LEGATO,1},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_R,.48f},{P_ENV2_A,.15f},{P_ENV2_D,.55f},
+        {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.36f},MX(1,S_WHL,D_RES,.3f),MX(2,S_AT,D_CUT,.4f)),
+    PRE("Set Acid Hymn 4 - Arp",{P_CUTOFF,.5f},{P_RESONANCE,.5f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,.7f},{P_ENV1_D,.6f},{P_ENV2_D,.64f},
+        {P_ENV2_S,.12f},{P_ENV2_R,.5f},{P_ARP_MODE,5},{P_ARP_GATE,.5f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},
+        {P_VEL_CUTOFF,.3f},{P_TRIM,.512f},MX(1,S_ARP,D_CUT,.25f)),
+    PRE("Set Steel Weather 1 - Sub",{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,-12},{P_OSC2_FINE,4},{P_OSC1_LEVEL,.9f},{P_OSC2_LEVEL,.5f},
+        {P_CUTOFF,.3f},{P_FILTER_DRIVE,.7f},{P_DRIVE,.3f},{P_FLT_FM1,0},{P_KEY_TRACK,.3f},{P_ENV2_A,.25f},{P_ENV2_R,.48f},{P_DRIFT,.5f},{P_GRIT,.1f},
+        {P_VEL_AMP,.4f},{P_VEL_CUTOFF,.3f},{P_TRIM,.571f},MX(1,S_LF2,D_PC2,.02f)),
+    PRE("Set Steel Weather 2 - Drone",{P_SAW_OCT,1},{P_OSC2_WAVE,1},{P_OSC2_FINE,15},{P_OSC2_LEVEL,.8f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},
+        {P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV2_A,.7f},{P_ENV2_R,.75f},{P_FLT_FM2,.25f},{P_LFO_RATE,.1f},{P_INTEG_SAT,.3f},
+        {P_AUX_FB,.15f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_TRIM,.397f},MX(1,S_SX,D_DRV,.5f)),
+    PRE("Set Steel Weather 3 - Chime",{P_OSC1_COARSE,12},{P_OSC1_WAVE,2},{P_OSC2_WAVE,2},{P_OSC2_COARSE,19},{P_OSC2_FINE,3},{P_OSC2_LEVEL,.5f},
+        {P_XMOD,.2f},{P_XMOD_MODE,1},{P_CUTOFF,.8f},{P_RESONANCE,.4f},{P_FILTER_DRIVE,.85f},{P_DRIVE,.5f},{P_FLT_FM1,0},{P_ENV1_D,.5f},{P_ENV2_D,.7f},
+        {P_ENV2_S,.05f},{P_ENV2_R,.6f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},{P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},
+        {P_TRIM,.415f},MX(1,S_KEY,D_XMD,.3f)),
+    PRE("Set Steel Weather 4 - Pluck",{P_OSC1_WAVE,4},{P_OSC1_SHAPE,.2f},{P_CUTOFF,.55f},{P_RESONANCE,.4f},{P_RES_CURVE,1},{P_FILTER_DRIVE,.85f},
+        {P_DRIVE,.5f},{P_FLT_FM1,.6f},{P_ENV1_D,.55f},{P_ENV2_D,.6f},{P_ENV2_S,.05f},{P_ENV2_R,.44f},{P_DRIFT,.6f},{P_NOISE_LEVEL,.03f},{P_GRIT,.2f},
+        {P_ENV2_A,.15f},{P_VEL_AMP,.5f},{P_VEL_CUTOFF,.3f},MX(1,S_VEL,D_CUT,.5f)),
 };
 #define N_PRESETS ((int)(sizeof PRESETS / sizeof PRESETS[0]))
 
@@ -1375,8 +1224,8 @@ static const preset_t PRESETS[] = {
  * a bank keeps the presets in array order, and the host's browser lists only the current bank.
  * User banks (files in the bank folder, see docs/BANK_FILES.md) follow the factory banks: bank N_BANKS + i is the i-th file in name order. A user
  * preset is addressed by the code USER_BASE + i * USER_STRIDE + position, so `preset` numbers below N_PRESETS stay the factory presets. */
-static const char *const PCAT[N_BANKS] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Set", "Keys"};
-static const char *const BANK_FILE_NAME[N_BANKS] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Sets", "Keys"};
+static const char *const PCAT[N_BANKS] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Set"};
+static const char *const BANK_FILE_NAME[N_BANKS] = {"Init", "Bass", "Lead", "Drone", "Arp", "Para", "Chaos", "Horror", "Sets"};
 _Static_assert(sizeof PRESETS / sizeof PRESETS[0] <= MAX_PRESETS, "raise MAX_PRESETS");
 static int g_bank_n[N_BANKS], g_bank_idx[N_BANKS][BANK_MAX], g_pbank[MAX_PRESETS], g_ppos[MAX_PRESETS];
 static void banks_init(void) {
@@ -1664,14 +1513,15 @@ static int emit_param(char *b, int n, int w, int i) {
 #define K_FXB   "\"fx1_lvl\",\"fx2_lvl\",\"fx3_lvl\",\"fx4_lvl\",\"fx1_type\",\"fx2_type\",\"fx3_type\",\"fx4_type\""
 #define K_STICK "\"stick_x\",\"stick_y\",\"stick_x_to\",\"stick_y_to\",\"bend_range\",\"vibrato_depth\",\"vib_rate\",\"hold\""
 #define K_OSC   "\"osc1_wave\",\"osc1_shape\",\"osc2_wave\",\"osc2_shape\",\"osc1_level\",\"osc2_level\",\"noise_level\",\"noise_color\""
-#define K_FILT  "\"cutoff\",\"resonance\",\"filter_mode\",\"filter_drive\",\"flt_fm1\",\"key_track\",\"drive\""
+#define K_FILT  "\"cutoff\",\"resonance\",\"filter_mode\",\"filter_drive\",\"flt_fm1\",\"key_track\",\"drive\",\"aux_fb\""
 #define K_ENV1  "\"env1_a\",\"env1_d\",\"env1_s\",\"env1_r\",\"flt_fm1\",\"osc1_fm1\",\"osc2_fm1\",\"vel_cutoff\""
-#define K_ENV2  "\"env2_a\",\"env2_d\",\"env2_s\",\"env2_r\",\"vel_amp\",\"drone\""
-#define K_LFO1  "\"lfo_wave\",\"lfo_rate\",\"flt_fm2\",\"lfo_sync\",\"osc1_fm2\",\"osc2_fm2\",\"shape_mod\""
+#define K_ENV2  "\"env2_a\",\"env2_d\",\"env2_s\",\"env2_r\",\"vel_amp\",\"drone\",\"am_env\""
+#define K_LFO1  "\"lfo_wave\",\"lfo_rate\",\"flt_fm2\",\"lfo_sync\",\"osc1_fm2\",\"osc2_fm2\",\"shape_mod\",\"am_lfo\""
 #define K_LFO2  "\"lfo2_wave\",\"lfo2_rate\",\"lfo2_sync\",\"lfo_gate\""
-#define K_OMOD  "\"xmod_2to1\",\"osc1_fm1\",\"osc2_fm1\""
-#define K_TUNE  "\"osc1_coarse\",\"osc1_fine\",\"osc2_coarse\",\"osc2_fine\",\"octave\",\"tune\",\"drift\",\"bend_range\""
+#define K_OMOD  "\"xmod_2to1\",\"xmod_mode\",\"osc_sync\",\"osc1_fm1\",\"osc2_fm1\""
+#define K_TUNE  "\"osc1_coarse\",\"osc1_fine\",\"osc2_coarse\",\"osc2_fine\",\"octave\",\"tune\",\"drift\",\"stretch\""
 #define K_VOICE "\"glide\",\"legato\",\"priority\",\"drift\",\"vibrato_depth\",\"vib_rate\",\"bend_range\",\"fx_scope\""
+#define K_ANA   "\"shape_flip\",\"saw_oct\",\"res_curve\",\"integ_sat\""
 #define K_RESP  "\"vel_cutoff\",\"vel_amp\",\"at_dest\",\"at_amount\",\"trim\",\"key_lvl\""
 #define K_BANKS "\"preset_cat\",\"bank_io\",\"bank_status\",\"user_banks\",\"version\",\"prog_chg\",\"last_change\",\"pc_seen\""
 #define K_MX1   "\"m1_src\",\"m1_dst\",\"m1_amt\",\"m1_via\",\"m2_src\",\"m2_dst\",\"m2_amt\",\"m2_via\""
@@ -1684,7 +1534,7 @@ static const char HIERARCHY[] =
         "\"knobs\":[" K_ROOT "],"
         "\"params\":[{\"level\":\"perform\",\"label\":\"Perform\"},{\"level\":\"fxbank\",\"label\":\"FX Bank\"},{\"level\":\"stick\",\"label\":\"Stick\"},"
         "{\"level\":\"osc\",\"label\":\"Oscillators\"},{\"level\":\"filter\",\"label\":\"Filter\"},{\"level\":\"env2\",\"label\":\"Amp Env\"},{\"level\":\"env1\",\"label\":\"Filter Env\"},"
-        "{\"level\":\"lfo\",\"label\":\"LFO 1\"},{\"level\":\"lfo2\",\"label\":\"LFO 2\"},{\"level\":\"omod\",\"label\":\"FM and X-Mod\"},{\"level\":\"tune\",\"label\":\"Tuning\"},"
+        "{\"level\":\"lfo\",\"label\":\"LFO 1\"},{\"level\":\"lfo2\",\"label\":\"LFO 2\"},{\"level\":\"omod\",\"label\":\"FM and X-Mod\"},{\"level\":\"ana\",\"label\":\"Analog\"},{\"level\":\"tune\",\"label\":\"Tuning\"},"
         "{\"level\":\"voice\",\"label\":\"Voice\"},{\"level\":\"resp\",\"label\":\"Response\"},{\"level\":\"banks\",\"label\":\"Bank Files\"},"
         "{\"level\":\"mx1\",\"label\":\"Matrix 1-2\"},{\"level\":\"mx2\",\"label\":\"Matrix 3-4\"},{\"level\":\"mx3\",\"label\":\"Matrix 5-6\"},"
         "{\"key\":\"env2_a\",\"short_name\":\"AmpA\"},{\"key\":\"env2_r\",\"short_name\":\"AmpR\"}]},"
@@ -1698,6 +1548,7 @@ static const char HIERARCHY[] =
     LEVEL("lfo", "LFO 1", K_LFO1) ","
     LEVEL("lfo2", "LFO 2", K_LFO2) ","
     LEVEL("omod", "FM and X-Mod", K_OMOD) ","
+    LEVEL("ana", "Analog", K_ANA) ","
     LEVEL("tune", "Tuning", K_TUNE) ","
     LEVEL("voice", "Voice", K_VOICE) ","
     LEVEL("resp", "Response", K_RESP) ","
@@ -1740,8 +1591,9 @@ static void reset_state(mm_t *m) {
  * resonance out (hot input squeezes the resonance out) with no iteration. A -80 dB noise floor kicks self-oscillation.
  * Mode taps: LP=y, BP=2(lp1-y), HP=u-2lp1+y (exact 2nd-order forms at K=0), combos are sums.
  */
-static inline float flt_tick(mm_t *m, float x, float G, float K, float ig, float inv_sqrt_ig, int mode, float kick) {
+static inline float flt_tick(mm_t *m, float x, float G0, float K, float ig, float inv_sqrt_ig, int mode, float kick) {
     float u = tanhf(ig * x) * inv_sqrt_ig + kick;
+    float G = G0 / (1.0f + m->isat * u * u);                 /* opto-FET integrators: a larger signal swing lowers the cutoff */
     float v1 = (u - m->f_s1) * G, lp1 = v1 + m->f_s1; m->f_s1 = lp1 + v1;
     /* feedback = K * HP1(y), HP1 = y - LP(y) with its own state s3: hp = (1-G)(y - s3) */
     float omg = 1.0f - G;
@@ -1756,7 +1608,7 @@ static inline float flt_tick(mm_t *m, float x, float G, float K, float ig, float
     if (fabsf(m->f_s1) < 1e-18f) m->f_s1 = 0.0f;           /* flush denormals: they are very slow on ARM */
     if (fabsf(m->f_s2) < 1e-18f) m->f_s2 = 0.0f;
     if (fabsf(m->f_s3) < 1e-18f) m->f_s3 = 0.0f;
-    if (!isfinite(y) || fabsf(y) > 1e4f) { m->f_s1 = m->f_s2 = m->f_s3 = 0.0f; return 0.0f; }
+    if (!isfinite(y) || fabsf(y) > 1e4f) { m->f_s1 = m->f_s2 = m->f_s3 = m->fb_z = 0.0f; return 0.0f; }
     float bp = 2.0f * (lp1 - y), hpo = u - 2.0f * lp1 + y;
     switch (mode) {
     case 1: return bp;
@@ -2019,7 +1871,12 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
     const float lfo1_sync_inc = ls1 ? sync_hz / SYNC_BEATS[ls1] / SR : 0.0f, lfo2_sync_inc = ls2 ? sync_hz / SYNC_BEATS[ls2] / SR : 0.0f;
     const float lfo2_base = p[P_LFO2_RATE];
     const float s1 = p[P_ENV1_S], s2 = drone_mode ? 1.0f : p[P_ENV2_S];  /* drone: amp holds at full while the note is down */
-    const float res_K = g_res * 3.6f;                 /* ~2 is linear self-oscillation */
+    const float am1 = p[P_AM_ENV], am2 = p[P_AM_LFO];   /* the hardware's AM1 (Env 2 depth) and AM2 (LFO tremolo) knobs */
+    const float auxg = 1.6f * p[P_AUX_FB] * p[P_AUX_FB];   /* audio taper: 0 = off, 1 = 1.6x the output back into the filter */
+    const float res_c = p[P_RES_CURVE], stretch = p[P_STRETCH], xlin = p[P_XMOD_MODE] > 0.5f ? 1.0f : 0.0f;
+    const int sync_m = (int)p[P_OSC_SYNC], sawup = p[P_SAW_OCT] > 0.5f, flip = p[P_SHAPE_FLIP] > 0.5f;
+    m->isat = p[P_INTEG_SAT] * 1.5f;
+    const float res_K = resk(g_res, res_c);                 /* ~2 is linear self-oscillation */
     const float ig = 0.25f * exp2f(4.0f * g_fdrive), inv_sqrt_ig = 1.0f / sqrtf(ig);
     const int fmode = (int)p[P_FILTER_MODE];
     const float drv = clampf(g_drive + (at_dest == 3 ? at * 0.6f : 0.0f), 0.0f, 1.6f), drv_g = 1.0f + 5.0f * drv + 6.0f * drv * drv, drv_b = 0.15f * drv, drv_bias_out = tanhf(drv_b);
@@ -2100,7 +1957,7 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         const float vib = vib_tri * fmaxf(vib_depth + 1.5f * mod[20] + 2.0f * fa[FXT_VIB], 0.0f);
         m->o1.drift += (frand(&m->rng) - m->o1.drift) * drift_c * 0.02f;  /* slow wander */
         m->o2.drift += (frand(&m->rng) - m->o2.drift) * drift_c * 0.02f;
-        float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib + 12.0f * mod[1] + 12.0f * (fa[FXT_RISE] - fa[FXT_DIVE]);
+        float semi = m->cur_semi + pitch_off + m->bend + stick_bend + vib + 12.0f * mod[1] + 12.0f * (fa[FXT_RISE] - fa[FXT_DIVE]) + stretch * 0.01f * (m->cur_semi - 60.0f) / 12.0f;
 
         float cut_oct = m->sm_cut + gs.cut_oct + p[P_FLT_FM1] * e1 * 5.0f + p[P_FLT_FM2] * lfo * 3.0f
                       + p[P_KEY_TRACK] * (m->cur_semi + pitch_off + m->bend - 60.0f) / 12.0f + vel_cut_oct + 5.0f * mod[8] + 5.0f * e1 * mod[23]
@@ -2109,7 +1966,10 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         float g = tanf(3.14159265f * fc / (SR * OS)), G = g / (1.0f + g);
 
         /* oscillator core at OS x the sample rate; halfband-decimated afterwards */
-        float amp = e2 * vel_scale;
+        float e2g = e2;
+        if (am1 < 0.999f) e2g = powf(e2, am1) * fminf(1.0f, e2 * 20.0f);   /* AM1 < 1: the envelope moves the VCA less, the tail still fades out as e2 reaches idle */
+        float amp = e2g * vel_scale;
+        if (am2 > 0.0f) amp *= 1.0f - am2 * 0.5f * (1.0f - lfo);          /* AM2: LFO 1 tremolo, 0 = none, 1 = chops to silence at the LFO's low point */
         float amp_mx = has_d[12] ? clampf(1.0f + mod[12], 0.0f, 2.0f) : 1.0f; amp *= amp_mx;
         if (fa[FXT_CHOP] != 0.0f || m->chop_g != 1.0f) {            /* Gate Chop: tempo-locked 1/16 gate, depth = level, smoothed so it never clicks */
             float tgc = m->chop_ph < 0.5f ? 1.0f : 1.0f - fa[FXT_CHOP];
@@ -2119,7 +1979,7 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
         const float lv1e = has_d[5] ? clampf(lv1 + mod[5], 0.0f, 1.5f) : lv1, lv2e = has_d[6] ? clampf(lv2 + mod[6], 0.0f, 1.5f) : lv2;
         const float nle = (has_d[7] || gm || fa[FXT_NOISE] != 0.0f) ? clampf(gs.noise + mod[7] + 0.6f * fa[FXT_NOISE], 0.0f, 1.0f) * 0.5f * 1.4142f : noise_lvl;
         const float xme = has_d[13] ? clampf(xmod_eff + mod[13], 0.0f, 1.0f) : xmod_eff;
-        const float resK = (has_d[9] || gm || fa[FXT_RES] != 0.0f) ? clampf(gs.res + mod[9] + 0.8f * fa[FXT_RES], 0.0f, 1.0f) * 3.6f : res_K;
+        const float resK = (has_d[9] || gm || fa[FXT_RES] != 0.0f) ? resk(clampf(gs.res + mod[9] + 0.8f * fa[FXT_RES], 0.0f, 1.0f), res_c) : res_K;
         float igi = ig, isqi = inv_sqrt_ig;
         if (has_d[10] || gm) { igi = 0.25f * exp2f(4.0f * clampf(gs.fdrive + mod[10], 0.0f, 2.0f)); isqi = 1.0f / sqrtf(igi); }
         float dg = drv_g, db = drv_b, dbo = drv_bias_out, dn = drv_norm;
@@ -2133,26 +1993,34 @@ static void render_active(mm_t *m, int16_t *out, int frames) {
             float f2 = 440.0f * exp2f((semi + o2o + m->o2.drift * drift_i * 8.0f - 69.0f) / 12.0f + fm2_oct);
             float dt2 = clampf(f2 / (SR * OS), 0.0f, 0.45f);
             float sh2 = clampf(p[P_OSC2_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f + 0.5f * mod[4], 0.0f, 1.0f);
-            float y2 = osc_wave(m->o2.phase, dt2, w2, sh2, k2);
-            m->o2.phase += dt2; if (m->o2.phase >= 1.0f) m->o2.phase -= 1.0f;
+            if (sync_m == 1 && m->sw1) m->o2.phase = m->sf1 * dt2;                 /* Hard Sync: osc 1 restarts osc 2 */
+            m->sw1 = 0;
+            float y2 = osc_wave(m->o2.phase, dt2, w2, sh2, k2, sawup);
+            if (flip) y2 *= clampf((sh2 - 0.5f) * 4.0f, -1.0f, 1.0f);                  /* Shape Flip: the waveform passes through silence and inverts at the shape centre */
+            int wrap2 = 0; float fr2 = 0.0f;
+            m->o2.phase += dt2; if (m->o2.phase >= 1.0f) { m->o2.phase -= 1.0f; wrap2 = 1; fr2 = m->o2.phase / dt2; }
             m->o2_prev = y2;
 
-            float fm1_oct = p[P_OSC1_FM1] * e1 * 3.0f + p[P_OSC1_FM2] * lfo * 1.0f + xme * y2 * 2.0f + 2.0f * mod[16];
+            float fm1_oct = p[P_OSC1_FM1] * e1 * 3.0f + p[P_OSC1_FM2] * lfo * 1.0f + (1.0f - xlin) * xme * y2 * 2.0f + 2.0f * mod[16];
             float f1 = 440.0f * exp2f((semi + o1o + m->o1.drift * drift_i * 8.0f - 69.0f) / 12.0f + fm1_oct);
+            if (xlin > 0.0f) f1 = fmaxf(f1 + xme * 2.0f * f2 * y2, 0.1f * f1);                  /* X-Mod Linear: the frequency moves by a fixed number of Hz per unit of osc 2 */
             float dt1 = clampf(f1 / (SR * OS), 0.0f, 0.45f);
+            if (sync_m == 2 && wrap2) m->o1.phase = fr2 * dt1;                           /* Hard Sync: osc 2 restarts osc 1 */
             float sh1 = clampf(p[P_OSC1_SHAPE] + p[P_SHAPE_MOD] * lfo * 0.5f + 0.5f * mod[3], 0.0f, 1.0f);
-            float y1 = osc_wave(m->o1.phase, dt1, w1, sh1, k1);
-            m->o1.phase += dt1; if (m->o1.phase >= 1.0f) m->o1.phase -= 1.0f;
+            float y1 = osc_wave(m->o1.phase, dt1, w1, sh1, k1, sawup);
+            if (flip) y1 *= clampf((sh1 - 0.5f) * 4.0f, -1.0f, 1.0f);
+            m->o1.phase += dt1; if (m->o1.phase >= 1.0f) { m->o1.phase -= 1.0f; if (sync_m == 1) { m->sw1 = 1; m->sf1 = m->o1.phase / dt1; } }
             m->o1_prev = y1;
 
 
             float white = frand(&m->rng);
             m->noise_lp1 += ncol_a * (white - m->noise_lp1);                 /* Noise Color: one-pole low-pass, level-compensated (0 = white, exact) */
             float noise = ncol_a >= 0.999f ? white : m->noise_lp1 * ncol_g;
-            float mix = y1 * lv1e + y2 * lv2e + noise * nle;
+            float mix = y1 * lv1e + y2 * lv2e + noise * nle + auxg * m->fb_z;   /* Aux input, fed from the output (Out patched to Aux on the hardware) */
             float fl = flt_tick(m, mix, G, resK, igi, isqi, fmode, (resK > 1.8f ? white * 1e-4f * (resK - 1.8f) : 0.0f));   /* a kick only where resonance can sustain self-oscillation */
             float va = fl * amp;                                       /* VCA */
             va = (tanhf(dg * va + db) - dbo) * dn; /* transistor-ish asymmetric drive */
+            m->fb_lp += 0.0014f * (va - m->fb_lp); m->fb_z = va - m->fb_lp;   /* AC-coupled return, about 20 Hz */
             m->hb[m->hb_pos] = va * m->sm_vol * gs.makeup;
             m->hb_pos = (m->hb_pos + 1) % HB_N;
         }
@@ -2182,7 +2050,7 @@ static inline void fpcr_write(unsigned long v) { __asm__ volatile("msr fpcr, %0"
 static void render_seg(mm_t *m, int16_t *out, int frames) {
     if (m->e2.stage == ENV_IDLE) {      /* silent voice: output exact zeros and spend no CPU */
         if (!m->was_idle) {
-            m->f_s1 = m->f_s2 = m->f_s3 = 0.0f; m->dc_x = m->dc_y = 0.0f;
+            m->f_s1 = m->f_s2 = m->f_s3 = m->fb_z = m->fb_lp = 0.0f; m->sw1 = 0; m->dc_x = m->dc_y = 0.0f;
             memset(m->hb, 0, sizeof m->hb);
             m->e1.stage = ENV_IDLE; m->e1.level = 0.0f;
             m->sm_init = 0;

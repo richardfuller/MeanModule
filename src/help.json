@@ -4,7 +4,7 @@
     {
       "title": "Start here",
       "lines": [
-        "Mean Module v0.13.3",
+        "Mean Module v0.14.0",
         "1. Play a note.",
         "2. Main page: turn Grit.",
         "Right = dirtier and",
@@ -158,6 +158,32 @@
         "from white to dark.",
         "Tuning page: Semi/Fine",
         "for both oscillators."
+      ]
+    },
+    {
+      "title": "Analog page",
+      "lines": [
+        "Malevolent touches, all",
+        "off by default.",
+        "Flip: shape passes",
+        "through silence at the",
+        "centre and inverts.",
+        "Saw+1: saw one octave",
+        "above tri and pulse.",
+        "Onset: resonance starts",
+        "earlier. ISat: hot",
+        "signals lower cutoff.",
+        "FM and X-Mod page: Sync",
+        "(1-2 or 2-1), XTyp",
+        "Exp or Lin. Filter",
+        "page: AuxFb returns the",
+        "output to the filter.",
+        "Lvl1/2 go past 100%",
+        "to overdrive the mix.",
+        "Tuning: Strch octave",
+        "stretch. AM1: amp env",
+        "depth; AM2 (LFO 1):",
+        "tremolo."
       ]
     },
     {
