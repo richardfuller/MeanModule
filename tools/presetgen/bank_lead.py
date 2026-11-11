@@ -28,5 +28,5 @@ pre('Lead Scream', w1=1, l1=.45, cut=.45, res=.95, fd=.6, dr=.6, fm=0, kt=1, e2s
 pre('Lead Howl', w1=1, cut=.4, res=.4, fd=.8, dr=1, fm=.5, e1d=.6, e2s=.9, atd=3, ata=.7)
 pre('Lead Fuzz', w1=4, sh1=.5, nz=.4, nc=.2, cut=.6, res=.3, fd=.9, dr=.8, fm=.2, e2s=.9, mx=[('WHL', 'NSE', .5)])
 pre('Lead Burn Saw', w1=1, w2=1, f2=14, cut=.6, res=.3, fd=.8, dr=.8, fm=.2, e2s=.9, lr=.2, mx=[('LFO', 'PCH', .1, 'VEL')])
-pre('Lead Squeal', w1=1, l1=.5, fmode=1, cut=.55, res=.9, fd=.6, dr=.3, fm=0, e2s=.9, mx=[('AEN', 'CUT', .5), ('WHL', 'RES', .1)])
+pre('Lead Squeal', w1=1, l1=.5, fmode=1, cut=.55, res=.9, fd=.6, dr=.3, fm=0, e2s=.9, mx=[('AEN', 'CUT', .5), ('WHL', 'RES', .08), ('WHL', 'CUT', .25)])
 pre('Lead Broken Pin', w1=4, sh1=.5, cut=.65, res=.3, fd=.6, dr=.4, fm=.2, e2d=.35, e2s=.4, lw=1, lr=.8, lg=1, mx=[('NSE', 'FM1', .06), ('SY', 'LFR', .6)])

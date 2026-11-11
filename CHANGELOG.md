@@ -1,5 +1,12 @@
 # Changelog
 
+## 0.13.2
+
+### Sound health checks
+* New `tests/health.c` (`scripts/health.sh`) measures what used to need listening: clipping at the limiter on low, middle and high notes, abrupt releases (clicks), hanging tails, pitch against the played note, whether the Mod Wheel, Aftertouch and Stick change the sound where a preset routes them, whether the arps follow the tempo (90 vs 150 BPM), and CPU per preset. It is documented in `docs/TESTING.md`.
+* First full run: no clipping, no abrupt releases, no hanging tails, every arp follows the tempo, CPU is even (median 33 us per block on the host, none above 45). It found four weak controller routes (Lead Squeal and Keys Drawbar Organ on the Mod Wheel, Drone Dust Storm and Horror Nerve Zap on Aftertouch), now stronger, and four presets described as clean that the character pass had saturated into near-squares: Bass Sub 1, Bass Log Tri, Lead Glide Tri and Set Void Walker 1 - Sub. Those four now skip the character floors, and the health check fails if they are squashed again.
+* Levels and registers were refitted.
+
 ## 0.13.1
 
 ### Ghost Sub and Mothership character for softer presets

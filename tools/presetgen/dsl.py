@@ -34,7 +34,9 @@ SOFT_NAMES = {'Bass Sub 1', 'Bass Sub 2', 'Bass Log Tri', 'Bass Ghost Sub', 'Set
 FLOORS = {}   # name -> dict of minimum values (arps.py)
 ARPS = {}   # name -> dict(arp=, arpr=, arpo=, arpg=), filled by arps.py
 KEYS = dict(drift=.4)   # the Keys bank keeps its own drive and filter values (the dynamics are the point): only a little drift and Grit
+CLEAN_NAMES = {'Bass Sub 1', 'Bass Log Tri', 'Lead Glide Tri', 'Set Void Walker 1 - Sub'}   # described as clean or smooth: a measured crest factor check keeps them out of saturation
 def tier(name):
+    if name in CLEAN_NAMES: return 'clean'
     if name.startswith('Keys '): return 'keys'
     if name in SOFT_NAMES or name.startswith('Drone '): return 'soft'
     if name.startswith('Init') or name == 'Horror Calliope': return 'none'
@@ -42,10 +44,10 @@ def tier(name):
 def apply_character(name, kw):
     t = tier(name)
     if t == 'none': return
-    fl = FULL if t == 'full' else (KEYS if t == 'keys' else SOFT)
+    fl = FULL if t == 'full' else (KEYS if t in ('keys', 'clean') else SOFT)
     for k, v in fl.items():
         if kw.get(k, DEF[k]) < v: kw[k] = v
-    kw['grit'] = max(kw.get('grit', 0), {'full': .2, 'keys': .06}.get(t, .1))
+    kw['grit'] = max(kw.get('grit', 0), {'full': .2, 'keys': .06, 'clean': 0}.get(t, .1))
 
 # ---- envelope floors: the time knobs are exponential (0.4 = 26 ms, 0.5 = 70 ms, 0.6 = 190 ms, 0.7 = 510 ms), so the first drafts had 2-16 ms releases (notes cut off almost at once) and
 # plucks and filter sweeps of 26-70 ms. These floors keep releases at 40-55 ms and plucks/sweeps at ~110-190 ms unless the preset is a deliberate short hit.

@@ -23,8 +23,10 @@ d "$BUILD && gcc -std=gnu11 -O2 -Isrc/host tests/register.c -o build/test/regist
 NP=$(grep -c '^    PRE(' src/dsp/mean_module_plugin.c)
 for s in $(seq 0 20 $((NP - 1))); do
   [ -s build/test/reg_chunk_$s.csv ] && continue
-  d "build/test/register build/test/dsp.so calibrate $s $((s + 20)) > build/test/reg_chunk_$s.csv.tmp" && mv build/test/reg_chunk_$s.csv.tmp build/test/reg_chunk_$s.csv
+  ( d "build/test/register build/test/dsp.so calibrate $s $((s + 20)) > build/test/reg_chunk_$s.csv.tmp" && mv build/test/reg_chunk_$s.csv.tmp build/test/reg_chunk_$s.csv ) &
+  while [ "$(jobs -rp | wc -l)" -ge 1 ]; do sleep 2; done   # one chunk at a time (three at once with 4 CPUs each crashed the PC)
 done
+wait
 python -c "
 import csv, glob
 rows = []

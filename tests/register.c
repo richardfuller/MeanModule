@@ -18,25 +18,13 @@
 #define HOLD_BLOCKS 1400     /* ~4 s: long enough for the slowest attacks */
 #define SHORT_BLOCKS 52      /* ~150 ms */
 #define TAIL_BLOCKS 460
-#define NNOTES 5
 
 static plugin_api_v2_t *api;
 static void midi(void *i, int a, int b, int c) { uint8_t m[3] = {(uint8_t)a, (uint8_t)b, (uint8_t)c}; api->on_midi(i, m, 3, MOVE_MIDI_SOURCE_EXTERNAL); }
 static void setp(void *i, const char *k, const char *v) { api->set_param(i, k, v); }
 static int16_t buf[(HOLD_BLOCKS + TAIL_BLOCKS) * BLK * 2];
 
-/* home register of a preset: five notes, low to high */
-static const int REG_BASS[NNOTES] = {36, 43, 48, 55, 60}, REG_LEAD[NNOTES] = {60, 67, 72, 79, 84}, REG_MID[NNOTES] = {48, 55, 60, 67, 72};
-static const int *reg_of(const char *name) {
-    if (!strncmp(name, "Bass ", 5)) return REG_BASS;
-    if (!strncmp(name, "Lead ", 5) || !strncmp(name, "Arp ", 4) || !strncmp(name, "Para ", 5) || !strcmp(name, "Init")) return REG_LEAD;
-    if (!strncmp(name, "Set ", 4)) {
-        const char *role = strstr(name, " - "); role = role ? role + 3 : "";
-        if (!strcmp(role, "Bass") || !strcmp(role, "Sub")) return REG_BASS;
-        if (!strcmp(role, "Lead") || !strcmp(role, "Arp") || !strcmp(role, "Pluck") || !strcmp(role, "Stab") || !strcmp(role, "Chime")) return REG_LEAD;
-    }
-    return REG_MID;
-}
+#include "regs.h"
 
 /* level of one note on a fresh instance (preset, optional key_lvl override); hold_blocks of sound, then release */
 static double note_level(int preset, double key_lvl, int note, int vel, int hold_blocks, double *peak, double *kl_out, char *name, size_t nn) {

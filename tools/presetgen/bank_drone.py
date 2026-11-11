@@ -11,7 +11,7 @@ pre('Drone Ground Swell', w1=2, w2=2, f2=5, l2=.8, cut=.4, res=.15, fd=.4, dr=.1
 # --- Noise and windscapes
 pre('Drone Cold Wind', l1=0, nz=.7, nc=.5, fmode=1, cut=.55, res=.5, fd=.3, dr=.1, fm=0, kt=.3, lr=.13, e2a=.7, e2r=.7, mx=[('LFO', 'CUT', .35)])
 pre('Drone Ruins', w1=2, l1=.8, nz=.2, nc=.2, cut=.7, res=.2, fd=.5, dr=.3, fm=0, e2a=.3, e2r=.6, mx=[('NSE', 'FM1', .15, 'WHL')])
-pre('Drone Dust Storm', w1=1, l1=.6, cut=.5, res=.9, fd=.6, dr=.5, fm=0, e2a=.3, e2r=.6, atd=0, mx=[('NSE', 'CUT', .12), ('AT', 'NSE', .5)])
+pre('Drone Dust Storm', w1=1, l1=.6, cut=.5, res=.9, fd=.6, dr=.5, fm=0, e2a=.3, e2r=.6, atd=0, mx=[('NSE', 'CUT', .12), ('AT', 'NSE', 1)])
 pre('Drone Static Sea', l1=0, nz=.9, cut=.64, res=.3, fd=.3, dr=.1, fm=0, lr=.2, e2a=.4, e2r=.6, mx=[('LFO', 'CUT', .4), ('SY', 'LFR', .5)])
 pre('Drone Ghost Breath', l1=0, nz=.1, nc=.3, fmode=1, cut=.55, res=.45, fd=.3, dr=.1, fm=.7, e1a=.6, e1d=.7, e1s=.3, e1r=.6, e2a=.5, e2r=.7, kt=.5, mx=[('FEN', 'NSE', .8), ('VEL', 'ENV', .5)])
 pre('Drone Vinyl Crack', l1=0, nz=.5, fmode=2, cut=.5, res=.2, fd=.3, dr=.1, fm=0, lw=4, lr=.85, e2a=.1, e2r=.4, mx=[('LFO', 'AMP', .9)])

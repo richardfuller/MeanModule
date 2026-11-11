@@ -20,7 +20,7 @@ pre('Horror Pendulum', w1=1, fmode=1, cut=.45, res=.55, fd=.5, dr=.25, fm=0, lfc
 # --- Jumpscares and stings
 pre('Horror Scream Hit', w1=1, l1=.5, fmode=2, cut=.45, res=.9, fd=.6, dr=.4, fm=.6, e1d=.5, e2d=.5, e2s=.1, e2r=.2, mx=[('VEL', 'ENV', .5)])
 pre('Horror Door Slam', w1=4, sh1=.5, w2=4, sh2=.5, c2=-12, f2=0, l2=.8, cut=.4, res=.2, fd=.9, dr=1, fm=0, e2d=.55, e2s=.2, e2r=.3, mx=[('WHL', 'DRV', .5)])
-pre('Horror Nerve Zap', l1=0, nz=.8, nc=0, fmode=2, cut=.5, res=.3, fd=.5, dr=.4, fm=0, lw=1, lr=.85, e2d=.3, e2s=.3, e2r=.1, mx=[('LFO', 'AMP', .9), ('AT', 'NSE', .3)])
+pre('Horror Nerve Zap', l1=0, nz=.5, nc=0, fmode=2, cut=.5, res=.3, fd=.5, dr=.4, fm=0, lw=1, lr=.85, e2d=.3, e2s=.3, e2r=.1, mx=[('LFO', 'AMP', .9), ('AT', 'NSE', .5)])
 pre('Horror Psycho', w1=1, w2=1, c2=6, f2=0, l2=.8, oct=1, cut=.5, res=.3, fd=.6, dr=.4, fm=.6, e1d=.4, e2d=.5, e2s=.15, e2r=.2, velc=.8)
 pre('Horror Glass Break', l1=0, nz=.8, nc=0, fmode=2, cut=.7, res=.3, fd=.4, dr=.2, fm=.5, e1d=.35, e2d=.45, e2s=.15, e2r=.2, mx=[('KEY', 'RES', .4)])
 pre('Horror Sudden Drop', w1=2, l1=1, cut=.6, res=.15, fd=.8, dr=.5, fm=0, o1e=1, e1d=.6, e2d=.6, e2s=.1, e2r=.3, mx=[('VEL', 'E1D', .4)])

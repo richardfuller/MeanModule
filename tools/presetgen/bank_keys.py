@@ -19,7 +19,7 @@ pre('Keys Pick Clav', w1=4, sh1=.3, w2=4, sh2=.1, c2=12, f2=0, l1=.8, l2=.35, cu
 pre('Keys Dirty Clav', w1=4, sh1=.12, w2=1, f2=8, l1=.8, l2=.5, cut=.55, res=.4, fd=.8, dr=.5, fm=.6, e1d=.58, e2d=.64, e2s=.12, e2r=.45, vela=.8, velc=.9, kt=.6, mx=[('VEL', 'DRV', .6), ('VEL', 'ENV', .4)])
 # --- Organs
 pre('Keys Combo Organ', w1=4, sh1=.5, w2=4, sh2=.5, c2=12, f2=4, l1=.8, l2=.45, cut=.72, res=.2, fd=.5, dr=.2, fm=.3, e1d=.5, e2s=1, e2r=.46, vela=.3, velc=.5, vib=.25, vibr=.65)
-pre('Keys Drawbar Organ', w1=2, w2=2, c2=12, f2=3, l1=.85, l2=.6, cut=.78, res=.15, fd=.5, dr=.2, fm=.35, e1d=.5, e2s=1, e2r=.46, vela=.3, velc=.5, lr=.78, mx=[('LFO', 'PCH', .02, 'WHL'), ('LFO', 'AMP', .1, 'WHL')])
+pre('Keys Drawbar Organ', w1=2, w2=2, c2=12, f2=3, l1=.85, l2=.6, cut=.78, res=.15, fd=.5, dr=.2, fm=.35, e1d=.5, e2s=1, e2r=.46, vela=.3, velc=.5, lr=.78, mx=[('LFO', 'PCH', .05, 'WHL'), ('LFO', 'AMP', .25, 'WHL')])
 pre('Keys Church Organ', w1=1, w2=2, c2=-12, f2=2, l1=.7, l2=.8, cut=.55, res=.1, fd=.5, dr=.15, fm=0, e2a=.42, e2s=1, e2r=.62, vela=.25, velc=.4, drift=.4)
 pre('Keys Perc Organ', w1=2, w2=2, c2=19, f2=0, l1=.85, l2=.7, cut=.75, res=.15, fd=.5, dr=.2, fm=.3, e1d=.5, e2s=1, e2r=.45, vela=.3, velc=.5, mx=[('FEN', 'LV2', .7)])
 # --- Struck and plucked keys
