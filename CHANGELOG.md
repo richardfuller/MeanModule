@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.13.1
+
+### Ghost Sub and Mothership character for softer presets
+Two presets were singled out as showing the instrument off best: Bass Ghost Sub (a pulse with slow PWM, a hollow high-pass filter, the Stick on the cutoff) and Chaos Mothership (deep detuned saws with a slow filter-envelope swell). Their traits were carried into twelve softer presets: slow PWM or shape movement from LFO 2 on Bass Sub 1, Set Void Walker 1 - Sub, Lead Glide Tri, Drone Stasis, Drone Glass Fog and Horror Ghost Organ (with the Stick on the cutoff); a slow filter-envelope swell on Lead Flute Mod, Drone Ground Swell, Para Fifth Drone, Para Sixth Pad and Set Void Walker 3 - Texture; a detuned second voice that drifts on Lead Theremin; and a deep detuned saw layer with a swell on Horror Chant. Levels and register were refitted.
+
 ## 0.13.0
 
 ### Matching the hardware's arpeggiator and octave shift

@@ -10,9 +10,9 @@ pre('Set Darkwave Drive 1 - Bass', w1=1, cut=.32, res=.3, fd=.6, dr=.4, fm=.6, e
 pre('Set Darkwave Drive 2 - Stab', w1=1, w2=1, c2=3, f2=3, l2=.8, cut=.45, res=.3, fd=.55, dr=.3, fm=.3, e1d=.4, e2d=.4, e2s=.06, e2r=.15, mx=[('KEY', 'CUT', .4)])
 pre('Set Darkwave Drive 3 - Arp', w1=2, w2=2, f2=6, l2=.7, fmode=2, cut=.35, res=.25, fd=.4, dr=.15, fm=.2, e1d=.3, e2d=.45, e2s=.12, e2r=.12, lr=.4, mx=[('LFO', 'CUT', .15)])
 # Set 3 Void Walker
-pre('Set Void Walker 1 - Sub', w1=2, l1=.7, cut=.38, res=.05, fd=.25, dr=.08, fm=0, kt=.3, e2r=.25, vela=.5, drift=.1)
+pre('Set Void Walker 1 - Sub', w1=2, l1=.7, cut=.38, res=.05, fd=.25, dr=.08, fm=0, kt=.3, e2r=.25, vela=.5, drift=.5, l2r=.13, mx=[('LF2', 'SH1', .4)])
 pre('Set Void Walker 2 - Lead', w1=0, w2=2, sh2=.3, c2=12, f2=0, l1=0, l2=.9, fmode=2, cut=.2, res=.18, fd=.3, dr=.1, fm=0, e2a=.15, e2s=1, e2r=.5, gl=.65, leg=1, vib=.1, mx=[('SX', 'GLD', .7)])
-pre('Set Void Walker 3 - Texture', l1=0, nz=.7, nc=.4, fmode=1, cut=.5, res=.45, fd=.3, dr=.1, fm=0, lfc=.3, lr=.15, e2a=.5, e2r=.6, mx=[('WHL', 'NSE', .5)])
+pre('Set Void Walker 3 - Texture', l1=0, nz=.7, nc=.4, fmode=1, cut=.45, res=.45, fd=.3, dr=.1, fm=.6, e1a=.75, e1d=.9, e1s=.35, lfc=.3, lr=.15, e2a=.5, e2r=.6, mx=[('WHL', 'NSE', .5)])
 # Set 4 Acid Reactor
 pre('Set Acid Reactor 1 - Bass', w1=1, cut=.3, res=.8, fd=.7, dr=.3, fm=.8, e1d=.42, e2d=.55, e2s=.7, e2r=.12, gl=.08, leg=1, mx=[('VEL', 'ENV', .5)])
 pre('Set Acid Reactor 2 - Pluck', w1=4, sh1=.35, cut=.4, res=.6, fd=.6, dr=.25, fm=.9, e1d=.35, e2d=.4, e2s=.06, e2r=.1, mx=[('WHL', 'RES', .3)])

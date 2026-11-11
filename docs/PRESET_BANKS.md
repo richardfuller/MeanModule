@@ -32,6 +32,11 @@ so it sounds like several pipes. The rest of the bank follows the brief: Music B
 Saw Blade, Creeping, The Hive, Dark Water, Pendulum; Scream Hit, Door Slam, Nerve Zap, Psycho, Glass Break, Sudden Drop; EVP, Banshee, Cold Breath,
 Apparition, Crypt, Spirit Box, Chant. Pitch clashes, heavy drive, resonance and random movement are on purpose.
 
+## Loading a preset resets everything
+
+Selecting a preset (the jog, the Bank knob, Program Change or a state load of a preset number) sets every parameter to the preset's saved value, so a tweaked preset comes back exactly as shipped when you leave and return to it.
+Only the performance setup survives: the FX Bank (the four effect types and levels), FX Touch and Program Change. Anything you want to keep goes into a user bank (`docs/BANK_FILES.md`).
+
 ## Keys
 
 Electric pianos (Tine EP, Wurly, Suitcase, Bell EP, Dirty EP), clavs (Clav, Funk Clav, Pick Clav, Dirty Clav), organs (Combo Organ, Drawbar Organ, Church Organ, Perc Organ) and struck or plucked keys

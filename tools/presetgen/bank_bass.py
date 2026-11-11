@@ -2,7 +2,7 @@ from dsl import *
 
 section('Bass')
 # --- Sub archetypes
-pre('Bass Sub 1', w1=2, l1=.95, cut=.5, res=.05, fd=.25, dr=.08, fm=0, kt=.6, e2d=.5, e2r=.15, vela=.5, drift=.15)
+pre('Bass Sub 1', w1=2, l1=.95, cut=.5, res=.05, fd=.25, dr=.08, fm=0, kt=.6, e2d=.5, e2r=.15, vela=.5, drift=.5, l2r=.14, mx=[('LF2', 'SH1', .45), ('SX', 'CUT', .3)])
 pre('Bass Sub 2', w1=2, w2=2, f2=9, l1=.85, l2=.8, cut=.5, res=.05, fd=.25, dr=.1, fm=0, kt=.6, lr=.12, e2r=.15, vela=.4, mx=[('LFO', 'PC2', .05)])
 pre('Bass Log Tri', w1=2, l1=.95, cut=.38, res=.12, fd=.3, dr=.1, fm=.25, e1d=.3, kt=.5, velc=.9, vela=.3, e2d=.55, e2s=.8, e2r=.18)
 pre('Bass Ghost Sub', w1=4, sh1=.35, l1=.9, fmode=2, cut=.22, res=.28, fd=.4, dr=.15, fm=0, kt=.3, lr=.2, shm=.6, e2r=.3, mx=[('SX', 'CUT', .4)])

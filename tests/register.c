@@ -84,7 +84,7 @@ int main(int argc, char **argv) {
         g_flat = (reg == REG_BASS);   /* the bass register is judged by plain RMS, the rest A-weighted */
         double L[NNOTES], PK[NNOTES], pk, pkb, kl = -99;
         #define MEAS(klv) do { double klo_; for (int k = 0; k < NNOTES; k++) L[k] = note_level(i, klv, reg[k], 100, HOLD_BLOCKS, &PK[k], &klo_, nm, sizeof nm); kl = klo_; } while (0)
-        #define BOOSTED_PEAK() ({ double m_ = -99; for (int k = 0; k < NNOTES; k++) if (kl * (reg[k] - 60) < -0.01 && PK[k] > m_) m_ = PK[k]; m_; })   /* peak of the notes the tilt boosts */
+        #define BOOSTED_PEAK() ({ double m_ = -99; for (int k = 0; k < NNOTES; k++) if (kl * (reg[k] - 60) > 0.01 && PK[k] > m_) m_ = PK[k]; m_; })   /* peak of the notes the tilt boosts: gain = 2^(kl (note - 60) / 12), so boosted where kl and (note - 60) agree in sign */
         for (int it = 0; it < (calibrate ? 3 : 1); it++) {
             MEAS(kl);
             if (!calibrate) break;

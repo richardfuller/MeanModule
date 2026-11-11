@@ -2,10 +2,10 @@ from dsl import *
 
 section('Lead')
 # --- Expressive and glide
-pre('Lead Glide Tri', w1=2, l1=.95, cut=.6, res=.15, fd=.3, dr=.15, fm=.2, e1d=.5, gl=.35, leg=1, pri=0, lr=.65, mx=[('LFO', 'PCH', .03), ('SX', 'GLD', .6)])
+pre('Lead Glide Tri', w1=2, l1=.95, cut=.6, res=.15, fd=.3, dr=.15, fm=.2, e1d=.5, gl=.35, leg=1, pri=0, lr=.65, l2r=.22, drift=.6, mx=[('LFO', 'PCH', .03), ('SX', 'GLD', .6), ('LF2', 'SH1', .4)])
 pre('Lead Solo Saw', w1=1, w2=1, f2=12, cut=.62, res=.25, fd=.55, dr=.25, fm=.35, e1d=.5, e2s=.9, lr=.62, gl=.1, leg=1, mx=[('LFO', 'PCH', .05, 'SY'), ('WHL', 'LFR', .3)])
-pre('Lead Flute Mod', w1=2, l1=.9, nz=.18, nc=.45, cut=.55, res=.12, fd=.3, dr=.1, fm=.25, e1d=.4, e2a=.1, e2s=.9, velc=.8, vela=.3)
-pre('Lead Theremin', w1=2, l1=.9, fmode=2, cut=.16, res=.1, fd=.3, dr=.1, fm=0, e2a=.15, e2s=1, e2r=.3, gl=.6, leg=1, lr=.65, vib=0, mx=[('LFO', 'PCH', .025, 'AT')])
+pre('Lead Flute Mod', w1=2, l1=.9, nz=.18, nc=.45, cut=.5, res=.2, fd=.3, dr=.1, fm=.5, e1a=.55, e1d=.7, e1s=.35, e2a=.1, e2s=.9, velc=.8, vela=.3, drift=.6, mx=[('FEN', 'NSE', .4)])
+pre('Lead Theremin', w1=2, l1=.9, fmode=2, cut=.16, res=.1, fd=.3, dr=.1, fm=0, e2a=.15, e2s=1, e2r=.3, gl=.6, leg=1, lr=.65, vib=0, w2=2, f2=14, l2=.55, drift=.7, mx=[('LFO', 'PCH', .025, 'AT'), ('SMR', 'PC2', .04)])
 pre('Lead Vow', w1=4, sh1=.35, fmode=1, cut=.45, res=.55, fd=.5, dr=.2, fm=.2, e1d=.5, e2s=.9, gl=.08, leg=1, mx=[('WHL', 'CUT', .4)])
 pre('Lead Soft Sync', w1=2, w2=4, sh2=.5, c2=0, f2=5, l2=.55, cut=.65, res=.15, fd=.35, dr=.15, fm=.2, e2s=.9, lr=.3, mx=[('LFO', 'SH2', .6), ('KEY', 'AMP', .2)])
 # --- Hard sync and tearing

@@ -7,7 +7,7 @@ pre('Drone Tectonic', w1=1, w2=1, f2=28, l2=.8, oct=-1, cut=.35, res=.2, fd=.6, 
 pre('Drone Abyss', w1=2, l1=.95, cut=.25, res=.2, fd=.35, dr=.1, fm=.6, e1a=.7, e1d=.85, e1s=.3, e2a=.5, e2r=.6, drift=.5, mx=[('SX', 'PC1', .02)])
 pre('Drone Dark Wash', w1=4, sh1=.4, cut=.4, res=.25, fd=.5, dr=.2, fm=0, e2a=.6, e2d=.85, e2s=.8, e2r=.7, mx=[('AEN', 'CUT', .5), ('VEL', 'E2A', .5)])
 pre('Drone Hollow Earth', w1=2, l1=.9, fmode=2, cut=.2, res=.8, fd=.4, dr=.15, fm=0, kt=.3, e2a=.4, e2r=.6, mx=[('WHL', 'CUT', .5)])
-pre('Drone Ground Swell', w1=2, w2=2, f2=5, l2=.8, cut=.4, res=.15, fd=.4, dr=.15, fm=0, lr=.1, e2a=.5, e2r=.6, mx=[('LFO', 'AMP', .5), ('SY', 'DRV', .6)])
+pre('Drone Ground Swell', w1=2, w2=2, f2=5, l2=.8, cut=.4, res=.15, fd=.4, dr=.15, fm=.5, e1a=.8, e1d=.9, e1s=.4, e1r=.7, lr=.1, e2a=.5, e2r=.6, mx=[('LFO', 'AMP', .5), ('SY', 'DRV', .6)])
 # --- Noise and windscapes
 pre('Drone Cold Wind', l1=0, nz=.7, nc=.5, fmode=1, cut=.55, res=.5, fd=.3, dr=.1, fm=0, kt=.3, lr=.13, e2a=.7, e2r=.7, mx=[('LFO', 'CUT', .35)])
 pre('Drone Ruins', w1=2, l1=.8, nz=.2, nc=.2, cut=.7, res=.2, fd=.5, dr=.3, fm=0, e2a=.3, e2r=.6, mx=[('NSE', 'FM1', .15, 'WHL')])
@@ -20,9 +20,9 @@ pre('Drone Iron Scrape', w1=2, w2=2, c2=7, f2=0, l2=.5, xm=.3, cut=.8, res=.2, f
 pre('Drone Reactor', w1=4, sh1=.5, cut=.6, res=.3, fd=.5, dr=.3, fm=0, ls=8, lw=1, lr=.4, o1l=.15, e2a=.3, e2r=.5, mx=[('SX', 'LFR', .3)])
 pre('Drone Bell Toll', w1=2, w2=2, c2=6, f2=0, l2=.7, xm=.2, cut=.8, res=.15, fd=.4, dr=.15, fm=0, e2d=.85, e2s=.2, e2r=.85, mx=[('AEN', 'XMD', .5)])
 pre('Drone Wire', w1=4, sh1=.06, cut=.75, res=.25, fd=.5, dr=.2, fm=0, lr=.22, shm=.8, e2a=.3, e2r=.5, mx=[('WHL', 'SH1', .6)])
-pre('Drone Stasis', w1=2, w2=1, c2=7, f2=3, l2=.55, cut=.5, res=.3, fd=.4, dr=.15, fm=0, lfc=.5, lr=.2, e2a=.5, e2r=.7, atd=3, ata=.6)
+pre('Drone Stasis', w1=2, w2=1, c2=7, f2=3, l2=.55, cut=.5, res=.3, fd=.4, dr=.15, fm=0, lfc=.5, lr=.2, l2r=.15, e2a=.5, e2r=.7, atd=3, ata=.6, mx=[('LF2', 'SH1', .5)])
 pre('Drone Radiation', w1=1, l1=.3, cut=.5, res=.92, fd=.5, dr=.2, fm=0, lfc=.7, lw=1, lr=.6, e2a=.2, e2r=.4, mx=[('SY', 'CUT', .5)])
-pre('Drone Glass Fog', w1=2, w2=2, c2=19, f2=0, l2=.5, xm=.25, fmode=2, cut=.6, res=.4, fd=.4, dr=.15, fm=0, e2a=.6, e2r=.7, mx=[('WHL', 'RES', .3)])
+pre('Drone Glass Fog', w1=2, w2=2, c2=19, f2=0, l2=.5, xm=.25, fmode=2, cut=.6, res=.4, fd=.4, dr=.15, fm=0, e2a=.6, e2r=.7, l2r=.18, mx=[('WHL', 'RES', .3), ('LF2', 'SH1', .5)])
 # --- Rhythmic and pulsing
 pre('Drone Heartbeat', w1=2, l1=.95, cut=.35, res=.2, fd=.5, dr=.3, fm=0, lw=2, lr=.52, e2a=.05, e2r=.3, mx=[('LFO', 'AMP', .5), ('WHL', 'LFR', .4)])
 pre('Drone Machinery', w1=4, sh1=.5, w2=4, sh2=.4, f2=0, c2=-12, cut=.55, res=.3, fd=.6, dr=.4, fm=0, lr=.6, o1l=.25, e2a=.1, atd=3, ata=.6)
